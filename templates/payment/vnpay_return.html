@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Kết quả thanh toán - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center p-5">
+                    {% if payment_success %}
+                        <div class="mb-4">
+                            <div class="success-animation">
+                                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                    <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" />
+                                    <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h3 class="text-success mb-3">Thanh toán thành công!</h3>
+                        <p class="mb-4">Giao dịch của bạn đã được xử lý thành công. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
+
+                        <div class="transaction-info bg-light p-4 rounded mb-4 text-start">
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Mã giao dịch:</div>
+                                <div class="col-6">{{ transaction_id }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Số tiền:</div>
+                                <div class="col-6">{{ amount|floatformat:0 }} VNĐ</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Thời gian:</div>
+                                <div class="col-6">{{ transaction_date|date:"d/m/Y H:i:s" }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Phương thức:</div>
+                                <div class="col-6">VNPay</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Trạng thái:</div>
+                                <div class="col-6"><span class="badge bg-success">Thành công</span></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Thanh toán thất bại -->
+                        <div class="mb-4">
+                            <div class="failed-animation">
+                                <svg class="crossmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                    <circle class="crossmark__circle" cx="26" cy="26" r="25" fill="none" />
+                                    <path class="crossmark__path" fill="none" d="M16 16 36 36 M36 16 16 36" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h3 class="text-danger mb-3">Thanh toán thất bại!</h3>
+                        <p class="mb-4">Rất tiếc, giao dịch của bạn không thể hoàn tất. Vui lòng thử lại sau hoặc chọn phương thức thanh toán khác.</p>
+
+                        <div class="transaction-info bg-light p-4 rounded mb-4 text-start">
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Mã giao dịch:</div>
+                                <div class="col-6">{{ transaction_id }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Mã lỗi:</div>
+                                <div class="col-6">{{ error_code }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Thông báo lỗi:</div>
+                                <div class="col-6">{{ error_message }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Thời gian:</div>
+                                <div class="col-6">{{ transaction_date|date:"d/m/Y H:i:s" }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6 fw-bold">Trạng thái:</div>
+                                <div class="col-6"><span class="badge bg-danger">Thất bại</span></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <a href="{% url 'payment:payment_history' %}" class="btn btn-primary">
+                            <i class="fas fa-history me-1"></i> Xem lịch sử thanh toán
+                        </a>
+                        <a href="{% url 'payment:my_invoices' %}" class="btn btn-outline-primary ms-2">
+                            <i class="fas fa-file-invoice me-1"></i> Xem hóa đơn
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-animation {
+        margin: 20px auto;
+        width: 80px;
+        height: 80px;
+    }
+
+    .checkmark {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #4BB543;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #4BB543;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+    }
+
+    .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #4BB543;
+        fill: none;
+        animation: stroke .6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: stroke .3s cubic-bezier(0.65, 0, 0.45, 1) .8s forwards;
+    }
+
+    .failed-animation {
+        margin: 20px auto;
+        width: 80px;
+        height: 80px;
+    }
+
+    .crossmark {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #FF6245;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #FF6245;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+    }
+
+    .crossmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #FF6245;
+        fill: none;
+        animation: stroke .6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .crossmark__path {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: stroke .3s cubic-bezier(0.65, 0, 0.45, 1) .8s forwards;
+    }
+
+    @keyframes stroke {
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @keyframes fill {
+        100% {
+            box-shadow: inset 0px 0px 0px 30px transparent;
+        }
+    }
+
+    @keyframes scale {
+        0%, 100% {
+            transform: none;
+        }
+        50% {
+            transform: scale3d(1.1, 1.1, 1);
+        }
+    }
+
+    .transaction-info {
+        font-size: 0.95rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,161 @@
+<!-- Navbar/Header -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white px-4 shadow-sm fixed-top">
+    <!-- Sidebar Toggle -->
+    <button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Logo/Brand -->
+    <a class="navbar-brand me-auto" href="{% url 'home' %}">
+        <i class="fas fa-building me-2"></i>
+        <span>Quản lý Ký túc xá</span>
+    </a>
+    
+    <!-- Navbar Right Side -->
+    <ul class="navbar-nav ms-auto">
+        <!-- Tìm kiếm -->
+        <li class="nav-item dropdown no-arrow d-none d-sm-block">
+            <form class="d-none d-sm-inline-block form-inline me-auto ms-md-3 my-md-0 mw-100 navbar-search">
+                <div class="input-group">
+                    <input type="text" class="form-control bg-light border-0 small" placeholder="Tìm kiếm..."
+                        aria-label="Tìm kiếm" aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button">
+                            <i class="fas fa-search fa-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </li>
+        
+        {% if user.is_authenticated %}
+            <!-- Thông báo -->
+            <li class="nav-item dropdown no-arrow mx-1">
+                <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bell fa-fw"></i>
+                    <!-- Đếm thông báo chưa đọc -->
+                    {% with unread_count=user.user_notifications.filter.is_read=False.count %}
+                        {% if unread_count > 0 %}
+                            <span class="badge rounded-pill bg-danger">{{ unread_count }}</span>
+                        {% endif %}
+                    {% endwith %}
+                </a>
+                <!-- Dropdown - Thông báo -->
+                <div class="dropdown-list dropdown-menu dropdown-menu-end shadow animated--grow-in"
+                    aria-labelledby="alertsDropdown">
+                    <h6 class="dropdown-header bg-primary">
+                        Thông báo
+                    </h6>
+                    {% with notifications=user.user_notifications.all|slice:":5" %}
+                        {% if notifications %}
+                            {% for notification in notifications %}
+                                <a class="dropdown-item d-flex align-items-center {% if not notification.is_read %}fw-bold{% endif %}" href="{% url 'notification:detail' notification.notification.id %}">
+                                    <div class="me-3">
+                                        <div class="icon-circle bg-{{ notification.notification.category.color }}">
+                                            <i class="fas {{ notification.notification.category.icon }} text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="small text-gray-500">{{ notification.created_at|date:"d/m/Y H:i" }}</div>
+                                        <span class="{% if not notification.is_read %}font-weight-bold{% endif %}">{{ notification.notification.title }}</span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="dropdown-item text-center">Không có thông báo mới</div>
+                        {% endif %}
+                    {% endwith %}
+                    <a class="dropdown-item text-center small text-gray-500" href="{% url 'notification:list' %}">Xem tất cả thông báo</a>
+                </div>
+            </li>
+            
+            <!-- Tin nhắn -->
+            <li class="nav-item dropdown no-arrow mx-1">
+                <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-envelope fa-fw"></i>
+                </a>
+                <!-- Dropdown - Tin nhắn -->
+                <div class="dropdown-list dropdown-menu dropdown-menu-end shadow animated--grow-in"
+                    aria-labelledby="messagesDropdown">
+                    <h6 class="dropdown-header bg-primary">
+                        Tin nhắn
+                    </h6>
+                    <div class="dropdown-item text-center">Tính năng đang phát triển</div>
+                    <a class="dropdown-item text-center small text-gray-500" href="#">Xem tất cả tin nhắn</a>
+                </div>
+            </li>
+            
+            <div class="topbar-divider d-none d-sm-block"></div>
+            
+            <!-- User Profile -->
+            <li class="nav-item dropdown no-arrow">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="me-2 d-none d-lg-inline text-gray-600 small">{{ user.get_full_name }}</span>
+                    {% if user.avatar %}
+                        <img class="img-profile rounded-circle" src="{{ user.avatar.url }}" style="width: 32px; height: 32px; object-fit: cover;">
+                    {% else %}
+                        <div class="d-inline-block">
+                            <div class="bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                {{ user.get_short_name|slice:":1"|upper }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </a>
+                <!-- Dropdown - User Information -->
+                <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in"
+                    aria-labelledby="userDropdown">
+                    <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                        <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>
+                        Hồ sơ
+                    </a>
+                    <a class="dropdown-item" href="{% url 'accounts:settings' %}">
+                        <i class="fas fa-cogs fa-sm fa-fw me-2 text-gray-400"></i>
+                        Cài đặt
+                    </a>
+                    <a class="dropdown-item" href="{% url 'accounts:change_password' %}">
+                        <i class="fas fa-key fa-sm fa-fw me-2 text-gray-400"></i>
+                        Đổi mật khẩu
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                        <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>
+                        Đăng xuất
+                    </a>
+                </div>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'accounts:login' %}">
+                    <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'accounts:register' %}">
+                    <i class="fas fa-user-plus me-1"></i> Đăng ký
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<!-- Logout Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logoutModalLabel">Xác nhận đăng xuất?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <a href="{% url 'accounts:logout' %}" class="btn btn-primary">Đăng xuất</a>
+            </div>
+        </div>
+    </div>
+</div>

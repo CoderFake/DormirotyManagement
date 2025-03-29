@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Quản trị - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard Quản trị</h1>
+        <span class="d-none d-sm-inline-block">
+            <i class="far fa-calendar-alt me-1"></i> {% now "l, d F Y" %}
+        </span>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-stats card-stats-primary shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số sinh viên
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'accounts:student_list' %}" class="card-footer text-center">
+                    <span class="text-primary">Xem chi tiết</span>
+                    <i class="fas fa-arrow-right ms-1 text-primary"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Tổng số phòng -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-stats card-stats-success shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng số phòng
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_rooms }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-door-open fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'dormitory:room_list' %}" class="card-footer text-center">
+                    <span class="text-success">Xem chi tiết</span>
+                    <i class="fas fa-arrow-right ms-1 text-success"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Phòng còn trống -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-stats card-stats-info shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Phòng còn trống
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ available_rooms }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bed fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'dormitory:room_list' %}?status=available" class="card-footer text-center">
+                    <span class="text-info">Xem chi tiết</span>
+                    <i class="fas fa-arrow-right ms-1 text-info"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Hóa đơn quá hạn -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-stats card-stats-danger shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Hóa đơn quá hạn
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ overdue_invoices }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'payment:invoice_list' %}?status=overdue" class="card-footer text-center">
+                    <span class="text-danger">Xem chi tiết</span>
+                    <i class="fas fa-arrow-right ms-1 text-danger"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ và Báo cáo -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Doanh thu theo tháng ({{ monthly_revenue.0.year }})</h6>
+                    <a href="{% url 'dashboard:revenue_report' %}" class="text-primary">Xem báo cáo đầy đủ</a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ tròn trạng thái phòng -->
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Trạng thái phòng</h6>
+                    <a href="{% url 'dashboard:occupancy_report' %}" class="text-primary">Xem chi tiết</a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie">
+                        <canvas id="roomStatusChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="me-2">
+                            <i class="fas fa-circle text-success"></i> Còn trống
+                        </span>
+                        <span class="me-2">
+                            <i class="fas fa-circle text-warning"></i> Còn chỗ
+                        </span>
+                        <span class="me-2">
+                            <i class="fas fa-circle text-danger"></i> Đã đầy
+                        </span>
+                        <span class="me-2">
+                            <i class="fas fa-circle text-info"></i> Bảo trì
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đơn đăng ký và yêu cầu mới -->
+    <div class="row">
+        <!-- Đơn đăng ký mới -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Đơn đăng ký mới</h6>
+                    <a href="{% url 'registration:application_list' %}" class="text-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    {% if new_registrations %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Sinh viên</th>
+                                        <th>Ngày đăng ký</th>
+                                        <th>Kỳ đăng ký</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for registration in new_registrations %}
+                                        <tr>
+                                            <td>{{ registration.user.full_name }}</td>
+                                            <td>{{ registration.registration_date|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ registration.registration_period.name }}</td>
+                                            <td>
+                                                <a href="{% url 'registration:application_detail' registration.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'registration:application_approve' registration.id %}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check"></i>
+                                                </a>
+                                                <a href="{% url 'registration:application_reject' registration.id %}" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <p>Không có đơn đăng ký mới nào.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Yêu cầu bảo trì mới -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Yêu cầu bảo trì mới</h6>
+                    <a href="{% url 'maintenance:request_list' %}" class="text-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    {% if new_maintenance_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Mã yêu cầu</th>
+                                        <th>Tiêu đề</th>
+                                        <th>Phòng</th>
+                                        <th>Ưu tiên</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in new_maintenance_requests %}
+                                        <tr>
+                                            <td>{{ request.request_number }}</td>
+                                            <td>{{ request.title|truncatechars:30 }}</td>
+                                            <td>{{ request.room }}</td>
+                                            <td>
+                                                {% if request.priority == 'low' %}
+                                                    <span class="badge bg-secondary">Thấp</span>
+                                                {% elif request.priority == 'medium' %}
+                                                    <span class="badge bg-info">Trung bình</span>
+                                                {% elif request.priority == 'high' %}
+                                                    <span class="badge bg-warning">Cao</span>
+                                                {% elif request.priority == 'urgent' %}
+                                                    <span class="badge bg-danger">Khẩn cấp</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'maintenance:request_detail' request.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'maintenance:request_assign' request.id %}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-user-check"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <p>Không có yêu cầu bảo trì mới nào.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê theo tòa nhà -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Tỷ lệ phòng đã thuê theo tòa nhà</h6>
+                    <a href="{% url 'dashboard:occupancy_report' %}" class="text-primary">Xem chi tiết</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Tòa nhà</th>
+                                    <th>Tổng số phòng</th>
+                                    <th>Đã thuê</th>
+                                    <th>Tỷ lệ</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for building in buildings %}
+                                    <tr>
+                                        <td>{{ building.name }}</td>
+                                        <td>{{ building.total_rooms }}</td>
+                                        <td>{{ building.occupied_rooms }}</td>
+                                        <td>
+                                            {% if building.total_rooms > 0 %}
+                                                {% widthratio building.occupied_rooms building.total_rooms 100 %}%
+                                            {% else %}
+                                                0%
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="progress">
+                                                {% if building.total_rooms > 0 %}
+                                                    {% with percentage=building.occupied_rooms|mul:100|div:building.total_rooms %}
+                                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ percentage }}%">
+                                                            {{ percentage }}%
+                                                        </div>
+                                                    {% endwith %}
+                                                {% else %}
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%">
+                                                        0%
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">Không có dữ liệu</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Dữ liệu cho biểu đồ doanh thu
+    const monthLabels = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+    const revenueData = [
+        {% for item in monthly_revenue %}
+            {{ item.revenue }},
+        {% endfor %}
+    ];
+
+    // Dữ liệu cho biểu đồ trạng thái phòng
+    const roomStatusLabels = ['Còn trống', 'Còn chỗ', 'Đã đầy', 'Bảo trì'];
+    const roomStatusData = [
+        {{ available_rooms }},
+        {{ total_rooms|sub:available_rooms|sub:occupied_rooms }},
+        {{ occupied_rooms }},
+        {{ total_rooms|sub:available_rooms|sub:occupied_rooms|sub:occupied_rooms }}
+    ];
+
+    // Khởi tạo biểu đồ khi trang tải xong
+    document.addEventListener('DOMContentLoaded', function() {
+        // Biểu đồ doanh thu
+        const revenueChart = new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData,
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    pointHoverBorderColor: '#fff',
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 25,
+                        top: 25,
+                        bottom: 0
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const roomStatusChart = new Chart(document.getElementById('roomStatusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: roomStatusLabels,
+                datasets: [{
+                    data: roomStatusData,
+                    backgroundColor: [
+                        'rgba(28, 200, 138, 0.8)',
+                        'rgba(246, 194, 62, 0.8)',
+                        'rgba(231, 74, 59, 0.8)',
+                        'rgba(54, 185, 204, 0.8)'
+                    ],
+                    hoverBackgroundColor: [
+                        'rgba(28, 200, 138, 1)',
+                        'rgba(246, 194, 62, 1)',
+                        'rgba(231, 74, 59, 1)',
+                        'rgba(54, 185, 204, 1)'
+                    ],
+                    hoverBorderColor: 'rgba(234, 236, 244, 1)'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

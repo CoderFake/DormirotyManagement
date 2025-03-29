@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Tạo giao dịch thanh toán - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tạo giao dịch thanh toán</h1>
+        <a href="{% url 'payment:payment_methods' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin thanh toán</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.amount.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Vui lòng nhập số tiền bạn muốn thanh toán (tối thiểu 10,000 VNĐ)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.order_info.id_for_label }}" class="form-label">{{ form.order_info.label }}</label>
+                            {{ form.order_info }}
+                            {% if form.order_info.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.order_info.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Nội dung thanh toán sẽ hiển thị trong lịch sử giao dịch</div>
+                        </div>
+
+                        <div class="text-center mb-4">
+                            <img src="/static/images/payment/vnpay.png" alt="VNPay" class="img-fluid" style="max-height: 60px;">
+                            <p class="text-muted mt-2">Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch</p>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-external-link-alt me-2"></i> Tiếp tục đến VNPay
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i> Lưu ý</h5>
+                <ul class="mb-0">
+                    <li>Không tắt trình duyệt cho đến khi hoàn tất thanh toán</li>
+                    <li>Sau khi thanh toán, bạn sẽ được chuyển trở lại trang web</li>
+                    <li>Số tiền sẽ được cộng vào tài khoản của bạn ngay sau khi thanh toán thành công</li>
+                    <li>Nếu bạn gặp vấn đề khi thanh toán, vui lòng liên hệ với quản lý ký túc xá</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh sách sinh viên - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Danh sách sinh viên</h1>
+        <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-1"></i> Thêm sinh viên mới
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Sinh viên</h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">Tùy chọn:</div>
+                    <a class="dropdown-item" href="#" id="exportExcel">
+                        <i class="fas fa-file-excel me-1 text-success"></i> Xuất Excel
+                    </a>
+                    <a class="dropdown-item" href="#" id="exportPDF">
+                        <i class="fas fa-file-pdf me-1 text-danger"></i> Xuất PDF
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-sync-alt me-1"></i> Làm mới
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered datatable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Mã SV</th>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Trường</th>
+                            <th>Ngày đăng ký</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <td>{{ student.student_id }}</td>
+                                <td>{{ student.full_name }}</td>
+                                <td>{{ student.email }}</td>
+                                <td>{{ student.phone_number|default:"-" }}</td>
+                                <td>{{ student.university|default:"-" }}</td>
+                                <td>{{ student.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if student.is_active %}
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Vô hiệu</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'accounts:student_detail' student.id %}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'accounts:student_edit' student.id %}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'accounts:student_delete' student.id %}" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">Không có sinh viên nào</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+            },
+            "order": [[ 5, "desc" ]]
+        });
+    });
+</script>
+{% endblock %}

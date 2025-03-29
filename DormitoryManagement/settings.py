@@ -52,11 +52,27 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    # Cài đặt bên thứ 3
+    "corsheaders",
+    "whitenoise.runserver_nostatic",
+    "vnpay",
+
+    # Ứng dụng tùy chỉnh
+    "accounts.apps.AccountsConfig",
+    "dormitory.apps.DormitoryConfig",
+    "registration.apps.RegistrationConfig",
+    "payment.apps.PaymentConfig",
+    "maintenance.apps.MaintenanceConfig",
+    "notification.apps.NotificationConfig",
+    "dashboard.apps.DashboardConfig",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -69,8 +85,7 @@ ROOT_URLCONF = "DormitoryManagement.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates']
-        ,
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -91,8 +106,16 @@ WSGI_APPLICATION = "DormitoryManagement.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("MYSQL_DB_NAME"),
+        "USER": os.getenv("MYSQL_DB_USER"),
+        "PASSWORD": os.getenv("MYSQL_DB_PASSWORD"),
+        "HOST": os.getenv("MYSQL_DB_HOST"),
+        "PORT": os.getenv("MYSQL_DB_PORT"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET NAMES 'utf8mb4'; SET CHARACTER SET 'utf8mb4'; SET character_set_connection='utf8mb4';",
+        },
     }
 }
 
@@ -119,9 +142,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "vi"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = os.getenv("TIME_ZONE", "Asia/Ho_Chi_Minh")
 
 USE_I18N = True
 
@@ -132,8 +155,47 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Cấu hình Auth tùy chỉnh
+AUTH_USER_MODEL = "accounts.User"
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/"
+
+# Cấu hình email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = os.getenv("EMAIL_PORT", "587")
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Dormitory Management <noreply@dormitory.com>")
+
+# Cấu hình VNPAY
+VNPAY_TMN_CODE = os.getenv("VNPAY_TMN_CODE", "")
+VNPAY_HASH_SECRET_KEY = os.getenv("VNPAY_HASH_SECRET_KEY", "")
+VNPAY_PAYMENT_URL = os.getenv("VNPAY_PAYMENT_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")
+VNPAY_RETURN_URL = os.getenv("VNPAY_RETURN_URL", "http://localhost:8008/payment/vnpay-return/")
+VNPAY_API_URL = os.getenv("VNPAY_API_URL", "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction")
+
+# Cấu hình CORS
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:8008",
+    "http://127.0.0.1:8008",
+]
+if ENV != "dev":
+    CORS_ALLOWED_ORIGINS.extend(os.environ.get('ALLOWED_HOSTS', "").split(','))

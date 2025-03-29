@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hệ thống Quản lý Ký túc xá{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{{ STATIC_URL }}images/favicon.ico" type="image/x-icon">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/style.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light">
+
+    {% include 'components/header.html' %}
+
+    <div class="container-fluid">
+        <div class="row">
+            {% if user.is_authenticated %}
+                <div class="col-lg-2 d-none d-lg-block">
+                    {% include 'components/sidebar.html' %}
+                </div>
+                <main class="col-lg-10 px-md-4 py-4">
+                    {% include 'components/breadcrumb.html' %}
+
+                    {% include 'components/alerts.html' %}
+
+                    {% block content %}{% endblock %}
+
+                    {% include 'components/footer.html' %}
+                </main>
+            {% else %}
+                <main class="col-12 px-md-4 py-4">
+                    {% include 'components/alerts.html' %}
+
+                    {% block content %}{% endblock %}
+
+                    {% include 'components/footer.html' %}
+                </main>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <!-- Toasts will be added here dynamically via JavaScript -->
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+    <!-- Bootstrap 5 Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{{ STATIC_URL }}js/script.js"></script>
+
+    <script>
+
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-bottom-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    toastr.success('{{ message }}', 'Thành công');
+                {% elif message.tags == 'info' %}
+                    toastr.info('{{ message }}', 'Thông tin');
+                {% elif message.tags == 'warning' %}
+                    toastr.warning('{{ message }}', 'Cảnh báo');
+                {% elif message.tags == 'error' %}
+                    toastr.error('{{ message }}', 'Lỗi');
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            $('.datatable').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+                },
+                responsive: true
+            });
+
+            $(".datepicker").flatpickr({
+                locale: "vn",
+                dateFormat: "d/m/Y",
+                allowInput: true
+            });
+
+            $(".datetimepicker").flatpickr({
+                locale: "vn",
+                dateFormat: "d/m/Y H:i",
+                enableTime: true,
+                time_24hr: true,
+                allowInput: true
+            });
+
+            $('.select2').select2({
+                theme: 'bootstrap-5'
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

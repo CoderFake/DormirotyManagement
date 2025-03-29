@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Phương thức thanh toán - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Thanh toán</h1>
+        <a href="{% url 'payment:my_invoices' %}" class="btn btn-outline-primary">
+            <i class="fas fa-file-invoice me-1"></i> Xem hóa đơn
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Thông tin thanh toán -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin thanh toán</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>Hóa đơn chưa thanh toán</h5>
+                        {% if unpaid_invoices %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Số hóa đơn</th>
+                                            <th>Ngày lập</th>
+                                            <th>Đến hạn</th>
+                                            <th>Số tiền</th>
+                                            <th>Đã thanh toán</th>
+                                            <th>Còn lại</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for invoice in unpaid_invoices %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <a href="{% url 'payment:invoice_detail' invoice.id %}">
+                                                        {{ invoice.invoice_number }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                                                <td>
+                                                    {{ invoice.due_date|date:"d/m/Y" }}
+                                                    {% if invoice.status == 'overdue' %}
+                                                        <span class="badge bg-danger">Quá hạn</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
+                                                <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
+                                                <td class="fw-bold {% if invoice.get_remaining_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                    {{ invoice.get_remaining_amount|floatformat:0 }} VNĐ
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="fw-bold">
+                                            <td colspan="6" class="text-end">Tổng cộng:</td>
+                                            <td class="text-danger">{{ total_amount|floatformat:0 }} VNĐ</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i> Bạn không có hóa đơn nào chưa thanh toán.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Form thanh toán -->
+                    {% if unpaid_invoices %}
+                        <h5>Nhập thông tin thanh toán</h5>
+                        <form method="post" action="{% url 'payment:create_payment' %}" class="needs-validation" novalidate>
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.amount.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Vui lòng nhập số tiền bạn muốn thanh toán (tối thiểu 10,000 VNĐ)</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.order_info.id_for_label }}" class="form-label">{{ form.order_info.label }}</label>
+                                {{ form.order_info }}
+                                {% if form.order_info.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.order_info.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Nội dung thanh toán sẽ hiển thị trong lịch sử giao dịch</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Chọn ngân hàng</label>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card bank-card active">
+                                            <div class="card-body text-center">
+                                                <img src="/static/images/banks/vietcombank.png" alt="Vietcombank" class="img-fluid mb-2" style="height: 40px; object-fit: contain;">
+                                                <div class="small">Vietcombank</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card bank-card">
+                                            <div class="card-body text-center">
+                                                <img src="/static/images/banks/techcombank.png" alt="Techcombank" class="img-fluid mb-2" style="height: 40px; object-fit: contain;">
+                                                <div class="small">Techcombank</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card bank-card">
+                                            <div class="card-body text-center">
+                                                <img src="/static/images/banks/bidv.png" alt="BIDV" class="img-fluid mb-2" style="height: 40px; object-fit: contain;">
+                                                <div class="small">BIDV</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nút thanh toán -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-credit-card me-2"></i> Thanh toán ngay
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Phương thức thanh toán -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Phương thức thanh toán</h6>
+                </div>
+                <div class="card-body">
+                    <div class="payment-methods">
+                        <div class="payment-method active">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <img src="/static/images/payment/vnpay.png" alt="VNPay" class="img-fluid">
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">VNPay</h6>
+                                    <small class="text-muted">Thanh toán an toàn qua cổng VNPay</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-method">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <img src="/static/images/payment/momo.png" alt="MoMo" class="img-fluid">
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">MoMo <span class="badge bg-secondary">Sắp ra mắt</span></h6>
+                                    <small class="text-muted">Thanh toán nhanh chóng qua ví MoMo</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-method">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <img src="/static/images/payment/zalopay.png" alt="ZaloPay" class="img-fluid">
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">ZaloPay <span class="badge bg-secondary">Sắp ra mắt</span></h6>
+                                    <small class="text-muted">Thanh toán qua ví ZaloPay</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn thanh toán -->
+            <div class="card shadow-sm">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Hướng dẫn thanh toán</h6>
+                </div>
+                <div class="card-body">
+                    <div class="guide-step mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <div class="step-number">1</div>
+                            </div>
+                            <div>
+                                <h6>Nhập số tiền cần thanh toán</h6>
+                                <p class="small">Nhập số tiền bạn muốn thanh toán (tối thiểu 10,000 VNĐ)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="guide-step mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <div class="step-number">2</div>
+                            </div>
+                            <div>
+                                <h6>Chọn ngân hàng</h6>
+                                <p class="small">Chọn ngân hàng bạn muốn thanh toán</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="guide-step mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <div class="step-number">3</div>
+                            </div>
+                            <div>
+                                <h6>Nhập thông tin thẻ</h6>
+                                <p class="small">Nhập thông tin thẻ của bạn trên cổng thanh toán VNPay</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="guide-step">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <div class="step-number">4</div>
+                            </div>
+                            <div>
+                                <h6>Xác nhận thanh toán</h6>
+                                <p class="small">Xác nhận và hoàn tất giao dịch</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-1"></i> Nếu bạn gặp vấn đề khi thanh toán, vui lòng liên hệ với quản lý ký túc xá để được hỗ trợ.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bank-card {
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid #e3e6f0;
+    }
+
+    .bank-card:hover {
+        transform: translateY(-3px);
+        border-color: #4e73df;
+    }
+
+    .bank-card.active {
+        border-color: #4e73df;
+        background-color: #f8f9fc;
+    }
+
+    .step-number {
+        width: 30px;
+        height: 30px;
+        background-color: #4e73df;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.bank-card').on('click', function() {
+            $('.bank-card').removeClass('active');
+            $(this).addClass('active');
+        });
+
+        $('.payment-method').on('click', function() {
+            $('.payment-method').removeClass('active');
+            $(this).addClass('active');
+        });
+    });
+</script>
+{% endblock %}

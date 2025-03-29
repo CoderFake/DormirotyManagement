@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Hồ sơ của tôi - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="profile-card card shadow-sm overflow-hidden">
+        <div class="profile-header">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3 class="mb-2">{{ user.full_name }}</h3>
+                    <p class="mb-0">{{ user.get_user_type_display }}</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-light">
+                        <i class="fas fa-edit me-1"></i> Chỉnh sửa hồ sơ
+                    </a>
+                </div>
+            </div>
+
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="{{ user.full_name }}" class="profile-avatar">
+            {% else %}
+                <div class="profile-avatar d-flex align-items-center justify-content-center bg-white">
+                    <span class="display-4 text-primary">{{ user.get_short_name|slice:":1"|upper }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="profile-body">
+            <div class="container">
+                <ul class="nav nav-pills nav-fill mb-4" id="profileTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab" aria-controls="personal" aria-selected="true">Thông tin cá nhân</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Thông tin liên hệ</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic" type="button" role="tab" aria-controls="academic" aria-selected="false">Thông tin học tập</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="emergency-tab" data-bs-toggle="tab" data-bs-target="#emergency" type="button" role="tab" aria-controls="emergency" aria-selected="false">Thông tin khẩn cấp</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="profileTabContent">
+                    <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Thông tin cá nhân</h5>
+                                <hr>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Họ và tên:</strong></p>
+                                        <p>{{ user.full_name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Email:</strong></p>
+                                        <p>{{ user.email }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Giới tính:</strong></p>
+                                        <p>{{ user.get_gender_display }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Ngày sinh:</strong></p>
+                                        <p>{{ user.date_of_birth|date:"d/m/Y" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>CMND/CCCD:</strong></p>
+                                        <p>{{ user.id_card_number|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Quê quán:</strong></p>
+                                        <p>{{ profile.home_town|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <p class="mb-1"><strong>Giới thiệu bản thân:</strong></p>
+                                        <p>{{ profile.bio|default:"Chưa cập nhật"|linebreaks }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Thông tin liên hệ</h5>
+                                <hr>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Số điện thoại:</strong></p>
+                                        <p>{{ user.phone_number|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Email:</strong></p>
+                                        <p>{{ user.email }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <p class="mb-1"><strong>Địa chỉ hiện tại:</strong></p>
+                                        <p>{{ user.address|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Facebook:</strong></p>
+                                        <p>
+                                            {% if profile.facebook_url %}
+                                                <a href="{{ profile.facebook_url }}" target="_blank">
+                                                    <i class="fab fa-facebook me-1"></i> Facebook
+                                                </a>
+                                            {% else %}
+                                                Chưa cập nhật
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="academic" role="tabpanel" aria-labelledby="academic-tab">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Thông tin học tập</h5>
+                                <hr>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Mã sinh viên:</strong></p>
+                                        <p>{{ user.student_id|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Trường:</strong></p>
+                                        <p>{{ user.university|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Khoa/Ngành:</strong></p>
+                                        <p>{{ user.faculty|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="emergency" role="tabpanel" aria-labelledby="emergency-tab">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Thông tin khẩn cấp</h5>
+                                <hr>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Tên phụ huynh:</strong></p>
+                                        <p>{{ profile.parent_name|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Số điện thoại phụ huynh:</strong></p>
+                                        <p>{{ profile.parent_phone|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Người liên hệ khẩn cấp:</strong></p>
+                                        <p>{{ profile.emergency_contact|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Số điện thoại khẩn cấp:</strong></p>
+                                        <p>{{ profile.emergency_phone|default:"Chưa cập nhật" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Tài khoản</h5>
+                                <hr>
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{% url 'accounts:change_password' %}" class="btn btn-primary">
+                                        <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                                    </a>
+                                    <a href="{% url 'accounts:settings' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-cog me-2"></i>Cài đặt tài khoản
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

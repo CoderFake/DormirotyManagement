@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Trang chủ - Hệ thống Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h1 class="h3 mb-3">Chào mừng đến với Hệ thống Quản lý Ký túc xá</h1>
+                        <p class="text-muted">Nền tảng trực tuyến giúp quản lý và đăng ký ký túc xá dễ dàng</p>
+                    </div>
+
+                    <div class="row g-4 mb-4 text-center">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded shadow-sm h-100">
+                                <i class="fas fa-home fa-2x text-primary mb-3"></i>
+                                <h5>Đăng ký phòng</h5>
+                                <p class="small text-muted">Đăng ký phòng ở ký túc xá trực tuyến, không cần xếp hàng chờ đợi</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded shadow-sm h-100">
+                                <i class="fas fa-credit-card fa-2x text-success mb-3"></i>
+                                <h5>Thanh toán</h5>
+                                <p class="small text-muted">Thanh toán phí ký túc xá, điện, nước trực tuyến an toàn</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded shadow-sm h-100">
+                                <i class="fas fa-tools fa-2x text-warning mb-3"></i>
+                                <h5>Yêu cầu sửa chữa</h5>
+                                <p class="small text-muted">Gửi yêu cầu sửa chữa và theo dõi tiến trình xử lý</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if not user.is_authenticated %}
+                        <div class="text-center">
+                            <div class="row justify-content-center">
+                                <div class="col-md-6">
+                                    <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 mb-2">
+                                        <i class="fas fa-user-plus me-2"></i> Đăng ký tài khoản
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <a href="{% url 'dashboard:index' %}" class="btn btn-primary">
+                                <i class="fas fa-tachometer-alt me-2"></i> Đi đến Dashboard
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông tin Ký túc xá</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h5>Giới thiệu</h5>
+                            <p>Ký túc xá của chúng tôi cung cấp không gian sống tiện nghi, an toàn và thân thiện cho sinh viên. Với vị trí thuận lợi gần trường đại học, ký túc xá là lựa chọn lý tưởng cho cuộc sống sinh viên.</p>
+
+                            <h5 class="mt-4">Tiện ích</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-wifi me-3 text-primary"></i> Wi-Fi tốc độ cao
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-shield-alt me-3 text-primary"></i> An ninh 24/7
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-couch me-3 text-primary"></i> Khu vực sinh hoạt chung
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-utensils me-3 text-primary"></i> Căn tin
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="fas fa-tshirt me-3 text-primary"></i> Khu giặt đồ
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Liên hệ</h5>
+                            <div class="mb-3">
+                                <div class="d-flex align-items-start mb-2">
+                                    <i class="fas fa-map-marker-alt mt-1 me-3 text-primary"></i>
+                                    <div>
+                                        <strong>Địa chỉ:</strong><br>
+                                        KM10 Trần Phú, Hà Đông, Hà Nội
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-phone-alt me-3 text-primary"></i>
+                                    <div>
+                                        <strong>Điện thoại:</strong><br>
+                                        0387367162
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-envelope me-3 text-primary"></i>
+                                    <div>
+                                        <strong>Email:</strong><br>
+                                        info@kytucxa.ptit.edu.vn
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h5 class="mt-4">Giờ làm việc</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td>Thứ 2 - Thứ 6:</td>
+                                            <td>8:00 - 17:00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Thứ 7:</td>
+                                            <td>8:00 - 12:00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Chủ nhật:</td>
+                                            <td>Đóng cửa</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông báo mới</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for announcement in announcements|slice:":5" %}
+                            <a href="{% url 'notification:announcement_detail' announcement.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ announcement.title }}</h6>
+                                    <small>{{ announcement.created_at|date:"d/m/Y" }}</small>
+                                </div>
+                                <p class="mb-1 text-truncate">{{ announcement.content|truncatechars:100 }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i> {{ announcement.author.get_full_name }}
+                                </small>
+                            </a>
+                        {% empty %}
+                            <p class="text-center py-3 text-muted">Không có thông báo mới</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a href="{% url 'notification:announcement_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i> Xem tất cả thông báo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

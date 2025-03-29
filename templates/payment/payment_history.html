@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Lịch sử thanh toán - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Lịch sử thanh toán</h1>
+        <div>
+            <a href="{% url 'payment:my_invoices' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-file-invoice me-1"></i> Xem hóa đơn
+            </a>
+            <a href="{% url 'payment:payment_methods' %}" class="btn btn-primary">
+                <i class="fas fa-credit-card me-1"></i> Thanh toán
+            </a>
+        </div>
+    </div>
+
+    <!-- Payments List -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lịch sử giao dịch</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered datatable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ngày thanh toán</th>
+                            <th>Số hóa đơn</th>
+                            <th>Số tiền</th>
+                            <th>Phương thức</th>
+                            <th>Mã giao dịch</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.id|truncatechars:8 }}</td>
+                                <td>{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if payment.invoice %}
+                                        <a href="{% url 'payment:invoice_detail' payment.invoice.id %}">
+                                            {{ payment.invoice.invoice_number }}
+                                        </a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ payment.amount|floatformat:0 }} VNĐ</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.transaction_id|default:"-"|truncatechars:10 }}</td>
+                                <td>
+                                    {% if payment.status == 'completed' %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                    {% elif payment.status == 'pending' %}
+                                        <span class="badge bg-warning">Đang xử lý</span>
+                                    {% elif payment.status == 'failed' %}
+                                        <span class="badge bg-danger">Thất bại</span>
+                                    {% elif payment.status == 'refunded' %}
+                                        <span class="badge bg-info">Đã hoàn tiền</span>
+                                    {% elif payment.status == 'canceled' %}
+                                        <span class="badge bg-secondary">Đã hủy</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">Chưa có giao dịch thanh toán nào</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="alert alert-info">
+        <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i> Thông tin thanh toán</h5>
+        <p>Lịch sử thanh toán hiển thị tất cả các giao dịch thanh toán của bạn. Các giao dịch được sắp xếp theo thời gian mới nhất.</p>
+        <hr>
+        <p class="mb-0">Nếu bạn có thắc mắc về giao dịch, vui lòng liên hệ với quản lý ký túc xá.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json"
+            },
+            "order": [[ 1, "desc" ]]
+        });
+    });
+</script>
+{% endblock %}
