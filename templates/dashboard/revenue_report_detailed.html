@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Báo cáo doanh thu chi tiết - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Báo cáo doanh thu chi tiết</h1>
+        <div>
+            <button class="btn btn-outline-primary me-2" id="exportPDF">
+                <i class="fas fa-file-pdf me-1"></i> Xuất PDF
+            </button>
+            <button class="btn btn-primary" id="exportExcel">
+                <i class="fas fa-file-excel me-1"></i> Xuất Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Bộ lọc</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="year" class="form-label">Năm</label>
+                    <select name="year" id="year" class="form-select">
+                        <option value="">Tất cả các năm</option>
+                        {% for y in available_years %}
+                            <option value="{{ y }}" {% if year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">

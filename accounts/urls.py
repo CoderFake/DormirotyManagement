@@ -30,6 +30,8 @@ urlpatterns = [
     path('profile/edit/', views.profile_edit_view, name='profile_edit'),
     path('change-password/', views.change_password_view, name='change_password'),
     path('settings/', views.settings_view, name='settings'),
+    path('verify-email/', views.verify_email_view, name='verify_email'),
+    path('verify-email-confirm/<uidb64>/<token>/', views.verify_email_confirm_view, name='verify_email_confirm'),
 
     # Quản lý người dùng (Admin)
     path('admin/students/', views.student_list_view, name='student_list'),

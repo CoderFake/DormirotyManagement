@@ -58,6 +58,7 @@ class User(AbstractUser):
     date_of_birth = models.DateField(_('ngày sinh'), blank=True, null=True)
     gender = models.CharField(_('giới tính'), max_length=10, choices=GENDER_CHOICES, default='male')
     id_card_number = models.CharField(_('số CMND/CCCD'), max_length=20, blank=True, null=True)
+    email_verified = models.BooleanField(_('email đã xác thực'), default=False)
     university = models.CharField(_('trường đại học'), max_length=255, blank=True, null=True)
     faculty = models.CharField(_('khoa'), max_length=255, blank=True, null=True)
     avatar = models.ImageField(_('ảnh đại diện'), upload_to='avatars/', blank=True, null=True)

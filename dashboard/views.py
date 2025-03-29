@@ -1,15 +1,17 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from accounts.models import User
-from dormitory.models import Building, Room, RoomType
+from accounts.views import is_admin_or_staff
+from dormitory.models import Building, Room, RoomType, Bed
 from registration.models import Contract, RoomRegistration, RegistrationPeriod
-from payment.models import Invoice, Payment
+from payment.models import Invoice, Payment, InvoiceItem
 from maintenance.models import MaintenanceRequest
 from notification.models import Notification, UserNotification
 
@@ -86,6 +88,9 @@ def admin_dashboard(request):
     total_rooms = Room.objects.count()
     available_rooms = Room.objects.filter(status__in=['available', 'partially_occupied']).count()
     occupied_rooms = Room.objects.filter(status='fully_occupied').count()
+    total_beds = Bed.objects.count()
+    occupied_beds = Bed.objects.filter(status='occupied').count()
+    vacancy_rate = round((1 - occupied_beds / total_beds) * 100 if total_beds > 0 else 0, 2)
 
     current_year = timezone.now().year
     monthly_revenue = []
@@ -100,13 +105,28 @@ def admin_dashboard(request):
             'revenue': revenue
         })
 
-    new_maintenance_requests = MaintenanceRequest.objects.filter(
-        status='pending'
-    ).order_by('-requested_date')[:5]
+    yearly_revenue = []
+    for year in range(current_year - 4, current_year + 1):
+        revenue = Payment.objects.filter(
+            payment_date__year=year,
+            status='completed'
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        yearly_revenue.append({
+            'year': year,
+            'revenue': revenue
+        })
 
-    new_registrations = RoomRegistration.objects.filter(
-        status='pending'
-    ).order_by('-registration_date')[:5]
+    maintenance_stats = MaintenanceRequest.objects.values('status').annotate(count=Count('id'))
+    maintenance_by_category = MaintenanceRequest.objects.values('category__name').annotate(count=Count('id'))
+
+    new_registrations = RoomRegistration.objects.filter(status='pending').order_by('-registration_date')[:5]
+    registrations_by_status = RoomRegistration.objects.values('status').annotate(count=Count('id'))
+
+    new_maintenance_requests = MaintenanceRequest.objects.filter(status='pending').order_by('-requested_date')[:5]
+
+    pending_invoices = Invoice.objects.filter(status='pending').count()
+    overdue_invoices = Invoice.objects.filter(status='overdue').count()
+    invoice_stats = Invoice.objects.values('status').annotate(count=Count('id'))
 
     buildings = Building.objects.annotate(
         total_rooms=Count('rooms'),
@@ -115,20 +135,32 @@ def admin_dashboard(request):
         ))
     )
 
-    pending_invoices = Invoice.objects.filter(status='pending').count()
-    overdue_invoices = Invoice.objects.filter(status='overdue').count()
+    seven_days_ago = timezone.now() - timezone.timedelta(days=7)
+    new_students = User.objects.filter(
+        user_type='student',
+        date_joined__gte=seven_days_ago
+    ).count()
 
     context = {
         'total_students': total_students,
         'total_rooms': total_rooms,
         'available_rooms': available_rooms,
         'occupied_rooms': occupied_rooms,
+        'total_beds': total_beds,
+        'occupied_beds': occupied_beds,
+        'vacancy_rate': vacancy_rate,
         'monthly_revenue': monthly_revenue,
-        'new_maintenance_requests': new_maintenance_requests,
+        'yearly_revenue': yearly_revenue,
+        'maintenance_stats': maintenance_stats,
+        'maintenance_by_category': maintenance_by_category,
         'new_registrations': new_registrations,
+        'registrations_by_status': registrations_by_status,
+        'new_maintenance_requests': new_maintenance_requests,
         'buildings': buildings,
         'pending_invoices': pending_invoices,
         'overdue_invoices': overdue_invoices,
+        'invoice_stats': invoice_stats,
+        'new_students': new_students,
         'page_title': 'Dashboard Quản trị',
         'breadcrumbs': [
             {'title': 'Dashboard', 'url': None}
@@ -136,6 +168,81 @@ def admin_dashboard(request):
     }
 
     return render(request, 'dashboard/admin_dashboard.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def revenue_report_detailed_view(request):
+    """Báo cáo doanh thu chi tiết"""
+
+    year = request.GET.get('year', str(timezone.now().year))
+    month = request.GET.get('month', '')
+
+    payments = Payment.objects.filter(status='completed')
+
+    if year:
+        payments = payments.filter(payment_date__year=int(year))
+
+    if month:
+        payments = payments.filter(payment_date__month=int(month))
+
+    total_revenue = payments.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    revenue_by_method = payments.values('payment_method').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')
+
+    revenue_by_fee_type = InvoiceItem.objects.filter(
+        invoice__payments__in=payments
+    ).values('fee_type__name').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')
+
+    revenue_by_building = payments.filter(
+        invoice__room__isnull=False
+    ).values('invoice__room__building__name').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')
+
+    revenue_by_user = payments.values('user__full_name').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')[:10]
+
+    thirty_days_ago = timezone.now().date() - timezone.timedelta(days=30)
+    revenue_by_day = payments.filter(
+        payment_date__date__gte=thirty_days_ago
+    ).values('payment_date__date').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('payment_date__date')
+
+    recent_payments = payments.order_by('-payment_date')[:20]
+
+    context = {
+        'year': year,
+        'month': month,
+        'total_revenue': total_revenue,
+        'revenue_by_method': revenue_by_method,
+        'revenue_by_fee_type': revenue_by_fee_type,
+        'revenue_by_building': revenue_by_building,
+        'revenue_by_user': revenue_by_user,
+        'revenue_by_day': revenue_by_day,
+        'recent_payments': recent_payments,
+        'available_years': range(2020, timezone.now().year + 1),
+        'page_title': 'Báo cáo doanh thu chi tiết',
+        'breadcrumbs': [
+            {'title': 'Dashboard', 'url': '/dashboard/'},
+            {'title': 'Báo cáo doanh thu', 'url': reverse('dashboard:revenue_report')},
+            {'title': 'Chi tiết', 'url': None}
+        ]
+    }
+
+    return render(request, 'dashboard/revenue_report_detailed.html', context)
+
 
 
 @login_required

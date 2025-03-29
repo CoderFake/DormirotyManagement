@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate, logout, update_session_auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
@@ -91,6 +91,73 @@ def register_view(request):
         'page_title': 'Đăng ký tài khoản'
     }
     return render(request, 'accounts/register.html', context)
+
+
+@login_required
+def verify_email_view(request):
+    """Xác thực email người dùng"""
+    if request.method == 'POST':
+        user = request.user
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        verify_url = request.build_absolute_uri(
+            f"/accounts/verify-email-confirm/{uid}/{token}/"
+        )
+
+        subject = "Xác thực email"
+        email_template = "accounts/email_verification_email.html"
+        email_context = {
+            "user": user,
+            "verify_url": verify_url,
+            "site_name": "Hệ thống Quản lý Ký túc xá",
+        }
+
+        html_message = render_to_string(email_template, email_context)
+        plain_message = render_to_string("accounts/email_verification_email.txt", email_context)
+
+        try:
+            send_mail(
+                subject=subject,
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False
+            )
+            messages.success(request, 'Email xác thực đã được gửi. Vui lòng kiểm tra hộp thư của bạn.')
+        except Exception as e:
+            messages.error(request, f'Có lỗi khi gửi email: {str(e)}')
+
+        return redirect('accounts:profile')
+
+    context = {
+        'page_title': 'Xác thực email',
+        'breadcrumbs': [
+            {'title': 'Tài khoản', 'url': '#'},
+            {'title': 'Xác thực email', 'url': None}
+        ]
+    }
+    return render(request, 'accounts/verify_email.html', context)
+
+
+def verify_email_confirm_view(request, uidb64, token):
+    """Xác nhận email từ link trong email"""
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.email_verified = True
+        user.save()
+        messages.success(request, 'Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập.')
+        return redirect('accounts:login')
+    else:
+        messages.error(request, 'Link xác thực không hợp lệ hoặc đã hết hạn.')
+        return redirect('accounts:login')
 
 
 def password_reset_request(request):

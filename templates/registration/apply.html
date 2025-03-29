@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng ký phòng ở - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Đăng ký phòng ở ký túc xá</h6>
+        </div>
+        <div class="card-body">
+            <!-- Thông tin kỳ đăng ký -->
+            <div class="alert alert-info mb-4">
+                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i> Thông tin kỳ đăng ký</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Kỳ đăng ký:</strong> {{ current_period.name }}</p>
+                        <p class="mb-1"><strong>Năm học:</strong> {{ current_period.academic_year }}</p>
+                        <p class="mb-1"><strong>Học kỳ:</strong> {{ current_period.semester }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Thời gian đăng ký:</strong> {{ current_period.registration_start|date:"d/m/Y H:i" }} - {{ current_period.registration_end|date:"d/m/Y H:i" }}</p>
+                        <p class="mb-1"><strong>Thời gian nhận phòng:</strong> {{ current_period.check_in_start|date:"d/m/Y" }} - {{ current_period.check_in_end|date:"d/m/Y" }}</p>
+                        <p class="mb-1"><strong>Thời hạn hợp đồng:</strong> {{ current_period.contract_start|date:"d/m/Y" }} - {{ current_period.contract_end|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if room %}
+                <!-- Đã chọn phòng -->
+                <div class="mb-4">
+                    <h5>Thông tin phòng đã chọn</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th style="width: 200px">Tòa nhà:</th>
+                                    <td>{{ room.building.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Phòng:</th>
+                                    <td>{{ room.room_number }} (Tầng {{ room.floor }})</td>
+                                </tr>
+                                <tr>
+                                    <th>Loại phòng:</th>
+                                    <td>{{ room.room_type.name }} ({{ room.room_type.capacity }} người)</td>
+                                </tr>
+                                <tr>
+                                    <th>Giá phòng:</th>
+                                    <td>{{ room.room_type.price_per_month|floatformat:0 }} VNĐ/tháng</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6">
+                            {% if room.image %}
+                                <img src="{{ room.image.url }}" alt="{{ room.building.name }} - {{ room.room_number }}" class="img-fluid rounded">
+                            {% else %}
+                                <div class="bg-light d-flex justify-content-center align-items-center rounded" style="height: 200px;">
+                                    <i class="fas fa-home fa-4x text-secondary"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <h5>Chọn giường</h5>
+                        <div class="row">
+                            {% for bed in available_beds %}
+                                <div class="col-md-3 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="bed" id="bed-{{ bed.id }}" value="{{ bed.id }}" required>
+                                        <label class="form-check-label" for="bed-{{ bed.id }}">
+                                            Giường {{ bed.bed_number }}
+                                        </label>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Không còn giường trống trong phòng này.
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="special_requirements" class="form-label">Yêu cầu đặc biệt (không bắt buộc)</label>
+                        <textarea name="special_requirements" id="special_requirements" rows="3" class="form-control"></textarea>
+                        <div class="form-text">Nếu bạn có yêu cầu đặc biệt, vui lòng ghi rõ ở đây.</div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="agree_terms" required>
+                        <label class="form-check-label" for="agree_terms">
+                            Tôi đã đọc và đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Điều khoản và quy định</a> của Ký túc xá
+                        </label>
+                    </div>
+
+                    <div class="alert alert-warning mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> Lưu ý quan trọng</h5>
+                        <p class="mb-0">Sau khi đăng ký, bạn cần đến Văn phòng Ký túc xá để xác nhận và hoàn thành thủ tục hợp đồng trong vòng 3 ngày làm việc.</p>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'registration:room_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Quay lại
+                        </a>
+
+                        {% if available_beds %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i> Gửi đơn đăng ký
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            {% else %}
+                <!-- Chưa chọn phòng -->
+                <div class="mb-4">
+                    <h5>Chọn phòng để đăng ký</h5>
+                    <p>Vui lòng chọn phòng từ danh sách phòng trước khi tiếp tục.</p>
+
+                    <a href="{% url 'registration:room_list' %}" class="btn btn-primary">
+                        <i class="fas fa-list me-1"></i> Xem danh sách phòng
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Điều khoản -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Điều khoản và quy định Ký túc xá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Quy định chung</h6>
+                <p>- Sinh viên phải tuân thủ nội quy ký túc xá và các quy định của nhà trường.</p>
+                <p>- Giữ gìn trật tự, vệ sinh chung và bảo quản tài sản công.</p>
+                <p>- Không được tự ý sửa chữa, cải tạo phòng ở.</p>
+
+                <h6>2. Quy định về thanh toán</h6>
+                <p>- Sinh viên phải đóng phí ký túc xá đúng thời hạn quy định.</p>
+                <p>- Phí điện, nước sẽ được tính theo chỉ số thực tế và thanh toán hàng tháng.</p>
+                <p>- Tiền đặt cọc sẽ được hoàn trả khi kết thúc hợp đồng (sau khi trừ các khoản phí phát sinh nếu có).</p>
+
+                <h6>3. Quy định về an ninh</h6>
+                <p>- Không được tự ý cho người ngoài vào phòng ở qua đêm.</p>
+                <p>- Tuân thủ giờ giấc ra vào ký túc xá theo quy định.</p>
+                <p>- Không được tàng trữ chất cháy nổ, chất độc hại, vũ khí, chất gây nghiện...</p>
+
+                <h6>4. Quy định về sinh hoạt</h6>
+                <p>- Không gây ồn ào, mất trật tự sau 22h00.</p>
+                <p>- Tiết kiệm điện, nước và giữ gìn vệ sinh chung.</p>
+                <p>- Phân loại rác thải trước khi vứt vào thùng rác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
