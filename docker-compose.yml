@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: dormitory_web
+    restart: always
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "${EXPORT_WEB_PORT:-8008}:8000"
+    entrypoint: /app/docker/app/entrypoint.sh
+    networks:
+      - dormitory_network
+
+  db:
+    image: mysql:8.0
+    container_name: dormitory_db
+    restart: always
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "${EXPORT_DB_PORT:-8836}:3306"
+    networks:
+      - dormitory_network
+
+networks:
+  dormitory_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  static_volume:
+  media_volume:
