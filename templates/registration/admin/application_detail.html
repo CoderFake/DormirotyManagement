@@ -1,0 +1,262 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for item in breadcrumbs %}
+                {% if item.url %}
+                    <li class="breadcrumb-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
+                {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Thông báo -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Thông tin đơn đăng ký -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin đơn đăng ký</h5>
+                    <div>
+                        <a href="{% url 'registration:admin_application_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                        {% if application.status == 'pending' %}
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
+                                <i class="fas fa-check"></i> Duyệt đơn
+                            </button>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                <i class="fas fa-times"></i> Từ chối
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Mã đơn:</strong> {{ application.code }}</p>
+                            <p class="mb-2"><strong>Kỳ đăng ký:</strong> {{ application.period.name }}</p>
+                            <p class="mb-2"><strong>Ngày đăng ký:</strong> {{ application.created_at|date:"d/m/Y H:i" }}</p>
+                            <p class="mb-2">
+                                <strong>Trạng thái:</strong>
+                                {% if application.status == 'pending' %}
+                                    <span class="badge bg-warning">Chờ duyệt</span>
+                                {% elif application.status == 'approved' %}
+                                    <span class="badge bg-success">Đã duyệt</span>
+                                {% elif application.status == 'rejected' %}
+                                    <span class="badge bg-danger">Từ chối</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Đã hủy</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Tòa nhà:</strong> {{ application.room.building.name }}</p>
+                            <p class="mb-2"><strong>Phòng:</strong> {{ application.room.room_number }}</p>
+                            <p class="mb-2"><strong>Giường:</strong> {{ application.bed.bed_number }}</p>
+                            <p class="mb-2"><strong>Giá phòng:</strong> {{ application.room.price|intcomma }} VNĐ/tháng</p>
+                        </div>
+                    </div>
+
+                    {% if application.special_requirements %}
+                        <div class="mt-4">
+                            <h6>Yêu cầu đặc biệt</h6>
+                            <div class="alert alert-info">
+                                {{ application.special_requirements|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if application.admin_note %}
+                        <div class="mt-4">
+                            <h6>Ghi chú của admin</h6>
+                            <div class="alert alert-secondary">
+                                {{ application.admin_note|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if application.reject_reason %}
+                        <div class="mt-4">
+                            <h6>Lý do từ chối</h6>
+                            <div class="alert alert-danger">
+                                {{ application.reject_reason|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Thông tin hợp đồng -->
+            {% if application.contract %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Thông tin hợp đồng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Mã hợp đồng:</strong> {{ application.contract.code }}</p>
+                                <p class="mb-2"><strong>Ngày bắt đầu:</strong> {{ application.contract.start_date|date:"d/m/Y" }}</p>
+                                <p class="mb-2"><strong>Ngày kết thúc:</strong> {{ application.contract.end_date|date:"d/m/Y" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Trạng thái:</strong>
+                                    {% if application.contract.status == 'pending' %}
+                                        <span class="badge bg-warning">Chờ ký</span>
+                                    {% elif application.contract.status == 'active' %}
+                                        <span class="badge bg-success">Đang hiệu lực</span>
+                                    {% elif application.contract.status == 'expired' %}
+                                        <span class="badge bg-secondary">Hết hạn</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Đã chấm dứt</span>
+                                    {% endif %}
+                                </p>
+                                <p class="mb-2"><strong>Ngày ký:</strong> {{ application.contract.signed_at|date:"d/m/Y H:i"|default:"Chưa ký" }}</p>
+                                <p class="mb-2"><strong>Ngày chấm dứt:</strong> {{ application.contract.terminated_at|date:"d/m/Y H:i"|default:"-" }}</p>
+                            </div>
+                        </div>
+
+                        {% if application.contract.termination_reason %}
+                            <div class="mt-4">
+                                <h6>Lý do chấm dứt</h6>
+                                <div class="alert alert-danger">
+                                    {{ application.contract.termination_reason|linebreaks }}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-4">
+                            <a href="{% url 'registration:admin_contract_detail' application.contract.id %}" class="btn btn-primary">
+                                <i class="fas fa-file-contract"></i> Xem chi tiết hợp đồng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Thông tin sinh viên -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin sinh viên</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if application.student.avatar %}
+                            <img src="{{ application.student.avatar.url }}" alt="Avatar" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% endif %}
+                    </div>
+
+                    <p class="mb-2"><strong>Họ và tên:</strong> {{ application.student.full_name }}</p>
+                    <p class="mb-2"><strong>MSSV:</strong> {{ application.student.student_id }}</p>
+                    <p class="mb-2"><strong>Giới tính:</strong> {{ application.student.get_gender_display }}</p>
+                    <p class="mb-2"><strong>Ngày sinh:</strong> {{ application.student.date_of_birth|date:"d/m/Y" }}</p>
+                    <p class="mb-2"><strong>Email:</strong> {{ application.student.email }}</p>
+                    <p class="mb-2"><strong>Số điện thoại:</strong> {{ application.student.phone_number }}</p>
+                    <p class="mb-2"><strong>CMND/CCCD:</strong> {{ application.student.id_number }}</p>
+                    <p class="mb-2"><strong>Địa chỉ:</strong> {{ application.student.address }}</p>
+                    <p class="mb-2"><strong>Khoa:</strong> {{ application.student.faculty }}</p>
+                    <p class="mb-2"><strong>Ngành:</strong> {{ application.student.major }}</p>
+                    <p class="mb-2"><strong>Khóa:</strong> {{ application.student.academic_year }}</p>
+
+                    <div class="mt-4">
+                        <a href="{% url 'registration:admin_student_detail' application.student.id %}" class="btn btn-primary w-100">
+                            <i class="fas fa-user"></i> Xem chi tiết sinh viên
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal duyệt đơn -->
+    {% if application.status == 'pending' %}
+        <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="approveModalLabel">Duyệt đơn đăng ký</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'registration:admin_approve_application' application.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <p class="mb-3">Bạn có chắc chắn muốn duyệt đơn đăng ký này?</p>
+                            <p class="mb-0"><strong>Mã đơn:</strong> {{ application.code }}</p>
+                            <p class="mb-0"><strong>Sinh viên:</strong> {{ application.student.full_name }} ({{ application.student.student_id }})</p>
+                            <p class="mb-0"><strong>Phòng:</strong> {{ application.room.building.name }} - Phòng {{ application.room.room_number }}</p>
+                            <p class="mb-3"><strong>Giường:</strong> Giường {{ application.bed.bed_number }}</p>
+                            <div class="form-group">
+                                <label for="note" class="form-label">Ghi chú</label>
+                                <textarea name="note" id="note" class="form-control" rows="3" placeholder="Nhập ghi chú nếu có..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Duyệt đơn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal từ chối đơn -->
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="rejectModalLabel">Từ chối đơn đăng ký</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'registration:admin_reject_application' application.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <p class="mb-3">Bạn có chắc chắn muốn từ chối đơn đăng ký này?</p>
+                            <p class="mb-0"><strong>Mã đơn:</strong> {{ application.code }}</p>
+                            <p class="mb-0"><strong>Sinh viên:</strong> {{ application.student.full_name }} ({{ application.student.student_id }})</p>
+                            <p class="mb-0"><strong>Phòng:</strong> {{ application.room.building.name }} - Phòng {{ application.room.room_number }}</p>
+                            <p class="mb-3"><strong>Giường:</strong> Giường {{ application.bed.bed_number }}</p>
+                            <div class="form-group">
+                                <label for="reason" class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
+                                <textarea name="reason" id="reason" class="form-control" rows="3" placeholder="Nhập lý do từ chối..." required></textarea>
+                                <div class="invalid-feedback">Vui lòng nhập lý do từ chối.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Từ chối đơn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

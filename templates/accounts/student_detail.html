@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div class="d-flex gap-2">
+                <a href="{% url 'accounts:student_edit' user_id=student.id %}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i>
+                    Chỉnh sửa
+                </a>
+                <a href="{% url 'accounts:student_delete' user_id=student.id %}" class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i>
+                    Xóa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Thông tin sinh viên</h5>
+                    <p class="card-text text-muted small">Chi tiết thông tin cá nhân và học tập.</p>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="bg-light w-25">Họ và tên</th>
+                                    <td>{{ student.full_name }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">MSSV</th>
+                                    <td>{{ student.student_id }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Email</th>
+                                    <td>
+                                        {{ student.email }}
+                                        {% if student.email_verified %}
+                                        <span class="badge bg-success ms-2">Đã xác thực</span>
+                                        {% else %}
+                                        <span class="badge bg-warning ms-2">Chưa xác thực</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Số điện thoại</th>
+                                    <td>{{ student.phone_number }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Giới tính</th>
+                                    <td>{{ student.get_gender_display }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Ngày sinh</th>
+                                    <td>{{ student.date_of_birth }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">CMND/CCCD</th>
+                                    <td>{{ student.id_card_number }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Địa chỉ</th>
+                                    <td>{{ student.address }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Trường</th>
+                                    <td>{{ student.university }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Khoa</th>
+                                    <td>{{ student.faculty }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Chuyên ngành</th>
+                                    <td>{{ student.major }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Khóa</th>
+                                    <td>{{ student.academic_year }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Ngày tạo tài khoản</th>
+                                    <td>{{ student.date_joined }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="bg-light">Trạng thái</th>
+                                    <td>
+                                        {% if student.is_active %}
+                                        <span class="badge bg-success">Hoạt động</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Đã khóa</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,208 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for item in breadcrumbs %}
+                {% if item.url %}
+                    <li class="breadcrumb-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
+                {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Thông báo -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Thông tin thanh toán -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin thanh toán</h5>
+                    <div>
+                        <a href="{% url 'registration:admin_payment_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                        {% if payment.status == 'pending' %}
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#markAsPaidModal">
+                                <i class="fas fa-check"></i> Xác nhận thanh toán
+                            </button>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                <i class="fas fa-times"></i> Hủy thanh toán
+                            </button>
+                        {% endif %}
+                        <a href="{% url 'registration:admin_print_payment' payment.id %}" class="btn btn-primary" target="_blank">
+                            <i class="fas fa-print"></i> In biên lai
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Mã thanh toán:</strong> {{ payment.code }}</p>
+                            <p class="mb-2"><strong>Kỳ thanh toán:</strong> {{ payment.period_start|date:"m/Y" }} - {{ payment.period_end|date:"m/Y" }}</p>
+                            <p class="mb-2"><strong>Số tiền:</strong> {{ payment.amount|intcomma }} VNĐ</p>
+                            <p class="mb-2"><strong>Ngày tạo:</strong> {{ payment.created_at|date:"d/m/Y H:i" }}</p>
+                            <p class="mb-2"><strong>Ngày thanh toán:</strong> {{ payment.paid_at|date:"d/m/Y H:i"|default:"Chưa thanh toán" }}</p>
+                            <p class="mb-2">
+                                <strong>Trạng thái:</strong>
+                                {% if payment.status == 'pending' %}
+                                    <span class="badge bg-warning">Chờ thanh toán</span>
+                                {% elif payment.status == 'paid' %}
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Đã hủy</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Tòa nhà:</strong> {{ payment.contract.room.building.name }}</p>
+                            <p class="mb-2"><strong>Phòng:</strong> {{ payment.contract.room.room_number }}</p>
+                            <p class="mb-2"><strong>Giường:</strong> {{ payment.contract.bed.bed_number }}</p>
+                            <p class="mb-2"><strong>Giá phòng:</strong> {{ payment.contract.room.price|intcomma }} VNĐ/tháng</p>
+                            <p class="mb-2"><strong>Mã hợp đồng:</strong> {{ payment.contract.code }}</p>
+                        </div>
+                    </div>
+
+                    {% if payment.note %}
+                        <div class="mt-4">
+                            <h6>Ghi chú</h6>
+                            <div class="alert alert-secondary">
+                                {{ payment.note|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if payment.cancel_reason %}
+                        <div class="mt-4">
+                            <h6>Lý do hủy</h6>
+                            <div class="alert alert-danger">
+                                {{ payment.cancel_reason|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin sinh viên -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin sinh viên</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if payment.contract.student.avatar %}
+                            <img src="{{ payment.contract.student.avatar.url }}" alt="Avatar" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% endif %}
+                    </div>
+
+                    <p class="mb-2"><strong>Họ và tên:</strong> {{ payment.contract.student.full_name }}</p>
+                    <p class="mb-2"><strong>MSSV:</strong> {{ payment.contract.student.student_id }}</p>
+                    <p class="mb-2"><strong>Giới tính:</strong> {{ payment.contract.student.get_gender_display }}</p>
+                    <p class="mb-2"><strong>Ngày sinh:</strong> {{ payment.contract.student.date_of_birth|date:"d/m/Y" }}</p>
+                    <p class="mb-2"><strong>Email:</strong> {{ payment.contract.student.email }}</p>
+                    <p class="mb-2"><strong>Số điện thoại:</strong> {{ payment.contract.student.phone_number }}</p>
+                    <p class="mb-2"><strong>CMND/CCCD:</strong> {{ payment.contract.student.id_number }}</p>
+                    <p class="mb-2"><strong>Địa chỉ:</strong> {{ payment.contract.student.address }}</p>
+                    <p class="mb-2"><strong>Khoa:</strong> {{ payment.contract.student.faculty }}</p>
+                    <p class="mb-2"><strong>Ngành:</strong> {{ payment.contract.student.major }}</p>
+                    <p class="mb-2"><strong>Khóa:</strong> {{ payment.contract.student.academic_year }}</p>
+
+                    <div class="mt-4">
+                        <a href="{% url 'registration:admin_student_detail' payment.contract.student.id %}" class="btn btn-primary w-100">
+                            <i class="fas fa-user"></i> Xem chi tiết sinh viên
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal đánh dấu đã thanh toán -->
+    {% if payment.status == 'pending' %}
+        <div class="modal fade" id="markAsPaidModal" tabindex="-1" aria-labelledby="markAsPaidModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="markAsPaidModalLabel">Xác nhận thanh toán</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'registration:admin_mark_payment_as_paid' payment.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <p class="mb-3">Bạn có chắc chắn muốn đánh dấu thanh toán này là đã thanh toán?</p>
+                            <p class="mb-0"><strong>Mã thanh toán:</strong> {{ payment.code }}</p>
+                            <p class="mb-0"><strong>Sinh viên:</strong> {{ payment.contract.student.full_name }} ({{ payment.contract.student.student_id }})</p>
+                            <p class="mb-0"><strong>Kỳ thanh toán:</strong> {{ payment.period_start|date:"m/Y" }} - {{ payment.period_end|date:"m/Y" }}</p>
+                            <p class="mb-3"><strong>Số tiền:</strong> {{ payment.amount|intcomma }} VNĐ</p>
+                            <div class="form-group">
+                                <label for="note" class="form-label">Ghi chú</label>
+                                <textarea name="note" id="note" class="form-control" rows="3" placeholder="Nhập ghi chú nếu có..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Xác nhận thanh toán
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal hủy thanh toán -->
+        <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelModalLabel">Hủy thanh toán</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'registration:admin_cancel_payment' payment.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <p class="mb-3">Bạn có chắc chắn muốn hủy thanh toán này?</p>
+                            <p class="mb-0"><strong>Mã thanh toán:</strong> {{ payment.code }}</p>
+                            <p class="mb-0"><strong>Sinh viên:</strong> {{ payment.contract.student.full_name }} ({{ payment.contract.student.student_id }})</p>
+                            <p class="mb-0"><strong>Kỳ thanh toán:</strong> {{ payment.period_start|date:"m/Y" }} - {{ payment.period_end|date:"m/Y" }}</p>
+                            <p class="mb-3"><strong>Số tiền:</strong> {{ payment.amount|intcomma }} VNĐ</p>
+                            <div class="form-group">
+                                <label for="reason" class="form-label">Lý do hủy <span class="text-danger">*</span></label>
+                                <textarea name="reason" id="reason" class="form-control" rows="3" placeholder="Nhập lý do hủy..." required></textarea>
+                                <div class="invalid-feedback">Vui lòng nhập lý do hủy.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Hủy thanh toán
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

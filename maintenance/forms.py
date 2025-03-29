@@ -23,10 +23,11 @@ class MaintenanceCategoryForm(forms.ModelForm):
 class MaintenanceRequestForm(forms.ModelForm):
     """Form yêu cầu bảo trì (cho sinh viên)"""
 
+    # Instead of using multiple=True, we'll handle multiple file uploads in the view
     images = forms.ImageField(
         label=_('Hình ảnh'),
         required=False,
-        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'multiple': True})
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control'})
     )
 
     class Meta:
@@ -47,11 +48,10 @@ class MaintenanceRequestForm(forms.ModelForm):
 
 class MaintenanceRequestAdminForm(forms.ModelForm):
     """Form yêu cầu bảo trì (cho Admin)"""
-
     images = forms.ImageField(
         label=_('Hình ảnh'),
         required=False,
-        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'multiple': True})
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control'})
     )
 
     class Meta:

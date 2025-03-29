@@ -7,4 +7,4 @@ class PaymentConfig(AppConfig):
     verbose_name = 'Quản lý Thanh toán'
 
     def ready(self):
-        import payment.signals
+        pass

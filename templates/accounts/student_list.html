@@ -1,90 +1,96 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Danh sách sinh viên - Quản lý Ký túc xá{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Danh sách sinh viên</h1>
-        <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
-            <i class="fas fa-user-plus me-1"></i> Thêm sinh viên mới
-        </a>
-    </div>
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Sinh viên</h6>
-            <div class="dropdown no-arrow">
-                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>
+                    Thêm sinh viên
                 </a>
-                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                    <div class="dropdown-header">Tùy chọn:</div>
-                    <a class="dropdown-item" href="#" id="exportExcel">
-                        <i class="fas fa-file-excel me-1 text-success"></i> Xuất Excel
-                    </a>
-                    <a class="dropdown-item" href="#" id="exportPDF">
-                        <i class="fas fa-file-pdf me-1 text-danger"></i> Xuất PDF
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">
-                        <i class="fas fa-sync-alt me-1"></i> Làm mới
-                    </a>
-                </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered datatable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Mã SV</th>
-                            <th>Họ và tên</th>
-                            <th>Email</th>
-                            <th>Số điện thoại</th>
-                            <th>Trường</th>
-                            <th>Ngày đăng ký</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for student in students %}
-                            <tr>
-                                <td>{{ student.student_id }}</td>
-                                <td>{{ student.full_name }}</td>
-                                <td>{{ student.email }}</td>
-                                <td>{{ student.phone_number|default:"-" }}</td>
-                                <td>{{ student.university|default:"-" }}</td>
-                                <td>{{ student.date_joined|date:"d/m/Y" }}</td>
-                                <td>
-                                    {% if student.is_active %}
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Danh sách sinh viên</h5>
+                    <p class="card-text text-muted small">Quản lý tài khoản sinh viên trong ký túc xá.</p>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Họ và tên</th>
+                                    <th scope="col">MSSV</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Số điện thoại</th>
+                                    <th scope="col">Trường</th>
+                                    <th scope="col">Trạng thái</th>
+                                    <th scope="col" class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if student.avatar %}
+                                            <img src="{{ student.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="{{ student.full_name }}">
+                                            {% else %}
+                                            <div class="rounded-circle bg-secondary bg-opacity-10 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person text-secondary"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>{{ student.full_name }}</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ student.student_id }}</td>
+                                    <td>
+                                        <div>{{ student.email }}</div>
+                                        {% if student.email_verified %}
+                                        <small class="text-success">Đã xác thực</small>
+                                        {% else %}
+                                        <small class="text-warning">Chưa xác thực</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ student.phone_number }}</td>
+                                    <td>{{ student.university }}</td>
+                                    <td>
+                                        {% if student.is_active %}
                                         <span class="badge bg-success">Hoạt động</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Vô hiệu</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{% url 'accounts:student_detail' student.id %}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Xem chi tiết">
-                                            <i class="fas fa-eye"></i>
+                                        {% else %}
+                                        <span class="badge bg-danger">Đã khóa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'accounts:student_detail' user_id=student.id %}" class="btn btn-sm btn-outline-primary">
+                                            Chi tiết
                                         </a>
-                                        <a href="{% url 'accounts:student_edit' student.id %}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Chỉnh sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{% url 'accounts:student_delete' student.id %}" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Xóa">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="8" class="text-center">Không có sinh viên nào</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        Không có sinh viên nào.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

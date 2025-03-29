@@ -369,17 +369,14 @@ def maintenance_report(request):
     elif period == 'year':
         start_date = timezone.now().date() - timezone.timedelta(days=365)
 
-    # Yêu cầu bảo trì theo trạng thái
     status_stats = MaintenanceRequest.objects.filter(
         requested_date__date__gte=start_date
     ).values('status').annotate(count=Count('id'))
 
-    # Yêu cầu bảo trì theo danh mục
     category_stats = MaintenanceRequest.objects.filter(
         requested_date__date__gte=start_date
     ).values('category__name').annotate(count=Count('id'))
 
-    # Yêu cầu bảo trì theo tòa nhà
     building_stats = MaintenanceRequest.objects.filter(
         requested_date__date__gte=start_date
     ).values('building__name').annotate(count=Count('id'))

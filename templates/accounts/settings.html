@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="row">
+                <!-- Cài đặt tài khoản -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Tài khoản</h5>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">
+                                    <i class="bi bi-pencil-square me-1"></i>
+                                    Chỉnh sửa hồ sơ
+                                </a>
+                                <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-key me-1"></i>
+                                    Đổi mật khẩu
+                                </a>
+                                {% if not user.email_verified %}
+                                <a href="{% url 'accounts:verify_email' %}" class="btn btn-outline-warning">
+                                    <i class="bi bi-envelope-check me-1"></i>
+                                    Xác thực email
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cài đặt thông báo -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông báo</h5>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                <label class="form-check-label" for="emailNotifications">
+                                    Thông báo qua email
+                                </label>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="smsNotifications">
+                                <label class="form-check-label" for="smsNotifications">
+                                    Thông báo qua SMS
+                                </label>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="webNotifications" checked>
+                                <label class="form-check-label" for="webNotifications">
+                                    Thông báo trên web
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cài đặt bảo mật -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Bảo mật</h5>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="twoFactorAuth">
+                                <label class="form-check-label" for="twoFactorAuth">
+                                    Xác thực 2 lớp
+                                </label>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="loginNotifications" checked>
+                                <label class="form-check-label" for="loginNotifications">
+                                    Thông báo đăng nhập mới
+                                </label>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="passwordExpiry">
+                                <label class="form-check-label" for="passwordExpiry">
+                                    Yêu cầu đổi mật khẩu định kỳ
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

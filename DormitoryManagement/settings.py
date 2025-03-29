@@ -51,12 +51,14 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.humanize",
     "django.contrib.staticfiles",
 
     # Cài đặt bên thứ 3
     "corsheaders",
     "whitenoise.runserver_nostatic",
     "vnpay",
+    "mathfilters",
 
     # Ứng dụng tùy chỉnh
     "accounts.apps.AccountsConfig",
@@ -114,7 +116,7 @@ DATABASES = {
         "PORT": os.getenv("MYSQL_DB_PORT"),
         "OPTIONS": {
             "charset": "utf8mb4",
-            "init_command": "SET NAMES 'utf8mb4'; SET CHARACTER SET 'utf8mb4'; SET character_set_connection='utf8mb4';",
+            "init_command": "SET NAMES 'utf8mb4'",
         },
     }
 }

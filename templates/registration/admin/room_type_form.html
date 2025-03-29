@@ -1,0 +1,155 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for item in breadcrumbs %}
+                {% if item.url %}
+                    <li class="breadcrumb-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
+                {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Thông báo -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">{{ form_title }}</h5>
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                {{ form.name|as_crispy_field }}
+                                {{ form.gender|as_crispy_field }}
+                                {{ form.bed_count|as_crispy_field }}
+                                {{ form.price_per_month|as_crispy_field }}
+                                {{ form.description|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Hình ảnh hiện tại</label>
+                                    <div class="text-center">
+                                        {% if form.instance.image %}
+                                            <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" class="img-fluid rounded mb-2" id="currentImage">
+                                        {% else %}
+                                            <img src="{% static 'images/default-room.jpg' %}" alt="Default Room" class="img-fluid rounded mb-2" id="currentImage">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {{ form.image|as_crispy_field }}
+                                <div id="imagePreview" class="text-center mb-3" style="display: none;">
+                                    <label class="form-label">Xem trước</label>
+                                    <img src="" alt="Preview" class="img-fluid rounded">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tiện nghi</label>
+                            <div class="row g-3">
+                                {% for amenity in form.amenities %}
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            {{ amenity.tag }}
+                                            <label class="form-check-label" for="{{ amenity.id_for_label }}">
+                                                {{ amenity.choice_label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% if form.instance.pk %}{% url 'registration:admin_room_type_detail' form.instance.pk %}{% else %}{% url 'registration:admin_room_type_list' %}{% endif %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const priceInput = document.getElementById('id_price_per_month');
+    if (priceInput) {
+
+        if (priceInput.value) {
+            priceInput.value = parseInt(priceInput.value).toLocaleString('vi-VN');
+        }
+
+        priceInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value) {
+                this.value = parseInt(value).toLocaleString('vi-VN');
+            }
+        });
+
+        priceInput.form.addEventListener('submit', function() {
+            priceInput.value = priceInput.value.replace(/\D/g, '');
+        });
+    }
+
+    const imageInput = document.getElementById('id_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImage = imagePreview.querySelector('img');
+    const currentImage = document.getElementById('currentImage');
+
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                imagePreview.style.display = 'block';
+                if (currentImage) {
+                    currentImage.style.display = 'none';
+                }
+            }
+            reader.readAsDataURL(file);
+        } else {
+            imagePreview.style.display = 'none';
+            if (currentImage) {
+                currentImage.style.display = 'block';
+            }
+        }
+    });
+
+    const bedCountInput = document.getElementById('id_bed_count');
+    if (bedCountInput) {
+        bedCountInput.addEventListener('input', function() {
+            if (this.value < 1) {
+                this.value = 1;
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

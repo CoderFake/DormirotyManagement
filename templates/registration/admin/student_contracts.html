@@ -1,0 +1,268 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for item in breadcrumbs %}
+                {% if item.url %}
+                    <li class="breadcrumb-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
+                {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Thông báo -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Thông tin sinh viên -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if student.avatar %}
+                        <img src="{{ student.avatar.url }}" alt="Avatar" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% endif %}
+                    <h5 class="mb-1">{{ student.full_name }}</h5>
+                    <p class="text-muted mb-3">{{ student.student_id }}</p>
+                    <div class="d-flex justify-content-center gap-2 mb-4">
+                        <a href="{% url 'registration:admin_student_detail' student.id %}" class="btn btn-sm btn-info">
+                            <i class="fas fa-user"></i> Thông tin
+                        </a>
+                        <a href="{% url 'registration:admin_student_applications' student.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-file-alt"></i> Đơn đăng ký
+                        </a>
+                        <a href="{% url 'registration:admin_student_payments' student.id %}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-money-bill"></i> Thanh toán
+                        </a>
+                    </div>
+                    <div class="list-group list-group-flush text-start">
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Khoa</small>
+                            <span>{{ student.faculty }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Ngành</small>
+                            <span>{{ student.major }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Khóa</small>
+                            <span>{{ student.academic_year }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Email</small>
+                            <span>{{ student.email }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Số điện thoại</small>
+                            <span>{{ student.phone_number }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách hợp đồng -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Danh sách hợp đồng</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Bộ lọc -->
+                    <form method="get" class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="registration_period" class="form-label">Đợt đăng ký</label>
+                            <select name="registration_period" id="registration_period" class="form-select">
+                                <option value="">Tất cả</option>
+                                {% for period in registration_periods %}
+                                    <option value="{{ period.id }}" {% if request.GET.registration_period == period.id|stringformat:"i" %}selected{% endif %}>{{ period.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Chờ ký</option>
+                                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Đang hiệu lực</option>
+                                <option value="terminated" {% if request.GET.status == 'terminated' %}selected{% endif %}>Đã chấm dứt</option>
+                                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Đã hết hạn</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if contracts %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mã hợp đồng</th>
+                                        <th>Đợt đăng ký</th>
+                                        <th>Phòng</th>
+                                        <th>Thời hạn</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contract in contracts %}
+                                        <tr>
+                                            <td>{{ contract.code }}</td>
+                                            <td>{{ contract.registration_period.name }}</td>
+                                            <td>
+                                                <div>{{ contract.room.building.name }}</div>
+                                                <small class="text-muted">Phòng {{ contract.room.number }} - Giường {{ contract.bed_number }}</small>
+                                            </td>
+                                            <td>
+                                                <div>{{ contract.start_date|date:"d/m/Y" }} - {{ contract.end_date|date:"d/m/Y" }}</div>
+                                                <small class="text-muted">{{ contract.duration }} tháng</small>
+                                            </td>
+                                            <td>
+                                                {% if contract.status == 'pending' %}
+                                                    <span class="badge bg-warning">Chờ ký</span>
+                                                {% elif contract.status == 'active' %}
+                                                    <span class="badge bg-success">Đang hiệu lực</span>
+                                                {% elif contract.status == 'terminated' %}
+                                                    <span class="badge bg-danger">Đã chấm dứt</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Đã hết hạn</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{% url 'registration:admin_contract_detail' contract.id %}" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if contract.status == 'active' %}
+                                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#terminateModal{{ contract.id }}">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                    <a href="{% url 'registration:admin_contract_print' contract.id %}" class="btn btn-sm btn-secondary" target="_blank">
+                                                        <i class="fas fa-print"></i>
+                                                    </a>
+                                                </div>
+
+                                                <!-- Modal xác nhận chấm dứt hợp đồng -->
+                                                {% if contract.status == 'active' %}
+                                                    <div class="modal fade" id="terminateModal{{ contract.id }}" tabindex="-1" aria-labelledby="terminateModalLabel{{ contract.id }}" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <form method="post" action="{% url 'registration:admin_terminate_contract' contract.id %}">
+                                                                    {% csrf_token %}
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="terminateModalLabel{{ contract.id }}">Xác nhận chấm dứt hợp đồng</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <p>Bạn có chắc chắn muốn chấm dứt hợp đồng này?</p>
+                                                                        <div class="mb-3">
+                                                                            <label for="reason{{ contract.id }}" class="form-label">Lý do chấm dứt <span class="text-danger">*</span></label>
+                                                                            <textarea class="form-control" id="reason{{ contract.id }}" name="reason" rows="3" required></textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                                        <button type="submit" class="btn btn-danger">Chấm dứt</button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Phân trang -->
+                        {% if contracts.has_other_pages %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if contracts.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if request.GET.registration_period %}&registration_period={{ request.GET.registration_period }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ contracts.previous_page_number }}{% if request.GET.registration_period %}&registration_period={{ request.GET.registration_period }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in contracts.paginator.page_range %}
+                                        {% if contracts.number == num %}
+                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                        {% elif num > contracts.number|add:'-3' and num < contracts.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if request.GET.registration_period %}&registration_period={{ request.GET.registration_period }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if contracts.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ contracts.next_page_number }}{% if request.GET.registration_period %}&registration_period={{ request.GET.registration_period }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ contracts.paginator.num_pages }}{% if request.GET.registration_period %}&registration_period={{ request.GET.registration_period }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <img src="{% static 'images/empty.svg' %}" alt="No data" class="img-fluid mb-3" style="max-width: 200px;">
+                            <h5>Không có hợp đồng nào</h5>
+                            <p class="text-muted">Sinh viên chưa có hợp đồng nào.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Auto submit form when select changes
+document.getElementById('registration_period').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.getElementById('status').addEventListener('change', function() {
+    this.form.submit();
+});
+</script>
+{% endblock %} 

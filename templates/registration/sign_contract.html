@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for item in breadcrumbs %}
+                {% if item.url %}
+                    <li class="breadcrumb-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
+                {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Thông báo -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Form ký hợp đồng -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Ký hợp đồng</h5>
+                        <span class="badge bg-warning">Chờ ký</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Thông tin cơ bản -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="card-subtitle mb-3">Thông tin hợp đồng</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fas fa-hashtag text-primary"></i> <strong>Mã hợp đồng:</strong><br>
+                                        <span class="ps-4">{{ contract.code }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-calendar text-primary"></i> <strong>Kỳ đăng ký:</strong><br>
+                                        <span class="ps-4">{{ contract.period.name }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-clock text-primary"></i> <strong>Thời hạn:</strong><br>
+                                        <span class="ps-4">{{ contract.start_date|date:"d/m/Y" }} - {{ contract.end_date|date:"d/m/Y" }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="card-subtitle mb-3">Thông tin phòng</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fas fa-building text-primary"></i> <strong>Tòa nhà:</strong><br>
+                                        <span class="ps-4">{{ contract.room.building.name }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-door-open text-primary"></i> <strong>Phòng:</strong><br>
+                                        <span class="ps-4">{{ contract.room.room_number }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-bed text-primary"></i> <strong>Giường:</strong><br>
+                                        <span class="ps-4">Giường {{ contract.bed.bed_number }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-money-bill-wave text-primary"></i> <strong>Giá/tháng:</strong><br>
+                                        <span class="ps-4">{{ contract.room.room_type.price_per_month|intcomma }} VNĐ</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Điều khoản hợp đồng -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Điều khoản hợp đồng</h6>
+                            <div class="alert alert-light" style="max-height: 400px; overflow-y: auto;">
+                                {{ contract.terms|linebreaks }}
+                            </div>
+                        </div>
+
+                        <!-- Xác nhận -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="confirm_read" name="confirm_read" required>
+                                <label class="form-check-label" for="confirm_read">
+                                    Tôi đã đọc và hiểu rõ các điều khoản của hợp đồng
+                                </label>
+                                <div class="invalid-feedback">
+                                    Bạn phải xác nhận đã đọc và hiểu rõ các điều khoản.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="confirm_agree" name="confirm_agree" required>
+                                <label class="form-check-label" for="confirm_agree">
+                                    Tôi đồng ý với tất cả các điều khoản của hợp đồng
+                                </label>
+                                <div class="invalid-feedback">
+                                    Bạn phải đồng ý với các điều khoản để ký hợp đồng.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nút thao tác -->
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'registration:contract_detail' contract.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-signature"></i> Ký hợp đồng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Thông tin sinh viên -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin sinh viên</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-user text-primary"></i> <strong>Họ tên:</strong><br>
+                            <span class="ps-4">{{ contract.student.full_name }}</span>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-id-card text-primary"></i> <strong>MSSV:</strong><br>
+                            <span class="ps-4">{{ contract.student.student_id }}</span>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-envelope text-primary"></i> <strong>Email:</strong><br>
+                            <span class="ps-4">{{ contract.student.email }}</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone text-primary"></i> <strong>Số điện thoại:</strong><br>
+                            <span class="ps-4">{{ contract.student.phone_number }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Hướng dẫn</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle"></i> Vui lòng đọc kỹ các điều khoản trước khi ký hợp đồng.
+                    </div>
+                    <ol class="mb-0">
+                        <li class="mb-2">Đọc kỹ thông tin hợp đồng</li>
+                        <li class="mb-2">Kiểm tra thông tin cá nhân</li>
+                        <li class="mb-2">Đọc và hiểu rõ điều khoản</li>
+                        <li class="mb-2">Xác nhận đồng ý với điều khoản</li>
+                        <li>Ký hợp đồng</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %} 

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Tạo tài khoản mới</h5>
+                    <p class="card-text text-muted small">Thêm tài khoản sinh viên hoặc nhân viên mới.</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Thông tin cơ bản -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Thông tin cơ bản</h5>
+                            <p class="text-muted small mb-4">Thông tin cá nhân của người dùng.</p>
+
+                            {% for field in form %}
+                            {% if field.email or field.full_name or field.phone_number or field.gender or field.date_of_birth or field.id_card_number or field.address %}
+                            <div class="row mb-3">
+                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ field.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ field }}
+                                    {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in field.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Thông tin tài khoản -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Thông tin tài khoản</h5>
+                            <p class="text-muted small mb-4">Loại tài khoản và thông tin đăng nhập.</p>
+
+                            {% for field in form %}
+                            {% if field.user_type or field.password1 or field.password2 %}
+                            <div class="row mb-3">
+                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ field.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ field }}
+                                    {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in field.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Thông tin sinh viên -->
+                        <div class="mb-4" id="student_fields" style="display: none;">
+                            <h5 class="mb-3">Thông tin sinh viên</h5>
+                            <p class="text-muted small mb-4">Thông tin học tập của sinh viên.</p>
+
+                            {% for field in form %}
+                            {% if field.student_id or field.university or field.faculty or field.major or field.academic_year %}
+                            <div class="row mb-3">
+                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ field.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ field }}
+                                    {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in field.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'accounts:staff_list' %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>
+                                Tạo tài khoản
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userTypeSelect = document.getElementById('id_user_type');
+    const studentFields = document.getElementById('student_fields');
+
+    function toggleStudentFields() {
+        if (userTypeSelect.value === 'student') {
+            studentFields.style.display = 'block';
+        } else {
+            studentFields.style.display = 'none';
+        }
+    }
+
+    userTypeSelect.addEventListener('change', toggleStudentFields);
+    toggleStudentFields();
+});
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,3 +1,6 @@
+{% load custom_filters %}
+{% get_unread_notifications_count user as unread_count %}
+
 <!-- Navbar/Header -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white px-4 shadow-sm fixed-top">
     <!-- Sidebar Toggle -->
@@ -35,7 +38,7 @@
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-bell fa-fw"></i>
                     <!-- Đếm thông báo chưa đọc -->
-                    {% with unread_count=user.user_notifications.filter.is_read=False.count %}
+                    {% with unread_count=user.user_notifications.all|length %}
                         {% if unread_count > 0 %}
                             <span class="badge rounded-pill bg-danger">{{ unread_count }}</span>
                         {% endif %}

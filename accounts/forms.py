@@ -125,8 +125,8 @@ class UserRegistrationForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = None  # Sử dụng email thay cho username
-        user.user_type = 'student'  # Mặc định là sinh viên
+        user.username = None
+        user.user_type = 'student'
         if commit:
             user.save()
         return user

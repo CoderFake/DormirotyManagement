@@ -6,3 +6,6 @@ django-cors-headers==4.7.0
 whitenoise==6.9.0
 PyMySQL==1.1.1
 django-vnpay==0.0.19
+humanize==4.12.2
+Pillow==11.1.0
+cryptography==44.0.2

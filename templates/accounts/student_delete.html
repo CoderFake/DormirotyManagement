@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Xác nhận xóa sinh viên</h5>
+                    <p class="card-text text-muted small">Thao tác này không thể hoàn tác.</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>
+                            Bạn có chắc chắn muốn xóa sinh viên <strong>{{ student.full_name }}</strong> không?
+                            Thao tác này sẽ xóa vĩnh viễn tài khoản và tất cả dữ liệu liên quan.
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="table-responsive mb-4">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th class="bg-light w-25">Họ và tên</th>
+                                        <td>{{ student.full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">MSSV</th>
+                                        <td>{{ student.student_id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Email</th>
+                                        <td>{{ student.email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Trường</th>
+                                        <td>{{ student.university }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'accounts:student_detail' user_id=student.id %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i>
+                                Xác nhận xóa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

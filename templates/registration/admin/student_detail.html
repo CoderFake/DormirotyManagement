@@ -1,0 +1,223 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for item in breadcrumbs %}
+                {% if item.url %}
+                    <li class="breadcrumb-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
+                {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Thông báo -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Thông tin sinh viên -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if student.avatar %}
+                        <img src="{{ student.avatar.url }}" alt="Avatar" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% endif %}
+                    <h5 class="mb-1">{{ student.full_name }}</h5>
+                    <p class="text-muted mb-3">{{ student.student_id }}</p>
+                    <div class="d-flex justify-content-center gap-2 mb-4">
+                        <a href="{% url 'registration:admin_student_applications' student.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-file-alt"></i> Đơn đăng ký
+                        </a>
+                        <a href="{% url 'registration:admin_student_contracts' student.id %}" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-contract"></i> Hợp đồng
+                        </a>
+                        <a href="{% url 'registration:admin_student_payments' student.id %}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-money-bill"></i> Thanh toán
+                        </a>
+                    </div>
+                    <div class="list-group list-group-flush text-start">
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Giới tính</small>
+                            <span>{{ student.get_gender_display }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Ngày sinh</small>
+                            <span>{{ student.date_of_birth|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Email</small>
+                            <span>{{ student.email }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Số điện thoại</small>
+                            <span>{{ student.phone_number }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">CMND/CCCD</small>
+                            <span>{{ student.id_number }}</span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Địa chỉ</small>
+                            <span>{{ student.address }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin học tập -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin học tập</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Khoa</small>
+                            <p>{{ student.faculty }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Ngành</small>
+                            <p>{{ student.major }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Khóa</small>
+                            <p>{{ student.academic_year }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thống kê -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">Đơn đăng ký</h6>
+                                    <h3 class="mb-0">{{ application_count }}</h3>
+                                </div>
+                                <i class="fas fa-file-alt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">Hợp đồng</h6>
+                                    <h3 class="mb-0">{{ contract_count }}</h3>
+                                </div>
+                                <i class="fas fa-file-contract fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">Thanh toán</h6>
+                                    <h3 class="mb-0">{{ payment_count }}</h3>
+                                </div>
+                                <i class="fas fa-money-bill fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lịch sử hoạt động -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Lịch sử hoạt động</h5>
+                </div>
+                <div class="card-body">
+                    {% if activities %}
+                        <div class="timeline">
+                            {% for activity in activities %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6 class="mb-0">{{ activity.title }}</h6>
+                                        <small class="text-muted">{{ activity.timestamp|date:"d/m/Y H:i" }}</small>
+                                        <p class="mb-0">{{ activity.description }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <img src="{% static 'images/empty.svg' %}" alt="No data" class="img-fluid mb-3" style="max-width: 200px;">
+                            <h5>Không có hoạt động nào</h5>
+                            <p class="text-muted">Chưa có hoạt động nào được ghi nhận.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Timeline styles */
+.timeline {
+    position: relative;
+    padding-left: 3rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -3rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: #007bff;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #007bff;
+}
+
+.timeline-content {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+}
+</style>
+{% endblock %} 

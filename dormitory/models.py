@@ -52,6 +52,7 @@ class RoomType(models.Model):
     description = models.TextField(_('mô tả'), blank=True, null=True)
     image = models.ImageField(_('hình ảnh'), upload_to='room_types/', blank=True, null=True)
     gender_allowed = models.CharField(_('giới tính cho phép'), max_length=10, choices=GENDER_CHOICES, default='mixed')
+    is_active = models.BooleanField(_('đang hoạt động'), default=True)
     created_at = models.DateTimeField(_('thời gian tạo'), auto_now_add=True)
     updated_at = models.DateTimeField(_('thời gian cập nhật'), auto_now=True)
 

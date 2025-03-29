@@ -9,6 +9,7 @@ echo "MySQL đã sẵn sàng!"
 
 # Thực hiện migrations
 echo "Đang áp dụng migrations..."
+python manage.py makemigrations
 python manage.py migrate
 
 echo "Đang thu thập static files..."

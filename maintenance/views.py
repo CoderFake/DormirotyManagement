@@ -4,11 +4,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
-from django.db.models import Q
-from django.db import transaction
-
-from accounts.models import User
-from dormitory.models import Building, Room
+from dormitory.models import Building
 from registration.models import Contract
 from .models import MaintenanceCategory, MaintenanceRequest, MaintenanceComment, MaintenanceImage
 from .forms import (
@@ -30,7 +26,6 @@ def is_admin_or_staff(user):
 @login_required
 def request_create_view(request):
     """Tạo yêu cầu bảo trì mới"""
-    # Kiểm tra xem sinh viên có phòng ở hiện tại không
     current_contract = Contract.objects.filter(
         user=request.user,
         status='active',
@@ -51,14 +46,13 @@ def request_create_view(request):
             maintenance_request.building = current_contract.room.building
             maintenance_request.save()
 
-            # Xử lý hình ảnh nếu có
-            if 'images' in request.FILES:
-                for image in request.FILES.getlist('images'):
-                    MaintenanceImage.objects.create(
-                        maintenance_request=maintenance_request,
-                        image=image,
-                        uploaded_by=request.user
-                    )
+            files = request.FILES.getlist('images')
+            for f in files:
+                MaintenanceImage.objects.create(
+                    maintenance_request=maintenance_request,
+                    image=f,
+                    uploaded_by=request.user
+                )
 
             messages.success(request, 'Yêu cầu bảo trì đã được gửi thành công.')
             return redirect('maintenance:my_requests')
@@ -156,13 +150,13 @@ def request_update_view(request, request_id):
         if form.is_valid():
             form.save()
 
-            if 'images' in request.FILES:
-                for image in request.FILES.getlist('images'):
-                    MaintenanceImage.objects.create(
-                        maintenance_request=maintenance_request,
-                        image=image,
-                        uploaded_by=request.user
-                    )
+            files = request.FILES.getlist('images')
+            for f in files:
+                MaintenanceImage.objects.create(
+                    maintenance_request=maintenance_request,
+                    image=f,
+                    uploaded_by=request.user
+                )
 
             messages.success(request, 'Yêu cầu bảo trì đã được cập nhật.')
             return redirect('maintenance:request_detail', request_id=request_id)
@@ -232,7 +226,7 @@ def category_list_view(request):
             {'title': 'Danh mục', 'url': None}
         ]
     }
-    return render(request, 'maintenance/category_list.html', context)
+    return render(request, 'maintenance/admin/category_list.html', context)
 
 
 @login_required
@@ -257,7 +251,7 @@ def category_create_view(request):
             {'title': 'Tạo mới', 'url': None}
         ]
     }
-    return render(request, 'maintenance/category_form.html', context)
+    return render(request, 'maintenance/admin/category_form.html', context)
 
 
 @login_required
@@ -285,7 +279,7 @@ def category_edit_view(request, category_id):
             {'title': category.name, 'url': None}
         ]
     }
-    return render(request, 'maintenance/category_form.html', context)
+    return render(request, 'maintenance/admin/category_form.html', context)
 
 
 @login_required
@@ -309,7 +303,7 @@ def category_delete_view(request, category_id):
             {'title': 'Xóa', 'url': None}
         ]
     }
-    return render(request, 'maintenance/category_delete.html', context)
+    return render(request, 'maintenance/admin/category_delete.html', context)
 
 
 @login_required
@@ -344,7 +338,7 @@ def request_list_view(request):
             {'title': 'Danh sách yêu cầu', 'url': None}
         ]
     }
-    return render(request, 'maintenance/request_list.html', context)
+    return render(request, 'maintenance/admin/request_list.html', context)
 
 
 @login_required
@@ -388,7 +382,7 @@ def request_assign_view(request, request_id):
             {'title': 'Phân công', 'url': None}
         ]
     }
-    return render(request, 'maintenance/request_assign.html', context)
+    return render(request, 'maintenance/admin/request_assign.html', context)
 
 
 @login_required
@@ -402,13 +396,13 @@ def request_admin_edit_view(request, request_id):
         if form.is_valid():
             form.save()
 
-            if 'images' in request.FILES:
-                for image in request.FILES.getlist('images'):
-                    MaintenanceImage.objects.create(
-                        maintenance_request=maintenance_request,
-                        image=image,
-                        uploaded_by=request.user
-                    )
+            files = request.FILES.getlist('images')
+            for f in files:
+                MaintenanceImage.objects.create(
+                    maintenance_request=maintenance_request,
+                    image=f,
+                    uploaded_by=request.user
+                )
 
             messages.success(request, 'Yêu cầu bảo trì đã được cập nhật.')
             return redirect('maintenance:request_detail', request_id=request_id)

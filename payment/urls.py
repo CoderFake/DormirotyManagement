@@ -28,27 +28,27 @@ urlpatterns = [
     path('invoice/create/', views.invoice_create_view, name='invoice_create'),
     path('invoice/<uuid:invoice_id>/edit/', views.invoice_edit_view, name='invoice_edit'),
     path('invoice/<uuid:invoice_id>/delete/', views.invoice_delete_view, name='invoice_delete'),
-    path('invoice/<uuid:invoice_id>/add-item/', views.invoice_add_item_view, name='invoice_add_item'),
-    path('invoice/item/<uuid:item_id>/edit/', views.invoice_item_edit_view, name='invoice_item_edit'),
-    path('invoice/item/<uuid:item_id>/delete/', views.invoice_item_delete_view, name='invoice_item_delete'),
-    path('invoice/<uuid:invoice_id>/record-payment/', views.record_payment_view, name='record_payment'),
-
-    # Chỉ số điện nước (cho Admin)
-    path('electricity/list/', views.electricity_list_view, name='electricity_list'),
-    path('electricity/create/', views.electricity_create_view, name='electricity_create'),
-    path('electricity/<uuid:reading_id>/edit/', views.electricity_edit_view, name='electricity_edit'),
-    path('electricity/<uuid:reading_id>/delete/', views.electricity_delete_view, name='electricity_delete'),
-
-    path('water/list/', views.water_list_view, name='water_list'),
-    path('water/create/', views.water_create_view, name='water_create'),
-    path('water/<uuid:reading_id>/edit/', views.water_edit_view, name='water_edit'),
-    path('water/<uuid:reading_id>/delete/', views.water_delete_view, name='water_delete'),
-
-    # Giao dịch (cho Admin)
-    path('transaction/list/', views.transaction_list_view, name='transaction_list'),
-    path('transaction/<uuid:transaction_id>/', views.transaction_detail_view, name='transaction_detail'),
-
-    # API
-    path('api/create-invoice/', views.create_invoice_api, name='create_invoice_api'),
-    path('api/check-payment-status/', views.check_payment_status_api, name='check_payment_status_api'),
+    # path('invoice/<uuid:invoice_id>/add-item/', views.invoice_add_item_view, name='invoice_add_item'),
+    # path('invoice/item/<uuid:item_id>/edit/', views.invoice_item_edit_view, name='invoice_item_edit'),
+    # path('invoice/item/<uuid:item_id>/delete/', views.invoice_item_delete_view, name='invoice_item_delete'),
+    # path('invoice/<uuid:invoice_id>/record-payment/', views.record_payment_view, name='record_payment'),
+    #
+    # # Chỉ số điện nước (cho Admin)
+    # path('electricity/list/', views.electricity_list_view, name='electricity_list'),
+    # path('electricity/create/', views.electricity_create_view, name='electricity_create'),
+    # path('electricity/<uuid:reading_id>/edit/', views.electricity_edit_view, name='electricity_edit'),
+    # path('electricity/<uuid:reading_id>/delete/', views.electricity_delete_view, name='electricity_delete'),
+    #
+    # path('water/list/', views.water_list_view, name='water_list'),
+    # path('water/create/', views.water_create_view, name='water_create'),
+    # path('water/<uuid:reading_id>/edit/', views.water_edit_view, name='water_edit'),
+    # path('water/<uuid:reading_id>/delete/', views.water_delete_view, name='water_delete'),
+    #
+    # # Giao dịch (cho Admin)
+    # path('transaction/list/', views.transaction_list_view, name='transaction_list'),
+    # path('transaction/<uuid:transaction_id>/', views.transaction_detail_view, name='transaction_detail'),
+    #
+    # # API
+    # path('api/create-invoice/', views.create_invoice_api, name='create_invoice_api'),
+    # path('api/check-payment-status/', views.check_payment_status_api, name='check_payment_status_api'),
 ]

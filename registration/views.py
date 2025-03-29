@@ -5,6 +5,8 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Count, Q
+from django.core.paginator import Paginator
 
 from accounts.views import is_admin_or_staff
 from dormitory.models import Bed, Building, RoomType, Room
@@ -17,6 +19,7 @@ from .forms import (
 @login_required
 def room_list_view(request):
     """Xem danh sách phòng có thể đăng ký"""
+
     current_period = RegistrationPeriod.objects.filter(
         status='active',
         is_active=True,
@@ -28,43 +31,7 @@ def room_list_view(request):
         messages.info(request, 'Hiện tại không có kỳ đăng ký nào đang mở.')
         return redirect('dashboard:index')
 
-    buildings = Building.objects.filter(is_active=True)
 
-    building_id = request.GET.get('building')
-    room_type_id = request.GET.get('room_type')
-
-    rooms = Room.objects.filter(is_active=True, status__in=['available', 'partially_occupied'])
-
-    if building_id:
-        rooms = rooms.filter(building_id=building_id)
-
-    if room_type_id:
-        rooms = rooms.filter(room_type_id=room_type_id)
-
-    room_types = RoomType.objects.filter(is_active=True)
-
-    context = {
-        'rooms': rooms,
-        'buildings': buildings,
-        'room_types': room_types,
-        'current_period': current_period,
-        'selected_building': building_id,
-        'selected_room_type': room_type_id,
-        'page_title': 'Danh sách phòng',
-        'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Danh sách phòng', 'url': None}
-        ]
-    }
-    return render(request, 'registration/room_list.html', context)
-
-
-@login_required
-def room_detail_view(request, room_id):
-    """Xem chi tiết phòng"""
-    room = get_object_or_404(Room, pk=room_id, is_active=True)
-
-    # Kiểm tra xem sinh viên có đủ điều kiện đăng ký không
     existing_registration = RoomRegistration.objects.filter(
         user=request.user,
         status__in=['pending', 'approved', 'confirmed']
@@ -79,10 +46,109 @@ def room_detail_view(request, room_id):
 
     can_register = not (existing_registration or current_contract)
 
-    # Lấy thông tin giường còn trống
-    available_beds = Bed.objects.filter(room=room, status='available')
 
-    # Lấy thông tin tiện nghi phòng
+    building_id = request.GET.get('building')
+    room_type_id = request.GET.get('room_type')
+    search_query = request.GET.get('q')
+    sort_by = request.GET.get('sort', 'room_number') 
+    gender = request.GET.get('gender')
+
+
+    rooms = Room.objects.filter(
+        is_active=True,
+        status__in=['available', 'partially_occupied']
+    ).select_related('building', 'room_type')
+
+
+    if building_id:
+        rooms = rooms.filter(building_id=building_id)
+
+    if room_type_id:
+        rooms = rooms.filter(room_type_id=room_type_id)
+
+    if gender:
+        rooms = rooms.filter(gender=gender)
+
+    if search_query:
+        rooms = rooms.filter(
+            Q(room_number__icontains=search_query) |
+            Q(building__name__icontains=search_query) |
+            Q(room_type__name__icontains=search_query)
+        )
+
+
+    rooms = rooms.annotate(
+        available_beds_count=Count(
+            'beds',
+            filter=Q(beds__status='available')
+        )
+    )
+
+
+    if sort_by == 'price':
+        rooms = rooms.order_by('room_type__price_per_month')
+    elif sort_by == 'available_beds':
+        rooms = rooms.order_by('-available_beds_count')
+    elif sort_by == 'building':
+        rooms = rooms.order_by('building__name', 'room_number')
+    else:
+        rooms = rooms.order_by('room_number')
+
+
+    paginator = Paginator(rooms, 10)
+    page_number = request.GET.get('page', 1)
+    rooms_page = paginator.get_page(page_number)
+
+
+    buildings = Building.objects.filter(is_active=True)
+    room_types = RoomType.objects.filter(is_active=True)
+
+    context = {
+        'rooms': rooms_page,
+        'buildings': buildings,
+        'room_types': room_types,
+        'current_period': current_period,
+        'can_register': can_register,
+        'selected_building': building_id,
+        'selected_room_type': room_type_id,
+        'selected_gender': gender,
+        'search_query': search_query,
+        'sort_by': sort_by,
+        'page_title': 'Danh sách phòng',
+        'breadcrumbs': [
+            {'title': 'Đăng ký phòng', 'url': '#'},
+            {'title': 'Danh sách phòng', 'url': None}
+        ]
+    }
+
+    if not can_register:
+        if existing_registration:
+            messages.warning(request, 'Bạn đã có đơn đăng ký đang chờ xử lý.')
+        elif current_contract:
+            messages.warning(request, 'Bạn đang có hợp đồng ký túc xá đang hoạt động.')
+
+    return render(request, 'registration/room_list.html', context)
+
+
+@login_required
+def room_detail_view(request, room_id):
+    """Xem chi tiết phòng"""
+    room = get_object_or_404(Room, pk=room_id, is_active=True)
+    existing_registration = RoomRegistration.objects.filter(
+        user=request.user,
+        status__in=['pending', 'approved', 'confirmed']
+    ).exists()
+
+    current_contract = Contract.objects.filter(
+        user=request.user,
+        status='active',
+        start_date__lte=timezone.now().date(),
+        end_date__gte=timezone.now().date()
+    ).exists()
+
+    can_register = not (existing_registration or current_contract)
+
+    available_beds = Bed.objects.filter(room=room, status='available')
     room_amenities = room.room_amenities.all()
 
     context = {
@@ -211,18 +277,11 @@ def my_applications_view(request):
 
 @login_required
 def my_contracts_view(request):
-    """Xem danh sách hợp đồng của người dùng hiện tại"""
+    """Xem danh sách hợp đồng của sinh viên"""
     contracts = Contract.objects.filter(user=request.user).order_by('-created_at')
-
-    active_contract = contracts.filter(
-        status='active',
-        start_date__lte=timezone.now().date(),
-        end_date__gte=timezone.now().date()
-    ).first()
 
     context = {
         'contracts': contracts,
-        'active_contract': active_contract,
         'page_title': 'Hợp đồng của tôi',
         'breadcrumbs': [
             {'title': 'Đăng ký phòng', 'url': '#'},
@@ -235,12 +294,7 @@ def my_contracts_view(request):
 @login_required
 def contract_detail_view(request, contract_id):
     """Xem chi tiết hợp đồng"""
-    contract = get_object_or_404(Contract, pk=contract_id)
-
-    # Kiểm tra quyền truy cập
-    if not (contract.user == request.user or is_admin_or_staff(request.user)):
-        messages.error(request, 'Bạn không có quyền xem hợp đồng này.')
-        return redirect('registration:my_contracts')
+    contract = get_object_or_404(Contract, pk=contract_id, user=request.user)
 
     context = {
         'contract': contract,
@@ -248,7 +302,7 @@ def contract_detail_view(request, contract_id):
         'breadcrumbs': [
             {'title': 'Đăng ký phòng', 'url': '#'},
             {'title': 'Hợp đồng của tôi', 'url': reverse('registration:my_contracts')},
-            {'title': f'#{contract.contract_number}', 'url': None}
+            {'title': f'Hợp đồng #{contract.contract_number}', 'url': None}
         ]
     }
     return render(request, 'registration/contract_detail.html', context)
@@ -256,17 +310,19 @@ def contract_detail_view(request, contract_id):
 
 @login_required
 def sign_contract_view(request, contract_id):
-    """Ký hợp đồng (dành cho sinh viên)"""
+    """Ký hợp đồng"""
     contract = get_object_or_404(Contract, pk=contract_id, user=request.user)
 
-    if contract.status not in ['draft', 'pending']:
-        messages.error(request, 'Hợp đồng này không thể ký.')
-        return redirect('registration:contract_detail', contract_id=contract_id)
+    if contract.signed_by_student:
+        messages.warning(request, 'Bạn đã ký hợp đồng này rồi.')
+        return redirect('registration:contract_detail', contract_id=contract.id)
 
     if request.method == 'POST':
-        contract.sign_by_student()
+        contract.signed_by_student = True
+        contract.student_signed_at = timezone.now()
+        contract.save(update_fields=['signed_by_student', 'student_signed_at'])
         messages.success(request, 'Bạn đã ký hợp đồng thành công.')
-        return redirect('registration:contract_detail', contract_id=contract_id)
+        return redirect('registration:contract_detail', contract_id=contract.id)
 
     context = {
         'contract': contract,
@@ -274,15 +330,12 @@ def sign_contract_view(request, contract_id):
         'breadcrumbs': [
             {'title': 'Đăng ký phòng', 'url': '#'},
             {'title': 'Hợp đồng của tôi', 'url': reverse('registration:my_contracts')},
-            {'title': f'#{contract.contract_number}',
-             'url': reverse('registration:contract_detail', args=[contract_id])},
+            {'title': f'Hợp đồng #{contract.contract_number}', 'url': reverse('registration:contract_detail', args=[contract_id])},
             {'title': 'Ký hợp đồng', 'url': None}
         ]
     }
     return render(request, 'registration/sign_contract.html', context)
 
-
-# ===== Views cho Admin =====
 
 @login_required
 @user_passes_test(is_admin_or_staff)
@@ -415,7 +468,7 @@ def application_approve_view(request, application_id):
 
     if request.method == 'POST':
         with transaction.atomic():
-            # Cập nhật trạng thái đơn đăng ký
+
             registration.status = 'approved'
             registration.approval_date = timezone.now()
 
@@ -430,13 +483,13 @@ def application_approve_view(request, application_id):
                     bed = Bed.objects.get(pk=bed_id)
                     registration.assigned_bed = bed
 
-                    # Cập nhật trạng thái giường
+
                     bed.status = 'reserved'
                     bed.save()
 
             registration.save()
 
-            # Tạo hợp đồng mới
+
             contract = Contract.objects.create(
                 registration=registration,
                 user=registration.user,
@@ -452,7 +505,6 @@ def application_approve_view(request, application_id):
             messages.success(request, 'Đã phê duyệt đơn đăng ký và tạo hợp đồng.')
             return redirect('registration:contract_list')
 
-    # Lấy danh sách phòng và giường có sẵn
     available_rooms = Room.objects.filter(
         status__in=['available', 'partially_occupied'],
         is_active=True
@@ -516,23 +568,35 @@ def application_reject_view(request, application_id):
 @login_required
 @user_passes_test(is_admin_or_staff)
 def contract_list_view(request):
-    """Danh sách hợp đồng (cho Admin)"""
-    contracts = Contract.objects.all().order_by('-created_at')
+    """Danh sách hợp đồng (cho admin)"""
+    contracts = Contract.objects.all().select_related('user', 'room').order_by('-created_at')
+
 
     status = request.GET.get('status')
     if status:
         contracts = contracts.filter(status=status)
 
-    building_id = request.GET.get('building')
-    if building_id:
-        contracts = contracts.filter(room__building_id=building_id)
+
+    search_query = request.GET.get('q')
+    if search_query:
+        contracts = contracts.filter(
+            Q(contract_number__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__full_name__icontains=search_query)
+        )
+
+
+    paginator = Paginator(contracts, 20)
+    page_number = request.GET.get('page', 1)
+    contracts_page = paginator.get_page(page_number)
 
     context = {
-        'contracts': contracts,
-        'buildings': Building.objects.all(),
+        'contracts': contracts_page,
+        'status': status,
+        'search_query': search_query,
         'page_title': 'Danh sách hợp đồng',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
+            {'title': 'Quản lý đăng ký', 'url': '#'},
             {'title': 'Hợp đồng', 'url': None}
         ]
     }
@@ -542,16 +606,16 @@ def contract_list_view(request):
 @login_required
 @user_passes_test(is_admin_or_staff)
 def contract_admin_detail_view(request, contract_id):
-    """Chi tiết hợp đồng (cho Admin)"""
+    """Chi tiết hợp đồng (cho admin)"""
     contract = get_object_or_404(Contract, pk=contract_id)
 
     context = {
         'contract': contract,
         'page_title': f'Chi tiết hợp đồng #{contract.contract_number}',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
+            {'title': 'Quản lý đăng ký', 'url': '#'},
             {'title': 'Hợp đồng', 'url': reverse('registration:contract_list')},
-            {'title': f'#{contract.contract_number}', 'url': None}
+            {'title': f'Hợp đồng #{contract.contract_number}', 'url': None}
         ]
     }
     return render(request, 'registration/contract_admin_detail.html', context)
@@ -560,38 +624,39 @@ def contract_admin_detail_view(request, contract_id):
 @login_required
 @user_passes_test(is_admin_or_staff)
 def contract_approve_view(request, contract_id):
-    """Ký duyệt hợp đồng (cho Admin)"""
+    """Duyệt hợp đồng"""
     contract = get_object_or_404(Contract, pk=contract_id)
 
-    if contract.status not in ['draft', 'pending']:
-        messages.error(request, 'Hợp đồng này không thể ký duyệt.')
-        return redirect('registration:contract_admin_detail', contract_id=contract_id)
+    if not contract.signed_by_student:
+        messages.error(request, 'Sinh viên chưa ký hợp đồng.')
+        return redirect('registration:contract_admin_detail', contract_id=contract.id)
+
+    if contract.signed_by_admin:
+        messages.warning(request, 'Hợp đồng này đã được duyệt.')
+        return redirect('registration:contract_admin_detail', contract_id=contract.id)
 
     if request.method == 'POST':
-        contract.sign_by_admin()
-
-        # Cập nhật trạng thái giường và phòng
-        if contract.bed:
-            contract.bed.status = 'occupied'
-            contract.bed.save()
-
-        # Cập nhật số lượng người trong phòng
-        room = contract.room
-        room.current_occupancy += 1
-        room.save()
-
-        messages.success(request, 'Hợp đồng đã được ký duyệt thành công.')
-        return redirect('registration:contract_admin_detail', contract_id=contract_id)
+        form = ContractApprovalForm(request.POST, instance=contract)
+        if form.is_valid():
+            contract = form.save(commit=False)
+            contract.signed_by_admin = True
+            contract.admin_signed_at = timezone.now()
+            contract.approved_by = request.user
+            contract.save()
+            messages.success(request, 'Đã duyệt hợp đồng thành công.')
+            return redirect('registration:contract_admin_detail', contract_id=contract.id)
+    else:
+        form = ContractApprovalForm(instance=contract)
 
     context = {
+        'form': form,
         'contract': contract,
-        'page_title': f'Ký duyệt hợp đồng #{contract.contract_number}',
+        'page_title': f'Duyệt hợp đồng #{contract.contract_number}',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
+            {'title': 'Quản lý đăng ký', 'url': '#'},
             {'title': 'Hợp đồng', 'url': reverse('registration:contract_list')},
-            {'title': f'#{contract.contract_number}',
-             'url': reverse('registration:contract_admin_detail', args=[contract_id])},
-            {'title': 'Ký duyệt', 'url': None}
+            {'title': f'Hợp đồng #{contract.contract_number}', 'url': reverse('registration:contract_admin_detail', args=[contract_id])},
+            {'title': 'Duyệt hợp đồng', 'url': None}
         ]
     }
     return render(request, 'registration/contract_approve.html', context)
@@ -600,19 +665,37 @@ def contract_approve_view(request, contract_id):
 @login_required
 @user_passes_test(is_admin_or_staff)
 def check_in_list_view(request):
-    """Danh sách nhận phòng (cho Admin)"""
-    check_ins = CheckIn.objects.all().order_by('-check_in_date')
+    """Danh sách biên bản nhận phòng"""
+    check_ins = CheckIn.objects.all().select_related('contract', 'contract__user', 'contract__room').order_by('-created_at')
 
-    is_completed = request.GET.get('completed')
-    if is_completed:
-        check_ins = check_ins.filter(is_completed=(is_completed == 'true'))
+
+    is_completed = request.GET.get('is_completed')
+    if is_completed is not None:
+        is_completed = is_completed.lower() == 'true'
+        check_ins = check_ins.filter(is_completed=is_completed)
+
+
+    search_query = request.GET.get('q')
+    if search_query:
+        check_ins = check_ins.filter(
+            Q(contract__user__username__icontains=search_query) |
+            Q(contract__user__full_name__icontains=search_query) |
+            Q(contract__room__room_number__icontains=search_query)
+        )
+
+
+    paginator = Paginator(check_ins, 20)
+    page_number = request.GET.get('page', 1)
+    check_ins_page = paginator.get_page(page_number)
 
     context = {
-        'check_ins': check_ins,
-        'page_title': 'Danh sách nhận phòng',
+        'check_ins': check_ins_page,
+        'is_completed': is_completed,
+        'search_query': search_query,
+        'page_title': 'Danh sách biên bản nhận phòng',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Nhận phòng', 'url': None}
+            {'title': 'Quản lý đăng ký', 'url': '#'},
+            {'title': 'Biên bản nhận phòng', 'url': None}
         ]
     }
     return render(request, 'registration/check_in_list.html', context)
@@ -621,20 +704,13 @@ def check_in_list_view(request):
 @login_required
 @user_passes_test(is_admin_or_staff)
 def check_in_create_view(request, contract_id):
-    """Tạo biên bản nhận phòng (cho Admin)"""
+    """Tạo biên bản nhận phòng"""
     contract = get_object_or_404(Contract, pk=contract_id)
 
-    if contract.status != 'active':
-        messages.error(request, 'Chỉ có thể tạo biên bản nhận phòng cho hợp đồng đang hoạt động.')
-        return redirect('registration:contract_admin_detail', contract_id=contract_id)
 
-    try:
-        # Kiểm tra xem đã có biên bản nhận phòng chưa
-        check_in = contract.check_in
-        messages.warning(request, 'Hợp đồng này đã có biên bản nhận phòng.')
-        return redirect('registration:check_in_detail', check_in_id=check_in.id)
-    except CheckIn.DoesNotExist:
-        pass
+    if CheckIn.objects.filter(contract=contract).exists():
+        messages.error(request, 'Đã có biên bản nhận phòng cho hợp đồng này.')
+        return redirect('registration:check_in_list')
 
     if request.method == 'POST':
         form = CheckInForm(request.POST)
@@ -643,8 +719,7 @@ def check_in_create_view(request, contract_id):
             check_in.contract = contract
             check_in.checked_by = request.user
             check_in.save()
-
-            messages.success(request, 'Đã tạo biên bản nhận phòng.')
+            messages.success(request, 'Đã tạo biên bản nhận phòng thành công.')
             return redirect('registration:check_in_detail', check_in_id=check_in.id)
     else:
         form = CheckInForm()
@@ -654,8 +729,8 @@ def check_in_create_view(request, contract_id):
         'contract': contract,
         'page_title': 'Tạo biên bản nhận phòng',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Nhận phòng', 'url': reverse('registration:check_in_list')},
+            {'title': 'Quản lý đăng ký', 'url': '#'},
+            {'title': 'Biên bản nhận phòng', 'url': reverse('registration:check_in_list')},
             {'title': 'Tạo mới', 'url': None}
         ]
     }
@@ -665,55 +740,85 @@ def check_in_create_view(request, contract_id):
 @login_required
 @user_passes_test(is_admin_or_staff)
 def check_in_detail_view(request, check_in_id):
-    """Chi tiết biên bản nhận phòng (cho Admin)"""
+    """Chi tiết biên bản nhận phòng"""
     check_in = get_object_or_404(CheckIn, pk=check_in_id)
 
+    if request.method == 'POST':
+        form = CheckInForm(request.POST, instance=check_in)
+        if form.is_valid():
+            check_in = form.save(commit=False)
+            if not check_in.is_completed:
+                check_in.is_completed = True
+                check_in.completed_at = timezone.now()
+                check_in.completed_by = request.user
+            check_in.save()
+            messages.success(request, 'Đã cập nhật biên bản nhận phòng thành công.')
+            return redirect('registration:check_in_detail', check_in_id=check_in.id)
+    else:
+        form = CheckInForm(instance=check_in)
+
     context = {
+        'form': form,
         'check_in': check_in,
-        'page_title': f'Chi tiết biên bản nhận phòng',
+        'page_title': 'Chi tiết biên bản nhận phòng',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Nhận phòng', 'url': reverse('registration:check_in_list')},
-            {'title': check_in.contract.user.full_name, 'url': None}
+            {'title': 'Quản lý đăng ký', 'url': '#'},
+            {'title': 'Biên bản nhận phòng', 'url': reverse('registration:check_in_list')},
+            {'title': f'Biên bản #{check_in.id}', 'url': None}
         ]
     }
-    return render(request, 'registration/check_in_detail.html', context)
+    return render(request, 'registration/admin/check_in_detail.html', context)
 
 
 @login_required
 @user_passes_test(is_admin_or_staff)
 def check_out_list_view(request):
-    """Danh sách trả phòng (cho Admin)"""
-    check_outs = CheckOut.objects.all().order_by('-check_out_date')
+    """Danh sách biên bản trả phòng"""
+    check_outs = CheckOut.objects.all().select_related('contract', 'contract__user', 'contract__room').order_by('-created_at')
 
-    is_completed = request.GET.get('completed')
-    if is_completed:
-        check_outs = check_outs.filter(is_completed=(is_completed == 'true'))
+
+    is_completed = request.GET.get('is_completed')
+    if is_completed is not None:
+        is_completed = is_completed.lower() == 'true'
+        check_outs = check_outs.filter(is_completed=is_completed)
+
+
+    search_query = request.GET.get('q')
+    if search_query:
+        check_outs = check_outs.filter(
+            Q(contract__user__username__icontains=search_query) |
+            Q(contract__user__full_name__icontains=search_query) |
+            Q(contract__room__room_number__icontains=search_query)
+        )
+
+
+    paginator = Paginator(check_outs, 20)
+    page_number = request.GET.get('page', 1)
+    check_outs_page = paginator.get_page(page_number)
 
     context = {
-        'check_outs': check_outs,
-        'page_title': 'Danh sách trả phòng',
+        'check_outs': check_outs_page,
+        'is_completed': is_completed,
+        'search_query': search_query,
+        'page_title': 'Danh sách biên bản trả phòng',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Trả phòng', 'url': None}
+            {'title': 'Quản lý đăng ký', 'url': '#'},
+            {'title': 'Biên bản trả phòng', 'url': None}
         ]
     }
-    return render(request, 'registration/check_out_list.html', context)
+    return render(request, 'registration/admin/check_out_list.html', context)
 
 
 @login_required
 @user_passes_test(is_admin_or_staff)
 def check_out_create_view(request, contract_id):
-    """Tạo biên bản trả phòng (cho Admin)"""
+    """Tạo biên bản trả phòng"""
     contract = get_object_or_404(Contract, pk=contract_id)
 
-    try:
-        # Kiểm tra xem đã có biên bản trả phòng chưa
-        check_out = contract.check_out
-        messages.warning(request, 'Hợp đồng này đã có biên bản trả phòng.')
-        return redirect('registration:check_out_detail', check_out_id=check_out.id)
-    except CheckOut.DoesNotExist:
-        pass
+
+    if CheckOut.objects.filter(contract=contract).exists():
+        messages.error(request, 'Đã có biên bản trả phòng cho hợp đồng này.')
+        return redirect('registration:check_out_list')
 
     if request.method == 'POST':
         form = CheckOutForm(request.POST)
@@ -722,22 +827,7 @@ def check_out_create_view(request, contract_id):
             check_out.contract = contract
             check_out.checked_by = request.user
             check_out.save()
-
-            # Cập nhật trạng thái hợp đồng
-            contract.status = 'terminated'
-            contract.save()
-
-            # Cập nhật trạng thái giường và phòng
-            if contract.bed:
-                contract.bed.status = 'available'
-                contract.bed.save()
-
-            # Cập nhật số lượng người trong phòng
-            room = contract.room
-            room.current_occupancy = max(0, room.current_occupancy - 1)
-            room.save()
-
-            messages.success(request, 'Đã tạo biên bản trả phòng.')
+            messages.success(request, 'Đã tạo biên bản trả phòng thành công.')
             return redirect('registration:check_out_detail', check_out_id=check_out.id)
     else:
         form = CheckOutForm()
@@ -747,27 +837,98 @@ def check_out_create_view(request, contract_id):
         'contract': contract,
         'page_title': 'Tạo biên bản trả phòng',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Trả phòng', 'url': reverse('registration:check_out_list')},
+            {'title': 'Quản lý đăng ký', 'url': '#'},
+            {'title': 'Biên bản trả phòng', 'url': reverse('registration:check_out_list')},
             {'title': 'Tạo mới', 'url': None}
         ]
     }
-    return render(request, 'registration/check_out_form.html', context)
+    return render(request, 'registration/admin/check_out_form.html', context)
 
 
 @login_required
 @user_passes_test(is_admin_or_staff)
 def check_out_detail_view(request, check_out_id):
-    """Chi tiết biên bản trả phòng (cho Admin)"""
+    """Chi tiết biên bản trả phòng"""
     check_out = get_object_or_404(CheckOut, pk=check_out_id)
 
+    if request.method == 'POST':
+        form = CheckOutForm(request.POST, instance=check_out)
+        if form.is_valid():
+            check_out = form.save(commit=False)
+            if not check_out.is_completed:
+                check_out.is_completed = True
+                check_out.completed_at = timezone.now()
+                check_out.completed_by = request.user
+            check_out.save()
+            messages.success(request, 'Đã cập nhật biên bản trả phòng thành công.')
+            return redirect('registration:check_out_detail', check_out_id=check_out.id)
+    else:
+        form = CheckOutForm(instance=check_out)
+
     context = {
+        'form': form,
         'check_out': check_out,
-        'page_title': f'Chi tiết biên bản trả phòng',
+        'page_title': 'Chi tiết biên bản trả phòng',
         'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Trả phòng', 'url': reverse('registration:check_out_list')},
-            {'title': check_out.contract.user.full_name, 'url': None}
+            {'title': 'Quản lý đăng ký', 'url': '#'},
+            {'title': 'Biên bản trả phòng', 'url': reverse('registration:check_out_list')},
+            {'title': f'Biên bản #{check_out.id}', 'url': None}
         ]
     }
-    return render(request, 'registration/check_out_detail.html', context)
+    return render(request, 'registration/admin/check_out_detail.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def period_delete_view(request, period_id):
+    """Xóa kỳ đăng ký"""
+    period = get_object_or_404(RegistrationPeriod, pk=period_id)
+    
+    if request.method == 'POST':
+        if period.registrations.exists():
+            messages.error(request, 'Không thể xóa kỳ đăng ký này vì đã có sinh viên đăng ký.')
+            return redirect('registration:period_list')
+            
+        period.delete()
+        messages.success(request, 'Đã xóa kỳ đăng ký thành công.')
+        return redirect('registration:period_list')
+        
+    context = {
+        'period': period,
+        'page_title': 'Xóa kỳ đăng ký',
+        'breadcrumbs': [
+            {'title': 'Quản lý đăng ký', 'url': '#'},
+            {'title': 'Danh sách kỳ đăng ký', 'url': reverse('registration:period_list')},
+            {'title': 'Xóa kỳ đăng ký', 'url': None}
+        ]
+    }
+    return render(request, 'registration/admin/period_delete.html', context)
+
+
+@login_required
+def application_cancel_view(request, application_id):
+    """Hủy đơn đăng ký phòng"""
+    registration = get_object_or_404(RoomRegistration, pk=application_id, user=request.user)
+    
+    if registration.status not in ['pending']:
+        messages.error(request, 'Chỉ có thể hủy đơn đăng ký đang chờ xét duyệt.')
+        return redirect('registration:my_applications')
+    
+    if request.method == 'POST':
+        registration.status = 'cancelled'
+        registration.cancelled_at = timezone.now()
+        registration.save(update_fields=['status', 'cancelled_at'])
+        
+        messages.success(request, 'Đã hủy đơn đăng ký thành công.')
+        return redirect('registration:my_applications')
+    
+    context = {
+        'registration': registration,
+        'page_title': 'Hủy đơn đăng ký',
+        'breadcrumbs': [
+            {'title': 'Đăng ký phòng', 'url': '#'},
+            {'title': 'Đơn đăng ký của tôi', 'url': reverse('registration:my_applications')},
+            {'title': 'Hủy đơn đăng ký', 'url': None}
+        ]
+    }
+    return render(request, 'registration/application_cancel.html', context)

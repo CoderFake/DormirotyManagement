@@ -106,15 +106,16 @@ def verify_email_view(request):
         )
 
         subject = "Xác thực email"
-        email_template = "accounts/email_verification_email.html"
+        email_template_html = "email/email_verification.html"
+        email_template_text = "email/email_verification.txt"
         email_context = {
             "user": user,
             "verify_url": verify_url,
             "site_name": "Hệ thống Quản lý Ký túc xá",
         }
 
-        html_message = render_to_string(email_template, email_context)
-        plain_message = render_to_string("accounts/email_verification_email.txt", email_context)
+        html_message = render_to_string(email_template_html, email_context)
+        plain_message = render_to_string(email_template_text, email_context)
 
         try:
             send_mail(
@@ -184,7 +185,8 @@ def password_reset_request(request):
                     f"/accounts/password-reset-confirm/{uid}/{token}/"
                 )
 
-                email_template = "accounts/password_reset_email.html"
+                email_template_html = "email/password_reset.html"
+                email_template_text = "email/password_reset.txt"
                 email_context = {
                     "user": user,
                     "reset_url": reset_url,
@@ -192,8 +194,8 @@ def password_reset_request(request):
                     "expiry_time": expiry_time
                 }
 
-                html_message = render_to_string(email_template, email_context)
-                plain_message = render_to_string("accounts/password_reset_email.txt", email_context)
+                html_message = render_to_string(email_template_html, email_context)
+                plain_message = render_to_string(email_template_text, email_context)
 
                 try:
                     send_mail(
