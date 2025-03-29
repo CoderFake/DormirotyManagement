@@ -257,7 +257,6 @@ def notification_create_view(request):
                 elif user_target == 'students':
                     recipients = User.objects.filter(is_active=True, user_type='student')
                 elif user_target == 'staff':
-
                     recipients = User.objects.filter(is_active=True, user_type__in=['staff', 'admin'])
                 elif user_target == 'building':
                     buildings = form.cleaned_data.get('target_buildings')
@@ -278,4 +277,169 @@ def notification_create_view(request):
                         contracts = Contract.objects.filter(
                             room__in=rooms,
                             status='active',
-                            start_date__lte=timezone.now().
+                            start_date__lte=timezone.now().date(),
+                            end_date__gte=timezone.now().date()
+                        )
+                        recipients = [contract.user for contract in contracts]
+                elif user_target == 'specific':
+                    specific_users = form.cleaned_data.get('specific_users')
+                    if specific_users:
+                        recipients = specific_users
+
+                for user in recipients:
+                    UserNotification.objects.create(
+                        notification=notification,
+                        user=user
+                    )
+
+            messages.success(request, 'Tạo thông báo mới thành công.')
+            return redirect('notification:list')
+    else:
+        form = NotificationForm()
+
+    context = {
+        'form': form,
+        'page_title': 'Tạo thông báo mới',
+        'breadcrumbs': [
+            {'title': 'Thông báo', 'url': '#'},
+            {'title': 'Tạo mới', 'url': None}
+        ]
+    }
+    return render(request, 'notification/notification_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def notification_edit_view(request, notification_id):
+    """Chỉnh sửa thông báo"""
+    notification = get_object_or_404(Notification, id=notification_id)
+
+    if request.method == 'POST':
+        form = NotificationForm(request.POST, instance=notification)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cập nhật thông báo thành công.')
+            return redirect('notification:list')
+    else:
+        form = NotificationForm(instance=notification)
+
+    context = {
+        'form': form,
+        'notification': notification,
+        'page_title': f'Chỉnh sửa thông báo: {notification.title}',
+        'breadcrumbs': [
+            {'title': 'Thông báo', 'url': '#'},
+            {'title': 'Danh sách', 'url': reverse('notification:list')},
+            {'title': notification.title, 'url': None}
+        ]
+    }
+    return render(request, 'notification/notification_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def notification_delete_view(request, notification_id):
+    """Xóa thông báo"""
+    notification = get_object_or_404(Notification, id=notification_id)
+
+    if request.method == 'POST':
+        notification_title = notification.title
+        notification.delete()
+        messages.success(request, f'Đã xóa thông báo: {notification_title}')
+        return redirect('notification:list')
+
+    context = {
+        'notification': notification,
+        'page_title': f'Xóa thông báo: {notification.title}',
+        'breadcrumbs': [
+            {'title': 'Thông báo', 'url': '#'},
+            {'title': 'Danh sách', 'url': reverse('notification:list')},
+            {'title': 'Xóa', 'url': None}
+        ]
+    }
+    return render(request, 'notification/notification_delete.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def announcement_create_view(request):
+    """Tạo thông báo chung"""
+    if request.method == 'POST':
+        form = AnnouncementForm(request.POST, request.FILES)
+        if form.is_valid():
+            announcement = form.save(commit=False)
+            announcement.author = request.user
+            announcement.save()
+            messages.success(request, 'Tạo thông báo chung mới thành công.')
+            return redirect('notification:announcement_list')
+    else:
+        form = AnnouncementForm()
+
+    context = {
+        'form': form,
+        'page_title': 'Tạo thông báo chung mới',
+        'breadcrumbs': [
+            {'title': 'Thông báo chung', 'url': reverse('notification:announcement_list')},
+            {'title': 'Tạo mới', 'url': None}
+        ]
+    }
+    return render(request, 'notification/announcement_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def announcement_edit_view(request, announcement_id):
+    """Chỉnh sửa thông báo chung"""
+    announcement = get_object_or_404(Announcement, id=announcement_id)
+
+    if request.method == 'POST':
+        form = AnnouncementForm(request.POST, request.FILES, instance=announcement)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cập nhật thông báo chung thành công.')
+            return redirect('notification:announcement_list')
+    else:
+        form = AnnouncementForm(instance=announcement)
+
+    context = {
+        'form': form,
+        'announcement': announcement,
+        'page_title': f'Chỉnh sửa thông báo chung: {announcement.title}',
+        'breadcrumbs': [
+            {'title': 'Thông báo chung', 'url': reverse('notification:announcement_list')},
+            {'title': announcement.title, 'url': reverse('notification:announcement_detail', args=[announcement.id])},
+            {'title': 'Chỉnh sửa', 'url': None}
+        ]
+    }
+    return render(request, 'notification/announcement_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def announcement_delete_view(request, announcement_id):
+    """Xóa thông báo chung"""
+    announcement = get_object_or_404(Announcement, id=announcement_id)
+
+    if request.method == 'POST':
+        announcement_title = announcement.title
+        announcement.delete()
+        messages.success(request, f'Đã xóa thông báo chung: {announcement_title}')
+        return redirect('notification:announcement_list')
+
+    context = {
+        'announcement': announcement,
+        'page_title': f'Xóa thông báo chung: {announcement.title}',
+        'breadcrumbs': [
+            {'title': 'Thông báo chung', 'url': reverse('notification:announcement_list')},
+            {'title': announcement.title, 'url': reverse('notification:announcement_detail', args=[announcement.id])},
+            {'title': 'Xóa', 'url': None}
+        ]
+    }
+    return render(request, 'notification/announcement_delete.html', context)
+
+
+@login_required
+def unread_count_api(request):
+    """API trả về số lượng thông báo chưa đọc"""
+    count = UserNotification.objects.filter(user=request.user, is_read=False).count()
+    return JsonResponse({'count': count})

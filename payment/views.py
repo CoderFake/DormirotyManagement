@@ -39,552 +39,593 @@ def is_admin_or_staff(user):
 # ====== Views cho sinh viên ======
 
 @login_required
-@user_passes_test(is_admin_or_staff)
-def invoice_add_item_view(request, invoice_id):
-    """Thêm mục vào hóa đơn"""
+def my_invoices_view(request):
+    """Xem danh sách hóa đơn của sinh viên"""
+    invoices = Invoice.objects.filter(user=request.user).order_by('-issue_date')
+
+    total_invoices = invoices.count()
+    pending_invoices = invoices.filter(status__in=['pending', 'overdue', 'partially_paid']).count()
+    total_unpaid = sum(invoice.get_remaining_amount() for invoice in invoices.filter(
+        status__in=['pending', 'overdue', 'partially_paid']
+    ))
+
+    context = {
+        'invoices': invoices,
+        'total_invoices': total_invoices,
+        'pending_invoices': pending_invoices,
+        'total_unpaid': total_unpaid,
+        'page_title': 'Hóa đơn của tôi',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn của tôi', 'url': None}
+        ]
+    }
+    return render(request, 'payment/my_invoices.html', context)
+
+
+@login_required
+def invoice_detail_view(request, invoice_id):
+    """Xem chi tiết hóa đơn"""
     invoice = get_object_or_404(Invoice, pk=invoice_id)
 
-    if request.method == 'POST':
-        form = InvoiceItemForm(request.POST)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.invoice = invoice
-            item.save()
+    if not (invoice.user == request.user or is_admin_or_staff(request.user)):
+        messages.error(request, 'Bạn không có quyền xem hóa đơn này.')
+        return redirect('payment:my_invoices')
 
-            messages.success(request, 'Thêm mục vào hóa đơn thành công.')
-            return redirect('payment:invoice_detail', invoice_id=invoice.id)
-    else:
-        form = InvoiceItemForm()
+    items = InvoiceItem.objects.filter(invoice=invoice)
+    payments = Payment.objects.filter(invoice=invoice).order_by('-payment_date')
 
     context = {
+        'invoice': invoice,
+        'items': items,
+        'payments': payments,
+        'page_title': f'Chi tiết hóa đơn #{invoice.invoice_number}',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn của tôi', 'url': reverse('payment:my_invoices')},
+            {'title': f'#{invoice.invoice_number}', 'url': None}
+        ]
+    }
+    return render(request, 'payment/invoice_detail.html', context)
+
+
+@login_required
+def payment_methods_view(request):
+    """Hiển thị các phương thức thanh toán"""
+    unpaid_invoices = Invoice.objects.filter(
+        user=request.user,
+        status__in=['pending', 'overdue', 'partially_paid']
+    ).order_by('due_date')
+
+    total_amount = sum(invoice.get_remaining_amount() for invoice in unpaid_invoices)
+
+    form = VNPayPaymentForm()
+
+    context = {
+        'unpaid_invoices': unpaid_invoices,
+        'total_amount': total_amount,
         'form': form,
-        'invoice': invoice,
-        'page_title': f'Thêm mục vào hóa đơn #{invoice.invoice_number}',
+        'page_title': 'Phương thức thanh toán',
         'breadcrumbs': [
             {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
-            {'title': f'Hóa đơn #{invoice.invoice_number}',
-             'url': reverse('payment:invoice_detail', kwargs={'invoice_id': invoice.id})},
-            {'title': 'Thêm mục', 'url': None}
+            {'title': 'Phương thức thanh toán', 'url': None}
         ]
     }
-    return render(request, 'payment/invoice_item_form.html', context)
+    return render(request, 'payment/payment_methods.html', context)
 
 
 @login_required
-@user_passes_test(is_admin_or_staff)
-def invoice_item_edit_view(request, item_id):
-    """Chỉnh sửa mục hóa đơn"""
-    item = get_object_or_404(InvoiceItem, pk=item_id)
-    invoice = item.invoice
-
-    if request.method == 'POST':
-        form = InvoiceItemForm(request.POST, instance=item)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Cập nhật mục hóa đơn thành công.')
-            return redirect('payment:invoice_detail', invoice_id=invoice.id)
-    else:
-        form = InvoiceItemForm(instance=item)
-
-    context = {
-        'form': form,
-        'item': item,
-        'invoice': invoice,
-        'page_title': 'Chỉnh sửa mục hóa đơn',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
-            {'title': f'Hóa đơn #{invoice.invoice_number}',
-             'url': reverse('payment:invoice_detail', kwargs={'invoice_id': invoice.id})},
-            {'title': 'Chỉnh sửa mục', 'url': None}
-        ]
-    }
-    return render(request, 'payment/invoice_item_form.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def invoice_item_delete_view(request, item_id):
-    """Xóa mục hóa đơn"""
-    item = get_object_or_404(InvoiceItem, pk=item_id)
-    invoice = item.invoice
-
-    if request.method == 'POST':
-        item.delete()
-        messages.success(request, 'Đã xóa mục hóa đơn.')
-        return redirect('payment:invoice_detail', invoice_id=invoice.id)
-
-    context = {
-        'item': item,
-        'invoice': invoice,
-        'page_title': 'Xóa mục hóa đơn',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
-            {'title': f'Hóa đơn #{invoice.invoice_number}',
-             'url': reverse('payment:invoice_detail', kwargs={'invoice_id': invoice.id})},
-            {'title': 'Xóa mục', 'url': None}
-        ]
-    }
-    return render(request, 'payment/invoice_item_delete.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def record_payment_view(request, invoice_id):
-    """Ghi nhận thanh toán thủ công"""
+def pay_invoice_view(request, invoice_id):
+    """Thanh toán một hóa đơn cụ thể"""
     invoice = get_object_or_404(Invoice, pk=invoice_id)
 
+    if invoice.user != request.user:
+        messages.error(request, 'Bạn không có quyền thanh toán hóa đơn này.')
+        return redirect('payment:my_invoices')
+
+    if invoice.status not in ['pending', 'overdue', 'partially_paid']:
+        messages.error(request, 'Hóa đơn này không cần thanh toán.')
+        return redirect('payment:invoice_detail', invoice_id=invoice_id)
+
+    initial_amount = invoice.get_remaining_amount()
+    form = VNPayPaymentForm(
+        initial={'amount': initial_amount, 'order_info': f'Thanh toán hóa đơn #{invoice.invoice_number}'})
+
     if request.method == 'POST':
-        form = PaymentForm(request.POST)
+        form = VNPayPaymentForm(request.POST)
         if form.is_valid():
-            payment = form.save(commit=False)
-            payment.invoice = invoice
-            payment.user = invoice.user
-            payment.payment_date = timezone.now()
-            payment.status = 'completed'
-            payment.save()
+            amount = form.cleaned_data['amount']
+            order_info = form.cleaned_data['order_info'] or f'Thanh toán hóa đơn #{invoice.invoice_number}'
+            txn_ref = f"INV{invoice.id.hex[:8]}{int(timezone.now().timestamp())}"
 
-            invoice.paid_amount += payment.amount
-            invoice.save()
-
-            messages.success(request,
-                             f'Đã ghi nhận thanh toán {payment.amount} VNĐ cho hóa đơn #{invoice.invoice_number}')
-            return redirect('payment:invoice_detail', invoice_id=invoice.id)
-    else:
-        initial_amount = invoice.get_remaining_amount()
-        form = PaymentForm(initial={'amount': initial_amount})
-
-    context = {
-        'form': form,
-        'invoice': invoice,
-        'page_title': f'Ghi nhận thanh toán cho hóa đơn #{invoice.invoice_number}',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
-            {'title': f'Hóa đơn #{invoice.invoice_number}',
-             'url': reverse('payment:invoice_detail', kwargs={'invoice_id': invoice.id})},
-            {'title': 'Ghi nhận thanh toán', 'url': None}
-        ]
-    }
-    return render(request, 'payment/record_payment.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def electricity_list_view(request):
-    """Danh sách chỉ số điện"""
-    readings = ElectricityReading.objects.all().order_by('-year', '-month', 'room__building__name', 'room__room_number')
-
-    room_id = request.GET.get('room')
-    month = request.GET.get('month')
-    year = request.GET.get('year')
-
-    if room_id:
-        readings = readings.filter(room_id=room_id)
-    if month:
-        readings = readings.filter(month=month)
-    if year:
-        readings = readings.filter(year=year)
-
-    context = {
-        'readings': readings,
-        'page_title': 'Danh sách chỉ số điện',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số điện', 'url': None}
-        ]
-    }
-    return render(request, 'payment/electricity_list.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def electricity_create_view(request):
-    """Tạo chỉ số điện mới"""
-    if request.method == 'POST':
-        form = ElectricityReadingForm(request.POST)
-        if form.is_valid():
-            reading = form.save()
-
-            messages.success(request, 'Tạo chỉ số điện mới thành công.')
-            return redirect('payment:electricity_list')
-    else:
-        form = ElectricityReadingForm()
-        form.initial['reading_date'] = timezone.now().date()
-        today = timezone.now().date()
-        form.initial['month'] = today.month
-        form.initial['year'] = today.year
-        form.initial['unit_price'] = 3500
-
-    context = {
-        'form': form,
-        'page_title': 'Tạo chỉ số điện mới',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số điện', 'url': reverse('payment:electricity_list')},
-            {'title': 'Tạo mới', 'url': None}
-        ]
-    }
-    return render(request, 'payment/electricity_form.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def electricity_edit_view(request, reading_id):
-    """Chỉnh sửa chỉ số điện"""
-    reading = get_object_or_404(ElectricityReading, pk=reading_id)
-
-    if request.method == 'POST':
-        form = ElectricityReadingForm(request.POST, instance=reading)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Cập nhật chỉ số điện thành công.')
-            return redirect('payment:electricity_list')
-    else:
-        form = ElectricityReadingForm(instance=reading)
-
-    context = {
-        'form': form,
-        'reading': reading,
-        'page_title': 'Chỉnh sửa chỉ số điện',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số điện', 'url': reverse('payment:electricity_list')},
-            {'title': 'Chỉnh sửa', 'url': None}
-        ]
-    }
-    return render(request, 'payment/electricity_form.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def electricity_delete_view(request, reading_id):
-    """Xóa chỉ số điện"""
-    reading = get_object_or_404(ElectricityReading, pk=reading_id)
-
-    if request.method == 'POST':
-        reading.delete()
-        messages.success(request, 'Đã xóa chỉ số điện.')
-        return redirect('payment:electricity_list')
-
-    context = {
-        'reading': reading,
-        'page_title': 'Xóa chỉ số điện',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số điện', 'url': reverse('payment:electricity_list')},
-            {'title': 'Xóa', 'url': None}
-        ]
-    }
-    return render(request, 'payment/electricity_delete.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def water_list_view(request):
-    readings = (WaterReading.objects.all()
-        .order_by('-year', '-month', 'room__building__name', 'room__room_number')
-    )
-
-    room_id = request.GET.get('room')
-    month = request.GET.get('month')
-    year = request.GET.get('year')
-
-    if room_id:
-        readings = readings.filter(room_id=room_id)
-    if month:
-        readings = readings.filter(month=month)
-    if year:
-        readings = readings.filter(year=year)
-
-    context = {
-        'readings': readings,
-        'page_title': 'Danh sách chỉ số nước',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số nước', 'url': None}
-        ]
-    }
-    return render(request, 'payment/water_list.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def water_create_view(request):
-    if request.method == 'POST':
-        form = WaterReadingForm(request.POST)
-        if form.is_valid():
-            reading = form.save()
-
-            messages.success(request, 'Tạo chỉ số nước mới thành công.')
-            return redirect('payment:water_list')
-    else:
-        form = WaterReadingForm()
-        form.initial['reading_date'] = timezone.now().date()
-        today = timezone.now().date()
-        form.initial['month'] = today.month
-        form.initial['year'] = today.year
-        form.initial['unit_price'] = 15000
-
-    context = {
-        'form': form,
-        'page_title': 'Tạo chỉ số nước mới',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số nước', 'url': reverse('payment:water_list')},
-            {'title': 'Tạo mới', 'url': None}
-        ]
-    }
-    return render(request, 'payment/water_form.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def water_edit_view(request, reading_id):
-    """Chỉnh sửa chỉ số nước"""
-    reading = get_object_or_404(WaterReading, pk=reading_id)
-
-    if request.method == 'POST':
-        form = WaterReadingForm(request.POST, instance=reading)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Cập nhật chỉ số nước thành công.')
-            return redirect('payment:water_list')
-    else:
-        form = WaterReadingForm(instance=reading)
-
-    context = {
-        'form': form,
-        'reading': reading,
-        'page_title': 'Chỉnh sửa chỉ số nước',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số nước', 'url': reverse('payment:water_list')},
-            {'title': 'Chỉnh sửa', 'url': None}
-        ]
-    }
-    return render(request, 'payment/water_form.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def water_delete_view(request, reading_id):
-    """Xóa chỉ số nước"""
-    reading = get_object_or_404(WaterReading, pk=reading_id)
-
-    if request.method == 'POST':
-        reading.delete()
-        messages.success(request, 'Đã xóa chỉ số nước.')
-        return redirect('payment:water_list')
-
-    context = {
-        'reading': reading,
-        'page_title': 'Xóa chỉ số nước',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Chỉ số nước', 'url': reverse('payment:water_list')},
-            {'title': 'Xóa', 'url': None}
-        ]
-    }
-    return render(request, 'payment/water_delete.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def transaction_list_view(request):
-    """Danh sách giao dịch"""
-    transactions = VNPayTransaction.objects.all().order_by('-created_at')
-
-    user_id = request.GET.get('user')
-    status = request.GET.get('status')
-
-    if user_id:
-        transactions = transactions.filter(user_id=user_id)
-    if status:
-        transactions = transactions.filter(transaction_status=status)
-
-    context = {
-        'transactions': transactions,
-        'page_title': 'Danh sách giao dịch',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Giao dịch', 'url': None}
-        ]
-    }
-    return render(request, 'payment/transaction_list.html', context)
-
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def transaction_detail_view(request, transaction_id):
-    """Chi tiết giao dịch"""
-    transaction = get_object_or_404(VNPayTransaction, pk=transaction_id)
-
-    context = {
-        'transaction': transaction,
-        'page_title': f'Chi tiết giao dịch #{transaction.txn_ref}',
-        'breadcrumbs': [
-            {'title': 'Thanh toán', 'url': '#'},
-            {'title': 'Giao dịch', 'url': reverse('payment:transaction_list')},
-            {'title': f'Giao dịch #{transaction.txn_ref}', 'url': None}
-        ]
-    }
-    return render(request, 'payment/transaction_detail.html', context)
-
-
-# ====== API Views ======
-
-@login_required
-@user_passes_test(is_admin_or_staff)
-def create_invoice_api(request):
-    """API tạo hóa đơn"""
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'Chỉ chấp nhận phương thức POST'}, status=405)
-
-    try:
-        data = json.loads(request.body) if request.body else request.POST
-
-        user_id = data.get('user_id')
-        room_id = data.get('room_id')
-        month = int(data.get('month', timezone.now().month))
-        year = int(data.get('year', timezone.now().year))
-
-        if not user_id or not room_id:
-            return JsonResponse({'status': 'error', 'message': 'Thiếu thông tin người dùng hoặc phòng'}, status=400)
-
-        user = get_object_or_404(User, pk=user_id)
-        room = get_object_or_404(Room, pk=room_id)
-
-        contract = Contract.objects.filter(
-            user=user,
-            room=room,
-            status='active',
-            start_date__lte=timezone.now().date(),
-            end_date__gte=timezone.now().date()
-        ).first()
-
-        with transaction.atomic():
-            invoice = Invoice.objects.create(
-                user=user,
-                contract=contract,
-                room=room,
-                issue_date=timezone.now().date(),
-                due_date=timezone.now().date() + timezone.timedelta(days=15),
-                month=month,
-                year=year
+            transaction = VNPayTransaction.objects.create(
+                user=request.user,
+                amount=amount,
+                order_info=order_info,
+                txn_ref=txn_ref,
+                transaction_status='pending'
             )
 
-            if contract:
-                fee_type = FeeType.objects.get_or_create(
-                    name='Tiền phòng',
-                    code='ROOM_FEE',
-                    defaults={'description': 'Phí thuê phòng hàng tháng'}
-                )[0]
+            # Tạo URL thanh toán VNPay
+            vnpay_url = create_vnpay_url(transaction)
 
-                InvoiceItem.objects.create(
-                    invoice=invoice,
-                    fee_type=fee_type,
-                    description=f'Tiền phòng tháng {month}/{year}',
-                    quantity=1,
-                    unit_price=contract.monthly_fee
-                )
+            return redirect(vnpay_url)
 
-            electricity_reading = ElectricityReading.objects.filter(
-                room=room,
-                month=month,
-                year=year,
-                is_billed=False
-            ).first()
-
-            if electricity_reading:
-                fee_type = FeeType.objects.get_or_create(
-                    name='Tiền điện',
-                    code='ELECTRICITY_FEE',
-                    defaults={'description': 'Phí sử dụng điện hàng tháng'}
-                )[0]
-
-                InvoiceItem.objects.create(
-                    invoice=invoice,
-                    fee_type=fee_type,
-                    description=f'Tiền điện tháng {month}/{year}: {electricity_reading.get_usage()} kWh',
-                    quantity=electricity_reading.get_usage(),
-                    unit_price=electricity_reading.unit_price
-                )
-
-                electricity_reading.is_billed = True
-                electricity_reading.invoice = invoice
-                electricity_reading.save()
-
-            water_reading = WaterReading.objects.filter(
-                room=room,
-                month=month,
-                year=year,
-                is_billed=False
-            ).first()
-
-            if water_reading:
-                fee_type = FeeType.objects.get_or_create(
-                    name='Tiền nước',
-                    code='WATER_FEE',
-                    defaults={'description': 'Phí sử dụng nước hàng tháng'}
-                )[0]
-
-                InvoiceItem.objects.create(
-                    invoice=invoice,
-                    fee_type=fee_type,
-                    description=f'Tiền nước tháng {month}/{year}: {water_reading.get_usage()} m³',
-                    quantity=water_reading.get_usage(),
-                    unit_price=water_reading.unit_price
-                )
-
-                water_reading.is_billed = True
-                water_reading.invoice = invoice
-                water_reading.save()
-
-        return JsonResponse({
-            'status': 'success',
-            'message': f'Tạo hóa đơn thành công. Số hóa đơn: {invoice.invoice_number}',
-            'invoice_id': str(invoice.id),
-            'invoice_number': invoice.invoice_number,
-            'redirect': reverse('payment:invoice_detail', kwargs={'invoice_id': invoice.id})
-        })
-
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    context = {
+        'form': form,
+        'invoice': invoice,
+        'page_title': f'Thanh toán hóa đơn #{invoice.invoice_number}',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn của tôi', 'url': reverse('payment:my_invoices')},
+            {'title': f'#{invoice.invoice_number}', 'url': reverse('payment:invoice_detail', args=[invoice_id])},
+            {'title': 'Thanh toán', 'url': None}
+        ]
+    }
+    return render(request, 'payment/pay_invoice.html', context)
 
 
 @login_required
-def check_payment_status_api(request):
-    """API kiểm tra trạng thái thanh toán"""
-    if request.method != 'GET':
-        return JsonResponse({'status': 'error', 'message': 'Chỉ chấp nhận phương thức GET'}, status=405)
+def payment_history_view(request):
+    """Lịch sử thanh toán"""
+    payments = Payment.objects.filter(user=request.user).order_by('-payment_date')
+
+    context = {
+        'payments': payments,
+        'page_title': 'Lịch sử thanh toán',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Lịch sử thanh toán', 'url': None}
+        ]
+    }
+    return render(request, 'payment/payment_history.html', context)
+
+
+@login_required
+def create_payment_view(request):
+    """Tạo một giao dịch thanh toán mới"""
+    if request.method == 'POST':
+        form = VNPayPaymentForm(request.POST)
+        if form.is_valid():
+            amount = form.cleaned_data['amount']
+            order_info = form.cleaned_data['order_info'] or 'Thanh toán ký túc xá'
+
+            txn_ref = f"PAY{request.user.id.hex[:8]}{int(timezone.now().timestamp())}"
+
+            transaction = VNPayTransaction.objects.create(
+                user=request.user,
+                amount=amount,
+                order_info=order_info,
+                txn_ref=txn_ref,
+                transaction_status='pending'
+            )
+            vnpay_url = create_vnpay_url(transaction)
+
+            return redirect(vnpay_url)
+    else:
+        form = VNPayPaymentForm()
+
+    context = {
+        'form': form,
+        'page_title': 'Tạo giao dịch thanh toán',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Tạo giao dịch', 'url': None}
+        ]
+    }
+    return render(request, 'payment/create_payment.html', context)
+
+
+@csrf_exempt
+def vnpay_return_view(request):
+    """Xử lý kết quả trả về từ VNPay"""
+    vnp_params = request.GET.copy()
+    vnp_txn_ref = vnp_params.get('vnp_TxnRef')
+    vnp_response_code = vnp_params.get('vnp_ResponseCode')
 
     try:
-        transaction_id = request.GET.get('transaction_id')
+        transaction = VNPayTransaction.objects.get(txn_ref=vnp_txn_ref)
+    except VNPayTransaction.DoesNotExist:
+        messages.error(request, 'Không tìm thấy thông tin giao dịch.')
+        return redirect('payment:payment_methods')
 
-        if not transaction_id:
-            return JsonResponse({'status': 'error', 'message': 'Thiếu thông tin giao dịch'}, status=400)
+    vnp_secure_hash = vnp_params.pop('vnp_SecureHash', None)
 
-        try:
-            transaction = VNPayTransaction.objects.get(txn_ref=transaction_id)
-        except VNPayTransaction.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Không tìm thấy giao dịch'}, status=404)
+    if not vnp_secure_hash:
+        transaction.transaction_status = 'failed'
+        transaction.response_code = '99'
+        transaction.response_message = 'Thiếu thông tin xác thực'
+        transaction.save()
 
-        if not is_admin_or_staff(request.user) and transaction.user != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Bạn không có quyền xem giao dịch này'}, status=403)
+        messages.error(request, 'Thiếu thông tin xác thực giao dịch.')
+        return redirect('payment:payment_methods')
 
-        return JsonResponse({
-            'status': 'success',
-            'transaction_status': transaction.transaction_status,
-            'amount': float(transaction.amount),
-            'created_at': transaction.created_at.strftime('%d/%m/%Y %H:%M:%S'),
-            'transaction_date': transaction.transaction_date.strftime(
-                '%d/%m/%Y %H:%M:%S') if transaction.transaction_date else None,
-            'response_code': transaction.response_code,
-            'message': transaction.response_message
-        })
+    if vnp_response_code == '00':
+        transaction.transaction_status = 'success'
+        transaction.response_code = vnp_response_code
+        transaction.response_message = 'Giao dịch thành công'
+        transaction.transaction_date = timezone.now()
+        transaction.bank_code = vnp_params.get('vnp_BankCode')
+        transaction.card_type = vnp_params.get('vnp_CardType')
+        transaction.save()
 
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        if vnp_txn_ref.startswith('INV'):
+            invoice_id = vnp_txn_ref[3:11]
+            try:
+                invoice = Invoice.objects.get(id__startswith=invoice_id)
+                payment = Payment.objects.create(
+                    invoice=invoice,
+                    user=transaction.user,
+                    amount=transaction.amount,
+                    payment_method='vnpay',
+                    transaction_id=vnp_txn_ref,
+                    status='completed'
+                )
+
+                invoice.paid_amount += transaction.amount
+                invoice.save()
+
+                transaction.payment = payment
+                transaction.save()
+            except Invoice.DoesNotExist:
+                pass
+        else:
+            unpaid_invoices = Invoice.objects.filter(
+                user=transaction.user,
+                status__in=['pending', 'overdue', 'partially_paid']
+            ).order_by('due_date')
+
+            remaining_amount = transaction.amount
+            for invoice in unpaid_invoices:
+                if remaining_amount <= 0:
+                    break
+
+                invoice_remaining = invoice.get_remaining_amount()
+                payment_amount = min(remaining_amount, invoice_remaining)
+
+                if payment_amount > 0:
+                    payment = Payment.objects.create(
+                        invoice=invoice,
+                        user=transaction.user,
+                        amount=payment_amount,
+                        payment_method='vnpay',
+                        transaction_id=vnp_txn_ref,
+                        status='completed'
+                    )
+
+                    invoice.paid_amount += payment_amount
+                    invoice.save()
+
+                    if not transaction.payment:
+                        transaction.payment = payment
+                        transaction.save()
+
+                    remaining_amount -= payment_amount
+
+        messages.success(request, 'Thanh toán thành công!')
+        context = {
+            'payment_success': True,
+            'transaction_id': vnp_txn_ref,
+            'amount': transaction.amount,
+            'transaction_date': transaction.transaction_date,
+            'page_title': 'Kết quả thanh toán',
+            'breadcrumbs': [
+                {'title': 'Thanh toán', 'url': '#'},
+                {'title': 'Kết quả', 'url': None}
+            ]
+        }
+    else:
+        transaction.transaction_status = 'failed'
+        transaction.response_code = vnp_response_code
+        transaction.response_message = 'Giao dịch thất bại'
+        transaction.transaction_date = timezone.now()
+        transaction.save()
+
+        messages.error(request, 'Thanh toán không thành công. Vui lòng thử lại sau.')
+        context = {
+            'payment_success': False,
+            'transaction_id': vnp_txn_ref,
+            'error_code': vnp_response_code,
+            'error_message': 'Giao dịch không thành công',
+            'transaction_date': transaction.transaction_date,
+            'page_title': 'Kết quả thanh toán',
+            'breadcrumbs': [
+                {'title': 'Thanh toán', 'url': '#'},
+                {'title': 'Kết quả', 'url': None}
+            ]
+        }
+
+    return render(request, 'payment/vnpay_return.html', context)
+
+
+@csrf_exempt
+def vnpay_ipn_view(request):
+    """Xử lý IPN (Instant Payment Notification) từ VNPay"""
+    vnp_params = request.GET.copy()
+    vnp_txn_ref = vnp_params.get('vnp_TxnRef')
+    vnp_response_code = vnp_params.get('vnp_ResponseCode')
+
+    try:
+        transaction = VNPayTransaction.objects.get(txn_ref=vnp_txn_ref)
+    except VNPayTransaction.DoesNotExist:
+        return HttpResponse('Không tìm thấy giao dịch', status=404)
+
+    vnp_secure_hash = vnp_params.pop('vnp_SecureHash', None)
+
+    if not vnp_secure_hash:
+        return HttpResponse('Thiếu thông tin xác thực', status=400)
+
+    if vnp_response_code == '00':
+        transaction.transaction_status = 'success'
+        transaction.response_code = vnp_response_code
+        transaction.response_message = 'Giao dịch thành công'
+        transaction.transaction_date = timezone.now()
+        transaction.bank_code = vnp_params.get('vnp_BankCode')
+        transaction.card_type = vnp_params.get('vnp_CardType')
+        transaction.save()
+
+        return HttpResponse('OK', status=200)
+    else:
+        transaction.transaction_status = 'failed'
+        transaction.response_code = vnp_response_code
+        transaction.response_message = 'Giao dịch thất bại'
+        transaction.transaction_date = timezone.now()
+        transaction.save()
+
+        return HttpResponse('Giao dịch thất bại', status=200)
+
+
+# ====== Views cho Admin ======
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def fee_type_list_view(request):
+    """Danh sách loại phí"""
+    fee_types = FeeType.objects.all().order_by('name')
+
+    context = {
+        'fee_types': fee_types,
+        'page_title': 'Danh sách loại phí',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Loại phí', 'url': None}
+        ]
+    }
+    return render(request, 'payment/fee_type_list.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def fee_type_create_view(request):
+    """Tạo loại phí mới"""
+    if request.method == 'POST':
+        form = FeeTypeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tạo loại phí mới thành công.')
+            return redirect('payment:fee_type_list')
+    else:
+        form = FeeTypeForm()
+
+    context = {
+        'form': form,
+        'page_title': 'Tạo loại phí mới',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Loại phí', 'url': reverse('payment:fee_type_list')},
+            {'title': 'Tạo mới', 'url': None}
+        ]
+    }
+    return render(request, 'payment/fee_type_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def fee_type_edit_view(request, fee_type_id):
+    """Chỉnh sửa loại phí"""
+    fee_type = get_object_or_404(FeeType, pk=fee_type_id)
+
+    if request.method == 'POST':
+        form = FeeTypeForm(request.POST, instance=fee_type)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cập nhật loại phí thành công.')
+            return redirect('payment:fee_type_list')
+    else:
+        form = FeeTypeForm(instance=fee_type)
+
+    context = {
+        'form': form,
+        'fee_type': fee_type,
+        'page_title': f'Chỉnh sửa loại phí: {fee_type.name}',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Loại phí', 'url': reverse('payment:fee_type_list')},
+            {'title': fee_type.name, 'url': None}
+        ]
+    }
+    return render(request, 'payment/fee_type_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def fee_type_delete_view(request, fee_type_id):
+    """Xóa loại phí"""
+    fee_type = get_object_or_404(FeeType, pk=fee_type_id)
+
+    if request.method == 'POST':
+        fee_type_name = fee_type.name
+        fee_type.delete()
+        messages.success(request, f'Đã xóa loại phí: {fee_type_name}')
+        return redirect('payment:fee_type_list')
+
+    context = {
+        'fee_type': fee_type,
+        'page_title': f'Xóa loại phí: {fee_type.name}',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Loại phí', 'url': reverse('payment:fee_type_list')},
+            {'title': 'Xóa', 'url': None}
+        ]
+    }
+    return render(request, 'payment/fee_type_delete.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def invoice_list_view(request):
+    """Danh sách tất cả hóa đơn"""
+    invoices = Invoice.objects.all().order_by('-issue_date')
+
+    status = request.GET.get('status')
+    if status:
+        invoices = invoices.filter(status=status)
+
+    user_id = request.GET.get('user')
+    if user_id:
+        invoices = invoices.filter(user_id=user_id)
+
+    room_id = request.GET.get('room')
+    if room_id:
+        invoices = invoices.filter(room_id=room_id)
+
+    context = {
+        'invoices': invoices,
+        'page_title': 'Danh sách hóa đơn',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn', 'url': None}
+        ]
+    }
+    return render(request, 'payment/invoice_list.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def invoice_create_view(request):
+    """Tạo hóa đơn mới"""
+    if request.method == 'POST':
+        form = InvoiceForm(request.POST)
+        if form.is_valid():
+            invoice = form.save(commit=False)
+            invoice.issue_date = timezone.now().date()
+            invoice.save()
+
+            messages.success(request, f'Tạo hóa đơn mới thành công. Số hóa đơn: {invoice.invoice_number}')
+            return redirect('payment:invoice_detail', invoice_id=invoice.id)
+    else:
+        form = InvoiceForm()
+        form.fields['due_date'].initial = timezone.now().date() + timezone.timedelta(days=15)
+        form.fields['month'].initial = timezone.now().month
+        form.fields['year'].initial = timezone.now().year
+
+    context = {
+        'form': form,
+        'page_title': 'Tạo hóa đơn mới',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
+            {'title': 'Tạo mới', 'url': None}
+        ]
+    }
+    return render(request, 'payment/invoice_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def invoice_edit_view(request, invoice_id):
+    """Chỉnh sửa hóa đơn"""
+    invoice = get_object_or_404(Invoice, pk=invoice_id)
+
+    if request.method == 'POST':
+        form = InvoiceForm(request.POST, instance=invoice)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cập nhật hóa đơn thành công.')
+            return redirect('payment:invoice_detail', invoice_id=invoice.id)
+    else:
+        form = InvoiceForm(instance=invoice)
+
+    context = {
+        'form': form,
+        'invoice': invoice,
+        'page_title': f'Chỉnh sửa hóa đơn #{invoice.invoice_number}',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
+            {'title': f'#{invoice.invoice_number}', 'url': reverse('payment:invoice_detail', args=[invoice_id])},
+            {'title': 'Chỉnh sửa', 'url': None}
+        ]
+    }
+    return render(request, 'payment/invoice_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def invoice_delete_view(request, invoice_id):
+    """Xóa hóa đơn"""
+    invoice = get_object_or_404(Invoice, pk=invoice_id)
+
+    if request.method == 'POST':
+        invoice_number = invoice.invoice_number
+        invoice.delete()
+        messages.success(request, f'Đã xóa hóa đơn: {invoice_number}')
+        return redirect('payment:invoice_list')
+
+    context = {
+        'invoice': invoice,
+        'page_title': f'Xóa hóa đơn #{invoice.invoice_number}',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
+            {'title': 'Xóa', 'url': None}
+        ]
+    }
+    return render(request, 'payment/invoice_delete.html', context)
+
+
+# ====== Hàm hỗ trợ ======
+
+def create_vnpay_url(transaction):
+    """Tạo URL thanh toán VNPay"""
+    vnp_tmn_code = settings.VNPAY_TMN_CODE
+    vnp_hash_secret = settings.VNPAY_HASH_SECRET_KEY
+    vnp_url = settings.VNPAY_PAYMENT_URL
+    vnp_return_url = settings.VNPAY_RETURN_URL
+
+    vnp_txn_ref = transaction.txn_ref
+    vnp_order_info = transaction.order_info
+    vnp_amount = int(transaction.amount) * 100
+    vnp_locale = 'vn'
+    vnp_currency = 'VND'
+    vnp_ip_addr = '127.0.0.1'
+    vnp_create_date = timezone.now().strftime('%Y%m%d%H%M%S')
+
+    vnp_params = {
+        'vnp_Version': '2.1.0',
+        'vnp_Command': 'pay',
+        'vnp_TmnCode': vnp_tmn_code,
+        'vnp_Amount': vnp_amount,
+        'vnp_CurrCode': vnp_currency,
+        'vnp_TxnRef': vnp_txn_ref,
+        'vnp_OrderInfo': vnp_order_info,
+        'vnp_OrderType': 'billpayment',
+        'vnp_Locale': vnp_locale,
+        'vnp_ReturnUrl': vnp_return_url,
+        'vnp_IpAddr': vnp_ip_addr,
+        'vnp_CreateDate': vnp_create_date
+    }
+
+    sorted_params = sorted(vnp_params.items())
+
+    hash_data = '&'.join([f"{k}={v}" for k, v in sorted_params])
+    vnp_secure_hash = hmac.new(
+        vnp_hash_secret.encode('utf-8'),
+        hash_data.encode('utf-8'),
+        hashlib.sha512
+    ).hexdigest()
+
+    vnp_params['vnp_SecureHash'] = vnp_secure_hash
+
+    query_string = urllib.parse.urlencode(vnp_params)
+    return f"{vnp_url}?{query_string}"
