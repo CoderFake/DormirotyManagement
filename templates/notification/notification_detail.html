@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ notification.title }} - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Chi tiết thông báo</h6>
+            <div>
+                <a href="{% url 'notification:list' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+                {% if user_notification and not user_notification.is_read %}
+                    <a href="{% url 'notification:mark_as_read' notification.id %}" class="btn btn-primary btn-sm ms-2">
+                        <i class="fas fa-check me-1"></i> Đánh dấu đã đọc
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h3 class="text-gray-800">{{ notification.title }}</h3>
+                <div class="d-flex justify-content-between align-items-center text-muted mb-3">
+                    <div>
+                        <span class="me-3">
+                            <i class="fas fa-user me-1"></i> {{ notification.sender.full_name }}
+                        </span>
+                        <span class="me-3">
+                            <i class="fas fa-clock me-1"></i> {{ notification.created_at|date:"d/m/Y H:i" }}
+                        </span>
+                        <span class="badge bg-{{ notification.category.color }}">
+                            <i class="fas {{ notification.category.icon }} me-1"></i> {{ notification.category.name }}
+                        </span>
+
+                        {% if notification.priority == 'high' %}
+                            <span class="badge bg-warning ms-2">Ưu tiên cao</span>
+                        {% elif notification.priority == 'urgent' %}
+                            <span class="badge bg-danger ms-2">Khẩn cấp</span>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        {% if user_notification %}
+                            {% if user_notification.is_read %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-check me-1"></i> Đã đọc
+                                </span>
+                            {% else %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-envelope me-1"></i> Chưa đọc
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="notification-content mb-4">
+                    <div class="border-top pt-3">
+                        {{ notification.content|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            {% if notification.target_buildings.exists or notification.target_rooms.exists %}
+                <div class="card mb-3">
+                    <div class="card-header py-2">
+                        <h6 class="m-0 font-weight-bold text-primary">Đối tượng thông báo</h6>
+                    </div>
+                    <div class="card-body py-2">
+                        {% if notification.is_global %}
+                            <p class="text-muted mb-0">Thông báo cho tất cả người dùng</p>
+                        {% else %}
+                            {% if notification.target_buildings.exists %}
+                                <div class="mb-2">
+                                    <strong>Tòa nhà:</strong>
+                                    {% for building in notification.target_buildings.all %}
+                                        <span class="badge bg-info me-1">{{ building.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            {% if notification.target_rooms.exists %}
+                                <div>
+                                    <strong>Phòng:</strong>
+                                    {% for room in notification.target_rooms.all %}
+                                        <span class="badge bg-secondary me-1">{{ room.building.code }}-{{ room.room_number }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    {% if notification.start_date %}
+                        <p class="mb-1"><strong>Ngày bắt đầu hiển thị:</strong> {{ notification.start_date|date:"d/m/Y H:i" }}</p>
+                    {% endif %}
+
+                    {% if notification.end_date %}
+                        <p class="mb-0"><strong>Ngày kết thúc hiển thị:</strong> {{ notification.end_date|date:"d/m/Y H:i" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

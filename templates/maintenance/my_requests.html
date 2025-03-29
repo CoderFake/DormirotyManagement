@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Yêu cầu bảo trì của tôi - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Yêu cầu bảo trì của tôi</h1>
+        <a href="{% url 'maintenance:request_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Tạo yêu cầu mới
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách yêu cầu</h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="filterDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-filter fa-sm text-gray-500"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="filterDropdown">
+                    <div class="dropdown-header">Lọc theo trạng thái:</div>
+                    <a class="dropdown-item {% if not request.GET.status %}active{% endif %}" href="{% url 'maintenance:my_requests' %}">Tất cả</a>
+                    <a class="dropdown-item {% if request.GET.status == 'pending' %}active{% endif %}" href="{% url 'maintenance:my_requests' %}?status=pending">Chờ xử lý</a>
+                    <a class="dropdown-item {% if request.GET.status == 'assigned' %}active{% endif %}" href="{% url 'maintenance:my_requests' %}?status=assigned">Đã phân công</a>
+                    <a class="dropdown-item {% if request.GET.status == 'in_progress' %}active{% endif %}" href="{% url 'maintenance:my_requests' %}?status=in_progress">Đang xử lý</a>
+                    <a class="dropdown-item {% if request.GET.status == 'completed' %}active{% endif %}" href="{% url 'maintenance:my_requests' %}?status=completed">Hoàn thành</a>
+                    <a class="dropdown-item {% if request.GET.status == 'canceled' %}active{% endif %}" href="{% url 'maintenance:my_requests' %}?status=canceled">Đã hủy</a>
+                    <a class="dropdown-item {% if request.GET.status == 'rejected' %}active{% endif %}" href="{% url 'maintenance:my_requests' %}?status=rejected">Từ chối</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered datatable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Mã yêu cầu</th>
+                            <th>Tiêu đề</th>
+                            <th>Danh mục</th>
+                            <th>Ngày yêu cầu</th>
+                            <th>Mức độ ưu tiên</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in requests %}
+                            <tr>
+                                <td>{{ request.request_number }}</td>
+                                <td>{{ request.title|truncatechars:40 }}</td>
+                                <td>{{ request.category.name }}</td>
+                                <td>{{ request.requested_date|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if request.priority == 'low' %}
+                                        <span class="badge bg-secondary">Thấp</span>
+                                    {% elif request.priority == 'medium' %}
+                                        <span class="badge bg-info">Trung bình</span>
+                                    {% elif request.priority == 'high' %}
+                                        <span class="badge bg-warning">Cao</span>
+                                    {% elif request.priority == 'urgent' %}
+                                        <span class="badge bg-danger">Khẩn cấp</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <span class="badge bg-warning">Chờ xử lý</span>
+                                    {% elif request.status == 'assigned' %}
+                                        <span class="badge bg-info">Đã phân công</span>
+                                    {% elif request.status == 'in_progress' %}
+                                        <span class="badge bg-primary">Đang xử lý</span>
+                                    {% elif request.status == 'completed' %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                    {% elif request.status == 'canceled' %}
+                                        <span class="badge bg-secondary">Đã hủy</span>
+                                    {% elif request.status == 'rejected' %}
+                                        <span class="badge bg-danger">Từ chối</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'maintenance:request_detail' request.id %}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if request.status == 'pending' or request.status == 'rejected' %}
+                                            <a href="{% url 'maintenance:request_update' request.id %}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'maintenance:request_cancel' request.id %}" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Hủy yêu cầu">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">Bạn chưa có yêu cầu bảo trì nào</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json"
+            },
+            "order": [[ 3, "desc" ]]
+        });
+    });
+</script>
+{% endblock %}

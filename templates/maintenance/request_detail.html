@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi tiết yêu cầu bảo trì #{{ maintenance_request.request_number }} - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Chi tiết yêu cầu #{{ maintenance_request.request_number }}</h6>
+            <div>
+                <a href="{% if user.user_type == 'admin' or user.user_type == 'staff' %}{% url 'maintenance:request_list' %}{% else %}{% url 'maintenance:my_requests' %}{% endif %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+
+                {% if maintenance_request.status == 'pending' or maintenance_request.status == 'rejected' %}
+                    {% if maintenance_request.user == user %}
+                        <a href="{% url 'maintenance:request_update' maintenance_request.id %}" class="btn btn-warning btn-sm ms-2">
+                            <i class="fas fa-edit me-1"></i> Chỉnh sửa
+                        </a>
+                        <a href="{% url 'maintenance:request_cancel' maintenance_request.id %}" class="btn btn-danger btn-sm ms-2">
+                            <i class="fas fa-times me-1"></i> Hủy yêu cầu
+                        </a>
+                    {% endif %}
+                {% endif %}
+
+                {% if user.user_type == 'admin' or user.user_type == 'staff' %}
+                    <div class="btn-group ms-2">
+                        <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog me-1"></i> Quản lý
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'maintenance:request_admin_edit' maintenance_request.id %}">
+                                    <i class="fas fa-edit me-1"></i> Chỉnh sửa
+                                </a>
+                            </li>
+                            {% if maintenance_request.status == 'pending' or maintenance_request.status == 'rejected' %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'maintenance:request_assign' maintenance_request.id %}">
+                                        <i class="fas fa-user-check me-1"></i> Phân công
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'maintenance:request_status_update' maintenance_request.id %}" id="statusUpdateForm">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" id="statusInput">
+                                    <input type="hidden" name="notes" id="notesInput">
+                                    {% if maintenance_request.status == 'assigned' %}
+                                        <button type="button" class="dropdown-item text-primary status-update" data-status="in_progress">
+                                            <i class="fas fa-play-circle me-1"></i> Bắt đầu xử lý
+                                        </button>
+                                    {% elif maintenance_request.status == 'in_progress' %}
+                                        <button type="button" class="dropdown-item text-success status-update" data-status="completed">
+                                            <i class="fas fa-check-circle me-1"></i> Đánh dấu hoàn thành
+                                        </button>
+                                    {% elif maintenance_request.status == 'pending' %}
+                                        <button type="button" class="dropdown-item text-danger status-update" data-status="rejected">
+                                            <i class="fas fa-times-circle me-1"></i> Từ chối yêu cầu
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Thông tin yêu cầu</h5>
+                    <table class="table table-bordered table-sm">
+                        <tr>
+                            <th style="width: 30%">Mã yêu cầu:</th>
+                            <td>{{ maintenance_request.request_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tiêu đề:</th>
+                            <td>{{ maintenance_request.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>Danh mục:</th>
+                            <td>{{ maintenance_request.category.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Mức độ ưu tiên:</th>
+                            <td>
+                                {% if maintenance_request.priority == 'low' %}
+                                    <span class="badge bg-secondary">Thấp</span>
+                                {% elif maintenance_request.priority == 'medium' %}
+                                    <span class="badge bg-info">Trung bình</span>
+                                {% elif maintenance_request.priority == 'high' %}
+                                    <span class="badge bg-warning">Cao</span>
+                                {% elif maintenance_request.priority == 'urgent' %}
+                                    <span class="badge bg-danger">Khẩn cấp</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái:</th>
+                            <td>
+                                {% if maintenance_request.status == 'pending' %}
+                                    <span class="badge bg-warning">Chờ xử lý</span>
+                                {% elif maintenance_request.status == 'assigned' %}
+                                    <span class="badge bg-info">Đã phân công</span>
+                                {% elif maintenance_request.status == 'in_progress' %}
+                                    <span class="badge bg-primary">Đang xử lý</span>
+                                {% elif maintenance_request.status == 'completed' %}
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                {% elif maintenance_request.status == 'canceled' %}
+                                    <span class="badge bg-secondary">Đã hủy</span>
+                                {% elif maintenance_request.status == 'rejected' %}
+                                    <span class="badge bg-danger">Từ chối</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>Thông tin thêm</h5>
+                    <table class="table table-bordered table-sm">
+                        <tr>
+                            <th style="width: 30%">Người yêu cầu:</th>
+                            <td>{{ maintenance_request.user.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày yêu cầu:</th>
+                            <td>{{ maintenance_request.requested_date|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tòa nhà:</th>
+                            <td>{{ maintenance_request.building.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phòng:</th>
+                            <td>{{ maintenance_request.room.room_number }}</td>
+                        </tr>
+                        {% if maintenance_request.assigned_to %}
+                            <tr>
+                                <th>Người được phân công:</th>
+                                <td>{{ maintenance_request.assigned_to.full_name }}</td>
+                            </tr>
+                        {% endif %}
+                        {% if maintenance_request.scheduled_date %}
+                            <tr>
+                                <th>Ngày dự kiến:</th>
+                                <td>{{ maintenance_request.scheduled_date|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        {% endif %}
+                        {% if maintenance_request.completed_date %}
+                            <tr>
+                                <th>Ngày hoàn thành:</th>
+                                <td>{{ maintenance_request.completed_date|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header py-2 bg-light">
+                    <h6 class="m-0 font-weight-bold">Mô tả</h6>
+                </div>
+                <div class="card-body">
+                    {{ maintenance_request.description|linebreaks }}
+                </div>
+            </div>
+
+            {% if maintenance_request.admin_notes %}
+                <div class="card mb-4">
+                    <div class="card-header py-2 bg-light">
+                        <h6 class="m-0 font-weight-bold">Ghi chú của quản trị viên</h6>
+                    </div>
+                    <div class="card-body">
+                        {{ maintenance_request.admin_notes|linebreaks }}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if images %}
+                <div class="mb-4">
+                    <h5>Hình ảnh</h5>
+                    <div class="row">
+                        {% for image in images %}
+                            <div class="col-md-3 mb-3">
+                                <a href="{{ image.image.url }}" target="_blank">
+                                    <img src="{{ image.image.url }}" alt="Hình ảnh {{ forloop.counter }}" class="img-fluid img-thumbnail">
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="mb-4">
+                <h5>Bình luận</h5>
+                {% if comments %}
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            {% for comment in comments %}
+                                <div class="d-flex mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                                    <div class="flex-shrink-0">
+                                        {% if comment.user.avatar %}
+                                            <img src="{{ comment.user.avatar.url }}" class="rounded-circle" width="40" height="40" alt="{{ comment.user.full_name }}">
+                                        {% else %}
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                {{ comment.user.get_short_name|slice:":1"|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">
+                                                {{ comment.user.full_name }}
+                                                {% if comment.user.user_type == 'admin' or comment.user.user_type == 'staff' %}
+                                                    <span class="badge bg-primary ms-1">{{ comment.user.get_user_type_display }}</span>
+                                                {% endif %}
+                                            </h6>
+                                            <small class="text-muted">{{ comment.created_at|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <p class="mb-0 mt-1">{{ comment.comment|linebreaks }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        Chưa có bình luận nào.
+                    </div>
+                {% endif %}
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                {{ comment_form.comment }}
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i> Gửi bình luận
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal để nhập ghi chú khi cập nhật trạng thái -->
+<div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notesModalLabel">Nhập ghi chú</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="modalNotes" class="form-label">Ghi chú (không bắt buộc)</label>
+                    <textarea id="modalNotes" class="form-control" rows="4" placeholder="Nhập ghi chú của bạn..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="submitNotes">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.status-update').on('click', function() {
+            var status = $(this).data('status');
+
+            if (status === 'rejected') {
+                $('#statusInput').val(status);
+                $('#notesModal').modal('show');
+            } else {
+                $('#statusInput').val(status);
+                $('#statusUpdateForm').submit();
+            }
+        });
+
+        $('#submitNotes').on('click', function() {
+            var notes = $('#modalNotes').val();
+            $('#notesInput').val(notes);
+            $('#statusUpdateForm').submit();
+        });
+    });
+</script>
+{% endblock %}

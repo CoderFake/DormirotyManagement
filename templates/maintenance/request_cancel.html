@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Hủy yêu cầu bảo trì - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Hủy yêu cầu bảo trì</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning mb-4">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> Xác nhận hủy</h5>
+                <p>Bạn có chắc chắn muốn hủy yêu cầu bảo trì này? Thao tác này không thể hoàn tác.</p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light py-2">
+                    <h6 class="m-0 font-weight-bold">Thông tin yêu cầu</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 200px">Mã yêu cầu:</th>
+                            <td>{{ maintenance_request.request_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tiêu đề:</th>
+                            <td>{{ maintenance_request.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>Danh mục:</th>
+                            <td>{{ maintenance_request.category.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày yêu cầu:</th>
+                            <td>{{ maintenance_request.requested_date|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phòng:</th>
+                            <td>{{ maintenance_request.building.name }} - {{ maintenance_request.room.room_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái hiện tại:</th>
+                            <td>
+                                {% if maintenance_request.status == 'pending' %}
+                                    <span class="badge bg-warning">Chờ xử lý</span>
+                                {% elif maintenance_request.status == 'assigned' %}
+                                    <span class="badge bg-info">Đã phân công</span>
+                                {% elif maintenance_request.status == 'in_progress' %}
+                                    <span class="badge bg-primary">Đang xử lý</span>
+                                {% elif maintenance_request.status == 'completed' %}
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                {% elif maintenance_request.status == 'canceled' %}
+                                    <span class="badge bg-secondary">Đã hủy</span>
+                                {% elif maintenance_request.status == 'rejected' %}
+                                    <span class="badge bg-danger">Từ chối</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'maintenance:request_detail' maintenance_request.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i> Xác nhận hủy yêu cầu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh sách hóa đơn - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Quản lý hóa đơn</h1>
+        <div>
+            <a href="{% url 'payment:invoice_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Tạo hóa đơn mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Bộ lọc</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Trạng thái</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Chờ thanh toán</option>
+                        <option value="partially_paid" {% if request.GET.status == 'partially_paid' %}selected{% endif %}>Thanh toán một phần</option>
+                        <option value="paid" {% if request.GET.status == 'paid' %}selected{% endif %}>Đã thanh toán</option>
+                        <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Quá hạn</option>
+                        <option value="canceled" {% if request.GET.status == 'canceled' %}selected{% endif %}>Đã hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="user" class="form-label">Người dùng</label>
+                    <select name="user" id="user" class="form-select searchable-select">
+                        <option value="">Tất cả</option>
+                        {% for user_option in users %}
+                            <option value="{{ user_option.id }}" {% if request.GET.user == user_option.id|stringformat:"s" %}selected{% endif %}>
+                                {{ user_option.full_name }} ({{ user_option.email }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="room" class="form-label">Phòng</label>
+                    <select name="room" id="room" class="form-select searchable-select">
+                        <option value="">Tất cả</option>
+                        {% for room_option in rooms %}
+                            <option value="{{ room_option.id }}" {% if request.GET.room == room_option.id|stringformat:"s" %}selected{% endif %}>
+                                {{ room_option.building.name }} - {{ room_option.room_number }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i> Lọc
+                    </button>
+                    <a href="{% url 'payment:invoice_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-redo me-1"></i> Đặt lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invoices List -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách hóa đơn</h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">Tùy chọn:</div>
+                    <a class="dropdown-item" href="#" id="exportExcel">
+                        <i class="fas fa-file-excel me-1 text-success"></i> Xuất Excel
+                    </a>
+                    <a class="dropdown-item" href="#" id="exportPDF">
+                        <i class="fas fa-file-pdf me-1 text-danger"></i> Xuất PDF
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'payment:invoice_list' %}">
+                        <i class="fas fa-sync-alt me-1"></i> Làm mới
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered datatable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Số hóa đơn</th>
+                            <th>Người dùng</th>
+                            <th>Phòng</th>
+                            <th>Ngày lập</th>
+                            <th>Ngày đến hạn</th>
+                            <th>Tổng tiền</th>
+                            <th>Đã thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr>
+                                <td>{{ invoice.invoice_number }}</td>
+                                <td>{{ invoice.user.full_name }}</td>
+                                <td>
+                                    {% if invoice.room %}
+                                        {{ invoice.room.building.name }} - {{ invoice.room.room_number }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                                <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                                <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
+                                <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
+                                <td>
+                                    {% if invoice.status == 'paid' %}
+                                        <span class="badge bg-success">Đã thanh toán</span>
+                                    {% elif invoice.status == 'partially_paid' %}
+                                        <span class="badge bg-info">Thanh toán một phần</span>
+                                    {% elif invoice.status == 'overdue' %}
+                                        <span class="badge bg-danger">Quá hạn</span>
+                                    {% elif invoice.status == 'pending' %}
+                                        <span class="badge bg-warning">Chờ thanh toán</span>
+                                    {% elif invoice.status == 'canceled' %}
+                                        <span class="badge bg-secondary">Đã hủy</span>
+                                    {% else %}
+                                        <span class="badge bg-light">{{ invoice.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'payment:invoice_detail' invoice.id %}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'payment:invoice_edit' invoice.id %}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if invoice.status != 'paid' %}
+                                            <a href="{% url 'payment:record_payment' invoice.id %}" class="btn btn-sm btn-success" data-bs-toggle="tooltip" title="Ghi nhận thanh toán">
+                                                <i class="fas fa-dollar-sign"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'payment:invoice_delete' invoice.id %}" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center">Không tìm thấy hóa đơn nào</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+            },
+            "order": [[ 3, "desc" ]]
+        });
+
+        $('.searchable-select').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Tìm kiếm...',
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}

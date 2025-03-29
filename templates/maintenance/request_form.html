@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if maintenance_request %}Cập nhật yêu cầu{% else %}Tạo yêu cầu bảo trì{% endif %} - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                {% if maintenance_request %}
+                    Cập nhật yêu cầu bảo trì #{{ maintenance_request.request_number }}
+                {% else %}
+                    Tạo yêu cầu bảo trì mới
+                {% endif %}
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if not contract %}
+                <div class="alert alert-warning mb-4">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> Lưu ý!</h5>
+                    <p class="mb-0">Bạn cần có hợp đồng ký túc xá đang hoạt động để có thể tạo yêu cầu bảo trì. Vui lòng đăng ký phòng ở trước.</p>
+                </div>
+            {% else %}
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <h5>Thông tin phòng</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tòa nhà</label>
+                                    <input type="text" class="form-control" value="{{ contract.room.building.name }}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Phòng</label>
+                                    <input type="text" class="form-control" value="{{ contract.room.room_number }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Chi tiết yêu cầu</h5>
+
+                        <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.category.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.title.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Mô tả chi tiết vấn đề cần bảo trì hoặc sửa chữa.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">{{ form.priority.label }}</label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.priority.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.images.id_for_label }}" class="form-label">{{ form.images.label }}</label>
+                            {{ form.images }}
+                            {% if form.images.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.images.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Tải lên hình ảnh để minh họa vấn đề (không bắt buộc).</div>
+                        </div>
+
+                        {{ form.room }}
+                    </div>
+
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i> Lưu ý!</h5>
+                        <p class="mb-0">Yêu cầu bảo trì sẽ được xử lý trong thời gian sớm nhất. Bạn sẽ nhận được thông báo khi yêu cầu được phân công và hoàn thành.</p>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if maintenance_request %}{% url 'maintenance:request_detail' maintenance_request.id %}{% else %}{% url 'maintenance:my_requests' %}{% endif %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {% if maintenance_request %}
+                                Cập nhật yêu cầu
+                            {% else %}
+                                Gửi yêu cầu
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

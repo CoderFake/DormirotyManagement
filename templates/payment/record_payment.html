@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Ghi nhận thanh toán - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Ghi nhận thanh toán cho hóa đơn #{{ invoice.invoice_number }}</h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h5>Thông tin hóa đơn</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 200px">Số hóa đơn:</th>
+                            <td>{{ invoice.invoice_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Người dùng:</th>
+                            <td>{{ invoice.user.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày lập:</th>
+                            <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày đến hạn:</th>
+                            <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tổng tiền:</th>
+                            <td class="fw-bold">{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <th>Đã thanh toán:</th>
+                            <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <th>Còn lại:</th>
+                            <td class="fw-bold {% if invoice.get_remaining_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ invoice.get_remaining_amount|floatformat:0 }} VNĐ
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái:</th>
+                            <td>
+                                {% if invoice.status == 'paid' %}
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                {% elif invoice.status == 'partially_paid' %}
+                                    <span class="badge bg-info">Thanh toán một phần</span>
+                                {% elif invoice.status == 'overdue' %}
+                                    <span class="badge bg-danger">Quá hạn</span>
+                                {% elif invoice.status == 'pending' %}
+                                    <span class="badge bg-warning">Chờ thanh toán</span>
+                                {% elif invoice.status == 'canceled' %}
+                                    <span class="badge bg-secondary">Đã hủy</span>
+                                {% else %}
+                                    <span class="badge bg-light">{{ invoice.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <h5>Thông tin thanh toán</h5>
+
+                <div class="mb-3">
+                    <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.amount.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Số tiền thanh toán không vượt quá số tiền còn lại của hóa đơn.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.payment_method.id_for_label }}" class="form-label">{{ form.payment_method.label }}</label>

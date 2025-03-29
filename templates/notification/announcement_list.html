@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Thông báo chung - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Thông báo chung</h1>
+        <div>
+            <a href="{% url 'notification:list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-envelope me-1"></i> Thông báo cá nhân
+            </a>
+            {% if user.user_type == 'admin' or user.user_type == 'staff' %}
+                <a href="{% url 'notification:announcement_create' %}" class="btn btn-primary ms-2">
+                    <i class="fas fa-plus me-1"></i> Tạo thông báo mới
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if announcements %}
+        <div class="row">
+            {% for announcement in announcements %}
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100 {% if announcement.is_pinned %}border-left-danger{% endif %}">
+                        {% if announcement.image %}
+                            <img src="{{ announcement.image.url }}" class="card-img-top" alt="{{ announcement.title }}" style="height: 180px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {% if announcement.is_pinned %}
+                                    <i class="fas fa-thumbtack text-danger me-1" data-bs-toggle="tooltip" title="Thông báo ghim"></i>
+                                {% endif %}
+                                {{ announcement.title }}
+                            </h5>
+                            <p class="card-text text-truncate">{{ announcement.content|truncatechars:150 }}</p>
+                        </div>
+                        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i> {{ announcement.created_at|date:"d/m/Y" }}
+                            </small>
+                            <a href="{% url 'notification:announcement_detail' announcement.id %}" class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-bullhorn fa-4x text-muted"></i>
+                </div>
+                <h5>Không có thông báo chung</h5>
+                <p class="text-muted">Thông báo chung sẽ xuất hiện ở đây khi ban quản lý ký túc xá có thông báo mới.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if announcements %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mt-4">
+                {% if announcements.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ announcements.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for i in announcements.paginator.page_range %}
+                    {% if announcements.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ i }}
+                                <span class="sr-only">(current)</span>
+                            </span>
+                        </li>
+                    {% elif i > announcements.number|add:'-3' and i < announcements.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if announcements.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ announcements.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ announcements.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}
