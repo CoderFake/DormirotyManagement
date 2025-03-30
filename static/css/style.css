@@ -15,8 +15,11 @@
 
 /* Common elements */
 body {
-    font-family: 'Nunito', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    font-size: 0.9rem;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fc;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 html, body {
@@ -24,10 +27,6 @@ html, body {
   margin: 0;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-}
 
 .content {
   flex: 1 0 auto;
@@ -35,6 +34,46 @@ body {
 
 .footer {
   flex-shrink: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    z-index: 100;
+    padding: 0;
+    background-color: #fff;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transition: width 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar.toggled {
+    width: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+#sidebarToggle {
+    background-color: transparent;
+    border: none;
+    color: #3a3b45;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#sidebarToggle:hover {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .sidebar .nav-link {
@@ -888,51 +927,6 @@ body {
 }
 
 
-body {
-    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f8f9fc;
-    overflow-x: hidden;
-}
-
-/* Sidebar */
-.sidebar {
-    position: fixed;
-    top: 56px; /* Chiều cao của navbar */
-    left: 0;
-    bottom: 0;
-    width: 250px;
-    z-index: 100;
-    padding: 0;
-    background-color: #fff;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-    transition: width 0.3s ease;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.sidebar.toggled {
-    width: 0;
-    overflow: hidden;
-    padding: 0;
-}
-
-#sidebarToggle {
-    background-color: transparent;
-    border: none;
-    color: #3a3b45;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#sidebarToggle:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-}
 
 
 main {
