@@ -17,12 +17,12 @@
 
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">{% if room %}Chỉnh sửa{% else %}Thêm mới{% endif %} phòng</h5>
-                    <p class="card-text text-muted small">Nhập thông tin phòng.</p>
+                    <h5 class="card-title mb-0">Tạo nhiều phòng cùng lúc</h5>
+                    <p class="card-text text-muted small">Công cụ này sẽ giúp bạn tạo nhiều phòng với cùng tòa nhà, loại phòng trong một dải số phòng.</p>
                 </div>
 
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post">
                         {% csrf_token %}
 
                         {% if form.non_field_errors %}
@@ -65,23 +65,6 @@
                                     {% endfor %}
                                 </div>
                                 {% endif %}
-                                <div class="form-text">Chọn loại phòng, điều này sẽ xác định sức chứa và giá phòng.</div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <label for="{{ form.room_number.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.room_number.label }}
-                            </label>
-                            <div class="col-sm-9">
-                                {{ form.room_number }}
-                                {% if form.room_number.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.room_number.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
 
@@ -102,100 +85,70 @@
                         </div>
 
                         <div class="row mb-3">
-                            <label for="{{ form.status.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.status.label }}
+                            <label for="{{ form.start_number.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.start_number.label }}
                             </label>
                             <div class="col-sm-9">
-                                {{ form.status }}
-                                {% if form.status.errors %}
+                                {{ form.start_number }}
+                                {% if form.start_number.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {% for error in form.status.errors %}
+                                    {% for error in form.start_number.errors %}
                                     {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
+                                <div class="form-text">Số bắt đầu của dải phòng, ví dụ: 101</div>
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <label for="{{ form.current_occupancy.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.current_occupancy.label }}
+                            <label for="{{ form.end_number.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.end_number.label }}
                             </label>
                             <div class="col-sm-9">
-                                {{ form.current_occupancy }}
-                                {% if form.current_occupancy.errors %}
+                                {{ form.end_number }}
+                                {% if form.end_number.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {% for error in form.current_occupancy.errors %}
+                                    {% for error in form.end_number.errors %}
                                     {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
+                                <div class="form-text">Số kết thúc của dải phòng, ví dụ: 120</div>
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <label for="{{ form.description.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.description.label }}
+                            <label for="{{ form.room_prefix.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.room_prefix.label }}
                             </label>
                             <div class="col-sm-9">
-                                {{ form.description }}
-                                {% if form.description.errors %}
+                                {{ form.room_prefix }}
+                                {% if form.room_prefix.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {% for error in form.description.errors %}
+                                    {% for error in form.room_prefix.errors %}
                                     {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
+                                <div class="form-text">Tiền tố thêm vào trước số phòng, ví dụ: "P" sẽ tạo P101, P102, ...</div>
                             </div>
                         </div>
 
-                        <div class="row mb-3">
-                            <label for="{{ form.image.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.image.label }}
-                            </label>
-                            <div class="col-sm-9">
-                                {% if room.image %}
-                                <div class="mb-3">
-                                    <img src="{{ room.image.url }}" alt="{{ room.room_number }}" class="img-thumbnail" style="max-height: 200px;">
-                                </div>
-                                {% endif %}
-                                {{ form.image }}
-                                {% if form.image.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.image.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <label for="{{ form.is_active.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.is_active.label }}
-                            </label>
-                            <div class="col-sm-9">
-                                <div class="form-check mt-2">
-                                    {{ form.is_active }}
-                                    {% if form.is_active.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.is_active.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="form-text">Đánh dấu nếu phòng đang hoạt động</div>
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <div>
+                                <strong>Lưu ý:</strong> Hệ thống sẽ tạo các phòng từ <span id="preview-start">?</span> đến <span id="preview-end">?</span> với mỗi phòng có <span id="preview-beds">?</span> giường. Tổng số <strong><span id="preview-count">?</span> phòng</strong> sẽ được tạo.
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% if room %}{% url 'dormitory:room_detail' room_id=room.id %}{% else %}{% url 'dormitory:room_list' %}{% endif %}" class="btn btn-light">
+                            <a href="{% url 'dormitory:room_list' %}" class="btn btn-light">
                                 Hủy
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>
-                                Lưu
+                                <i class="fas fa-plus-circle me-1"></i>
+                                Tạo phòng
                             </button>
                         </div>
                     </form>
@@ -209,9 +162,32 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        $('#id_building').on('change', function() {
-            console.log('Tòa nhà đã thay đổi');
-        });
+        function updatePreview() {
+            const start = $('#id_start_number').val();
+            const end = $('#id_end_number').val();
+            const prefix = $('#id_room_prefix').val();
+            const roomType = $('#id_room_type option:selected');
+
+            let capacity = 0;
+            if (roomType.length > 0) {
+                capacity = roomType.text().match(/\d+/) ? roomType.text().match(/\d+/)[0] : '?';
+            }
+
+            $('#preview-start').text(prefix + start);
+            $('#preview-end').text(prefix + end);
+            $('#preview-beds').text(capacity);
+
+            if (start && end) {
+                const count = parseInt(end) - parseInt(start) + 1;
+                $('#preview-count').text(count > 0 ? count : '?');
+            } else {
+                $('#preview-count').text('?');
+            }
+        }
+
+        $('#id_start_number, #id_end_number, #id_room_prefix, #id_room_type').on('change', updatePreview);
+
+        updatePreview();
     });
 </script>
 {% endblock %}

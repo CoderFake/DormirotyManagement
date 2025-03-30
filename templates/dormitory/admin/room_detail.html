@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'dormitory:bulk_bed_create' %}?room={{ room.id }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-plus-circle me-1"></i>
+                    Thêm nhiều giường
+                </a>
+                <a href="{% url 'dormitory:bed_create' %}?room={{ room.id }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-bed me-1"></i>
+                    Thêm giường
+                </a>
+                <a href="{% url 'dormitory:room_edit' room_id=room.id %}" class="btn btn-primary me-2">
+                    <i class="fas fa-edit me-1"></i>
+                    Chỉnh sửa
+                </a>
+                <a href="{% url 'dormitory:room_delete' room_id=room.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>
+                    Xóa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Thông tin phòng</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                {% if room.image %}
+                                <img src="{{ room.image.url }}" alt="{{ room.room_number }}" class="img-fluid rounded mb-3">
+                                {% else %}
+                                <div class="bg-light text-center py-5 rounded mb-3">
+                                    <i class="fas fa-home fa-4x text-secondary"></i>
+                                </div>
+                                {% endif %}
+                                <h5 class="card-title">Phòng {{ room.room_number }}</h5>
+                                <span class="badge bg-primary">{{ room.building.name }}</span>
+                            </div>
+
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                    <th class="bg-light">Sức chứa</th>
+                                    <td>{{ room.room_type.capacity }} người</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Đang sử dụng</th>
+                                    <td>{{ room.current_occupancy }} người</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Trạng thái</th>
+                                    <td>{{ room.get_status_display }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'dormitory:room_detail' room_id=room.id %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>
+                                Xác nhận xóa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

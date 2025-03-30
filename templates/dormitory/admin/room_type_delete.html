@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Xác nhận xóa loại phòng</h5>
+                    <p class="card-text text-muted small">Thao tác này không thể hoàn tác.</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <div>
+                            Bạn có chắc chắn muốn xóa loại phòng <strong>{{ room_type.name }}</strong> không?
+                            Thao tác này sẽ xóa vĩnh viễn loại phòng này.
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th class="bg-light w-25">Tên loại phòng</th>
+                                    <td>{{ room_type.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Mã</th>
+                                    <td>{{ room_type.code }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Sức chứa</th>
+                                    <td>{{ room_type.capacity }} người</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Giá/tháng</th>
+                                    <td>{{ room_type.price_per_month|floatformat:0 }} VNĐ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'dormitory:room_type_detail' room_type_id=room_type.id %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>
+                                Xác nhận xóa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+
+5. templates/dormitory/admin/room_list.html - Danh sách phòng
+```html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'dormitory:bulk_room_create' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-plus-circle me-1"></i>
+                    Tạo nhiều phòng
+                </a>
+                <a href="{% url 'dormitory:room_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Thêm phòng
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Bộ lọc</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="building" class="form-label">Tòa nhà</label>
+                            <select name="building" id="building" class="form-select">
+                                <option value="">-- Tất cả tòa nhà --</option>
+                                {% for building in buildings %}
+                                <option value="{{ building.id }}" {% if request.GET.building == building.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ building.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="room_type" class="form-label">Loại phòng</label>
+                            <select name="room_type" id="room_type" class="form-select">
+                                <option value="">-- Tất cả loại phòng --</option>
+                                {% for room_type in room_types %}
+                                <option value="{{ room_type.id }}" {% if request.GET.room_type == room_type.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ room_type.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="available" {% if request.GET.status == 'available' %}selected{% endif %}>Còn trống</option>
+                                <option value="partially_occupied" {% if request.GET.status == 'partially_occupied' %}selected{% endif %}>Còn chỗ</option>
+                                <option value="fully_occupied" {% if request.GET.status == 'fully_occupied' %}selected{% endif %}>Đã đầy</option>
+                                <option value="maintenance" {% if request.GET.status == 'maintenance' %}selected{% endif %}>Bảo trì</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="floor" class="form-label">Tầng</label>
+                            <input type="number" class="form-control" id="floor" name="floor" min="1" placeholder="Tầng" value="{{ request.GET.floor }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="search" class="form-label">Tìm kiếm</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Nhập từ khóa..." value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <a href="{% url 'dormitory:room_list' %}" class="btn btn-light me-2">Đặt lại</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i> Lọc
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Danh sách phòng</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tòa nhà</th>
+                                    <th>Phòng</th>
+                                    <th>Tầng</th>
+                                    <th>Loại phòng</th>
+                                    <th>Sức chứa</th>
+                                    <th>Hiện tại</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                <tr>
+                                    <td>{{ room.building.name }}</td>
+                                    <td>{{ room.room_number }}</td>
+                                    <td>{{ room.floor }}</td>
+                                    <td>{{ room.room_type.name }}</td>
+                                    <td>{{ room.room_type.capacity }}</td>
+                                    <td>{{ room.current_occupancy }}</td>
+                                    <td>
+                                        {% if room.status == 'available' %}
+                                        <span class="badge bg-success">Còn trống</span>
+                                        {% elif room.status == 'partially_occupied' %}
+                                        <span class="badge bg-warning">Còn chỗ</span>
+                                        {% elif room.status == 'fully_occupied' %}
+                                        <span class="badge bg-danger">Đã đầy</span>
+                                        {% elif room.status == 'maintenance' %}
+                                        <span class="badge bg-secondary">Bảo trì</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ room.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'dormitory:room_detail' room_id=room.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'dormitory:room_edit' room_id=room.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'dormitory:room_delete' room_id=room.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">Không tìm thấy phòng nào.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

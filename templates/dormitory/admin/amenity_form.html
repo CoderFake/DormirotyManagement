@@ -17,12 +17,12 @@
 
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">{% if room_type %}Chỉnh sửa{% else %}Thêm mới{% endif %} loại phòng</h5>
-                    <p class="card-text text-muted small">Nhập thông tin loại phòng.</p>
+                    <h5 class="card-title mb-0">{% if amenity %}Chỉnh sửa{% else %}Thêm mới{% endif %} tiện nghi</h5>
+                    <p class="card-text text-muted small">Nhập thông tin tiện nghi.</p>
                 </div>
 
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post">
                         {% csrf_token %}
 
                         {% if form.non_field_errors %}
@@ -53,14 +53,31 @@
                         </div>
 
                         <div class="row mb-3">
-                            <label for="{{ form.code.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.code.label }}
+                            <label for="{{ form.icon.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.icon.label }}
                             </label>
                             <div class="col-sm-9">
-                                {{ form.code }}
-                                {% if form.code.errors %}
+                                {{ form.icon }}
+                                {% if form.icon.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {% for error in form.code.errors %}
+                                    {% for error in form.icon.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Biểu tượng Font Awesome (fa-...), ví dụ: fa-wifi, fa-shower, fa-air-conditioner</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.description.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
                                     {{ error }}
                                     {% endfor %}
                                 </div>
@@ -68,10 +85,8 @@
                             </div>
                         </div>
 
-                        <!-- Các trường khác tương tự -->
-
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'dormitory:room_type_list' %}" class="btn btn-light">
+                            <a href="{% url 'dormitory:amenity_list' %}" class="btn btn-light">
                                 Hủy
                             </a>
                             <button type="submit" class="btn btn-primary">

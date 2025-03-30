@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Tạo nhiều giường cùng lúc</h5>
+                    <p class="card-text text-muted small">Công cụ này sẽ giúp bạn tạo nhiều giường cho một phòng cụ thể.</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <label for="{{ form.room.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.room.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.room }}
+                                {% if form.room.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.room.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Chọn phòng cần thêm giường</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.quantity.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.quantity.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Số lượng giường cần tạo</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.bed_prefix.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.bed_prefix.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.bed_prefix }}
+                                {% if form.bed_prefix.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.bed_prefix.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Tiền tố thêm vào trước số giường, ví dụ: "G" sẽ tạo G1, G2, ... (không bắt buộc)</div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <div>
+                                <strong>Lưu ý:</strong> Hệ thống sẽ tự động đếm số giường hiện có trong phòng và tạo thêm giường mới. Ví dụ: nếu phòng đã có 2 giường (1, 2) và bạn thêm 3 giường nữa, hệ thống sẽ tạo giường số 3, 4, 5.
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'dormitory:room_list' %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-1"></i>
+                                Tạo giường
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

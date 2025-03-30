@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'dormitory:room_type_edit' room_type_id=room_type.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i>
+                    Chỉnh sửa
+                </a>
+                <a href="{% url 'dormitory:room_type_delete' room_type_id=room_type.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>
+                    Xóa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Thông tin cơ bản</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                {% if room_type.image %}
+                                <img src="{{ room_type.image.url }}" alt="{{ room_type.name }}" class="img-fluid rounded mb-3">
+                                {% else %}
+                                <div class="bg-light text-center py-5 rounded mb-3">
+                                    <i class="fas fa-door-open fa-4x text-secondary"></i>
+                                </div>
+                                {% endif %}
+                                <h5 class="card-title">{{ room_type.name }}</h5>
+                                <span class="badge bg-primary">{{ room_type.code }}</span>
+                            </div>
+
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th>Sức chứa:</th>
+                                        <td>{{ room_type.capacity }} người</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Diện tích:</th>
+                                        <td>{{ room_type.area }} m²</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Giá/tháng:</th>
+                                        <td>{{ room_type.price_per_month|floatformat:0 }} VNĐ</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tiền đặt cọc:</th>
+                                        <td>{{ room_type.deposit|floatformat:0 }} VNĐ</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Giới tính:</th>
+                                        <td>
+                                            {% if room_type.gender_allowed == 'male' %}
+                                            Nam
+                                            {% elif room_type.gender_allowed == 'female' %}
+                                            Nữ
+                                            {% else %}
+                                            Nam và Nữ
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Danh sách phòng</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if rooms %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tòa nhà</th>
+                                            <th>Phòng</th>
+                                            <th>Tầng</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for room in rooms %}
+                                        <tr>
+                                            <td>{{ room.building.name }}</td>
+                                            <td>{{ room.room_number }}</td>
+                                            <td>{{ room.floor }}</td>
+                                            <td>
+                                                {% if room.status == 'available' %}
+                                                <span class="badge bg-success">Còn trống</span>
+                                                {% elif room.status == 'partially_occupied' %}
+                                                <span class="badge bg-warning">Còn chỗ</span>
+                                                {% elif room.status == 'fully_occupied' %}
+                                                <span class="badge bg-danger">Đã đầy</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">{{ room.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'dormitory:room_detail' room_id=room.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Chưa có phòng nào thuộc loại này.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Mô tả & Tiện nghi</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if room_type.description %}
+                            <h6 class="font-weight-bold">Mô tả:</h6>
+                            <p>{{ room_type.description|linebreaks }}</p>
+                            {% endif %}
+
+                            {% if room_type.amenities %}
+                            <h6 class="font-weight-bold">Tiện nghi:</h6>
+                            <ul>
+                                {% for amenity in room_type.amenities.split %}
+                                <li>{{ amenity }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
