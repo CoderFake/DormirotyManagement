@@ -1,59 +1,92 @@
 /**
- * Main JavaScript file for Dormitory Management System
+ * Handles sidebar toggle functionality for all screen sizes
  */
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+function handleSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (!sidebarToggle || !sidebar) return;
+    
+    // Check initial state based on screen size
+    function updateSidebarState() {
+        if (window.innerWidth < 768) {
+            // Mobile view - sidebar should be hidden by default
+            document.body.classList.add('sidebar-collapsed');
+            sidebar.classList.add('collapsed');
+        } else {
+            // Desktop view - sidebar should be visible by default
+            document.body.classList.remove('sidebar-collapsed');
+            sidebar.classList.remove('collapsed');
+        }
+    }
+    
+    // Initial state
+    updateSidebarState();
+    
+    // Toggle sidebar when button is clicked
+    sidebarToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.body.classList.toggle('sidebar-collapsed');
+        sidebar.classList.toggle('collapsed');
+        
+        const icon = this.querySelector('i');
+        if (icon) {
+            if (icon.classList.contains('fa-chevron-left')) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+            }
+        }
     });
-
-    // Initialize popovers
-    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
+    
+    // Update sidebar state when window is resized
+    window.addEventListener('resize', function() {
+        updateSidebarState();
     });
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth < 768) {
+            const isOutsideSidebar = !sidebar.contains(event.target);
+            const isNotToggleButton = !sidebarToggle.contains(event.target);
+            
+            if (isOutsideSidebar && isNotToggleButton && !document.body.classList.contains('sidebar-collapsed')) {
+                document.body.classList.add('sidebar-collapsed');
+                sidebar.classList.add('collapsed');
+            }
+        }
+    });
+}
 
-    // Auto-close alerts
-    setTimeout(function () {
-        const alerts = document.querySelectorAll('.alert-auto-close');
-        alerts.forEach(function (alert) {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        });
-    }, 5000);
-
-
-    // Handle sidebar active state
-    handleSidebarActiveState();
-
-    // Handle sidebar toggle
+document.addEventListener('DOMContentLoaded', function() {
     handleSidebarToggle();
-
-    // Initialize Flatpickr datepickers
-    initializeFlatpickr();
-
-    // Initialize Select2 if present
-    initializeSelect2();
+    
+    // Initialize other components
+    initializeNavigation();
+    initializeComponents();
 });
 
 /**
- * Handles sidebar active state
+ * Initialize navigation items (active state, etc.)
  */
-function handleSidebarActiveState() {
+function initializeNavigation() {
     // Get current URL path
     const currentPath = window.location.pathname;
-
+    
+    // Find and activate the current page in the navigation
     const sidebarLinks = document.querySelectorAll('.sidebar .nav-link, .sidebar .collapse-item');
-
+    
     sidebarLinks.forEach(link => {
         const href = link.getAttribute('href');
-
+        
         if (!href || href === '#') return;
+        
         if (currentPath === href || (currentPath.startsWith(href) && href !== '/')) {
             link.classList.add('active');
-
+            
+            // If in collapse menu, expand that menu
             const collapseMenu = link.closest('.collapse');
             if (collapseMenu) {
                 collapseMenu.classList.add('show');
@@ -65,81 +98,26 @@ function handleSidebarActiveState() {
             }
         }
     });
-
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', function () {
-            if (this.getAttribute('data-bs-toggle') || this.getAttribute('href') === '#') return;
-            localStorage.setItem('activeLink', this.getAttribute('href'));
-        });
-    });
-
-    const storedActiveLink = localStorage.getItem('activeLink');
-    if (storedActiveLink) {
-        const matchingLink = document.querySelector(`.sidebar a[href="${storedActiveLink}"]`);
-        if (matchingLink && !matchingLink.classList.contains('active')) {
-            matchingLink.classList.add('active');
-
-            // If it's inside a collapse menu, expand that menu
-            const collapseMenu = matchingLink.closest('.collapse');
-            if (collapseMenu) {
-                collapseMenu.classList.add('show');
-                const parentLink = document.querySelector(`[data-bs-toggle="collapse"][data-bs-target="#${collapseMenu.id}"]`);
-                if (parentLink) {
-                    parentLink.classList.add('active');
-                    parentLink.setAttribute('aria-expanded', 'true');
-                }
-            }
-        }
-    }
 }
 
 /**
- * Handles sidebar toggle functionality
+ * Initialize other UI components
  */
-function handleSidebarToggle() {
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    if (sidebarToggle) {
-        const sidebarState = localStorage.getItem('sidebarToggled');
-        if (sidebarState === 'true') {
-            document.body.classList.add('sidebar-toggled');
-        }
-
-        sidebarToggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            document.body.classList.toggle('sidebar-toggled');
-            const sidebar = document.querySelector('.sidebar');
-
-            localStorage.setItem('sidebarToggled', 'true');
-        });
-    }
-    window.addEventListener('resize', function () {
-        const sidebar = document.querySelector('.sidebar');
-        if (window.innerWidth < 992) {
-            document.querySelectorAll('.sidebar .collapse.show').forEach(el => {
-                const bsCollapse = new bootstrap.Collapse(el);
-                bsCollapse.hide();
-            });
-        }
-        if (window.innerWidth < 576) {
-             sidebar.classList.remove('show');
-             sidebar.classList.remove('toggled');
-        }
+function initializeComponents() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-}
 
-/**
- * Initialize Flatpickr datepickers
- */
-function initializeFlatpickr() {
+    // Initialize datepickers
     if (typeof flatpickr !== 'undefined') {
-        // Regular date pickers
         flatpickr(".datepicker", {
             locale: "vn",
             dateFormat: "Y-m-d",
             allowInput: true
         });
 
-        // Date-time pickers
         flatpickr(".datetimepicker", {
             locale: "vn",
             dateFormat: "d/m/Y H:i",
@@ -148,191 +126,16 @@ function initializeFlatpickr() {
             allowInput: true
         });
     }
-}
 
-/**
- * Initialize Select2 dropdowns
- */
-function initializeSelect2() {
+    // Initialize select2 dropdowns
     if (typeof $.fn.select2 !== 'undefined') {
         $('.select2').select2({
             theme: 'bootstrap-5'
         });
 
-        // For searchable selects
         $('.searchable-select').select2({
             theme: 'bootstrap-5',
             allowClear: true
         });
     }
 }
-
-/**
- * Show loading spinner
- */
-function showLoading() {
-    const loadingEl = document.createElement('div');
-    loadingEl.className = 'loading-overlay';
-    loadingEl.innerHTML = `
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    `;
-    document.body.appendChild(loadingEl);
-    document.body.classList.add('loading');
-}
-
-/**
- * Hide loading spinner
- */
-function hideLoading() {
-    const loadingEl = document.querySelector('.loading-overlay');
-    if (loadingEl) {
-        loadingEl.remove();
-        document.body.classList.remove('loading');
-    }
-}
-
-/**
- * Format currency (VND)
- */
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(amount);
-}
-
-/**
- * Format date in Vietnamese format
- */
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    }).format(date);
-}
-
-/**
- * Format datetime in Vietnamese format
- */
-function formatDateTime(dateString) {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    }).format(date);
-}
-
-/**
- * Handle form confirmation
- */
-function confirmAction(message, callback) {
-    if (confirm(message)) {
-        callback();
-    }
-}
-
-/**
- * Copy text to clipboard
- */
-function copyToClipboard(text) {
-    const tempInput = document.createElement('input');
-    tempInput.value = text;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-
-    // Show toast notification
-    if (typeof toastr !== 'undefined') {
-        toastr.success('Đã sao chép vào clipboard!');
-    }
-}
-
-
-/**
- * Mobile sidebar functionality
- */
-function initMobileSidebar() {
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.querySelector('.sidebar');
-
-    // Function to handle sidebar toggle
-    function toggleSidebar() {
-        document.body.classList.toggle('sidebar-toggled');
-        sidebar.classList.toggle('show');
-    }
-
-    // Add click event to sidebar toggle button
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            toggleSidebar();
-        });
-    }
-
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', function (event) {
-        const windowWidth = window.innerWidth;
-        if (windowWidth < 992) {
-            const isOutsideSidebar = !sidebar.contains(event.target);
-            const isNotToggleButton = !sidebarToggle.contains(event.target);
-
-            if (isOutsideSidebar && isNotToggleButton && document.body.classList.contains('sidebar-toggled')) {
-                toggleSidebar();
-            }
-        }
-    });
-
-    // Close sidebar when window resizes past breakpoint
-    window.addEventListener('resize', function () {
-        if (window.innerWidth >= 992 && document.body.classList.contains('sidebar-toggled')) {
-            document.body.classList.remove('sidebar-toggled');
-            sidebar.classList.remove('show');
-        }
-    });
-
-    const sidebarLinks = document.querySelectorAll('.sidebar .nav-link, .sidebar .collapse-item');
-    sidebarLinks.forEach(link => {
-        if (!link.getAttribute('data-bs-toggle')) {
-            link.addEventListener('click', function () {
-                if (window.innerWidth < 992) {
-                    setTimeout(() => {
-                        document.body.classList.remove('sidebar-toggled');
-                        sidebar.classList.remove('show');
-                    }, 150);
-                }
-            });
-        }
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    initMobileSidebar();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebarToggle = document.getElementById('sidebarToggle');
-
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.body.classList.toggle('sidebar-toggled');
-            document.querySelector('.sidebar').classList.toggle('toggled');
-
-            const icon = sidebarToggle.querySelector('i');
-            if (icon) {
-                if (icon.classList.contains('fa-chevron-left')) {
-                    icon.classList.remove('fa-chevron-left');
-                    icon.classList.add('fa-chevron-right');
-                } else {
-                    icon.classList.remove('fa-chevron-right');
-                    icon.classList.add('fa-chevron-left');
-                }
-            }
-        });
-    }
-});

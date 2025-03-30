@@ -160,36 +160,6 @@ main {
   }
 }
 
-@media (max-width: 991.98px) {
-   #sidebarToggle {
-    position: absolute !important;
-    left: 30px;
-  }
-
-  .sidebar {
-    position: fixed;
-    top: 56px;
-    left: 0;
-    bottom: 0;
-    width: 16rem !important;
-    z-index: 99;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    overflow-y: auto;
-  }
-
-  .sidebar.show {
-    transform: translateX(0);
-  }
-
-  body.sidebar-toggled .sidebar {
-    transform: translateX(0);
-  }
-
-  main {
-    transition: margin-left 0.3s ease-in-out;
-  }
-}
 
 .navbar .nav-link {
   display: flex;
@@ -237,20 +207,63 @@ main {
 }
 
 /* ========== SIDEBAR STYLES ========== */
+/* ========== SIDEBAR STYLES ========== */
 
 .sidebar {
-  width: auto !important;
+  width: 250px !important;
   min-height: calc(100vh - 56px);
   background-color: #ffffff;
   transition: all 0.3s ease;
-  z-index: 1;
+  z-index: 1030;
   box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
   position: fixed;
-  top: 56px;
+  top: 64px;
+  left: 0;
   bottom: 0;
   overflow-y: auto;
 }
 
+/* Collapsed sidebar styles */
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+body.sidebar-collapsed .col-lg-10 {
+  width: 100%;
+  margin-left: 0;
+}
+
+/* Content area adjustment */
+.col-lg-10 {
+  transition: width 0.3s ease, margin-left 0.3s ease;
+  width: calc(100% - 250px);
+  margin-left: 250px;
+}
+
+/* Toggle button */
+#sidebarToggle {
+  background-color: rgba(231, 74, 59, 0.1);
+  width: 2.5rem;
+  height: 2.5rem;
+  text-align: center;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 1rem;
+  color: #5a5c69;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+}
+
+#sidebarToggle:hover {
+  background-color: #de2219;
+  color: #fff;
+}
+
+/* Sidebar header styles */
 .sidebar-heading {
   padding: 0.85rem 1rem;
   font-size: 0.65rem;
@@ -265,7 +278,7 @@ main {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* Sidebar Navigation Links */
+/* Sidebar navigation links */
 .sidebar .nav-link {
   transition: all 0.2s ease-in-out;
   border-left: 3px solid transparent;
@@ -292,7 +305,7 @@ main {
   margin-right: 0.5rem;
 }
 
-/* Sidebar Collapse Items */
+/* Sidebar collapse items */
 .sidebar .collapse-inner {
   padding: 0.5rem 0;
   min-width: 10rem;
@@ -323,80 +336,46 @@ main {
   font-weight: 600;
 }
 
-
-.sidebar.toggled {
-    width: 80px !important;
-}
-
-.sidebar.toggled .nav-item .nav-link span {
-    display: none;
-}
-
-.sidebar.toggled .sidebar-heading {
-    display: none;
-}
-
-.sidebar.toggled .collapse-inner {
-    display: none !important;
-}
-
-body.sidebar-toggled .col-lg-10 {
-    width: calc(100% - 80px);
-}
-
-#sidebarToggle {
-  background-color: rgba(231, 74, 59, 0.1);
-  width: 2.5rem;
-  height: 2.5rem;
-  text-align: center;
-  border-radius: 50%;
-  padding: 0;
-  font-size: 1rem;
-  color: #5a5c69;
-  transition: all 0.3s ease;
-}
-
-#sidebarToggle:hover {
-  background-color: #de2219;
-  color: #fff;
-}
-
-#sidebarToggle i {
-  transition: transform 0.3s;
-}
-
-.sidebar.toggled {
-  width: 0 !important;
-  overflow: hidden;
-}
-
-.sidebar-toggled #sidebarToggle i {
-  transform: rotate(180deg);
-}
-
-@media (min-width: 992px) {
-  .sidebar.toggled + .col-lg-10 {
+/* Media queries for responsive design */
+@media (max-width: 991.98px) {
+  .col-lg-10 {
     width: 100%;
     margin-left: 0;
   }
 }
 
-@media (max-width: 991.98px) {
-    .sidebar {
-        width: 0;
-        position: fixed;
-        top: 56px;
-        left: 0;
-        height: 100vh;
-        z-index: 99;
-        background-color: white;
-        transition: all 0.3s;
-    }
+@media (max-width: 767.98px) {
+  #sidebarToggle {
+    position: absolute;
+    left: 15px;
+    z-index: 1040;
+  }
 
-    .sidebar.toggled {
-        width: auto !important;
-    }
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+
+  /* Main content offset when sidebar is visible on mobile */
+  body:not(.sidebar-collapsed) .col-lg-10 {
+    margin-left: 0;
+  }
+
+  /* Overlay for sidebar on mobile */
+  body:not(.sidebar-collapsed) .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1025;
+  }
 }
+
 /* ========== CARD STYLES ========== */
 
 .card {
