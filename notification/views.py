@@ -1,7 +1,10 @@
+from django.conf import settings
+from django.core.mail import EmailMessage
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from django.contrib import messages
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q
@@ -19,6 +22,35 @@ def is_admin(user):
 def is_admin_or_staff(user):
     return user.is_authenticated and user.user_type in ['admin', 'staff']
 
+
+def send_notification_email(user, notification):
+    """
+    Hàm tiện ích để gửi email thông báo
+    """
+    try:
+        subject = f"Thông báo mới: {notification.title}"
+
+        email_context = {
+            "user": user,
+            "notification": notification,
+            "site_name": "Hệ thống Quản lý Ký túc xá",
+            "current_date": timezone.now().strftime("%d/%m/%Y %H:%M"),
+        }
+
+        html_message = render_to_string('notification/email_template.html', email_context)
+
+        email_message = EmailMessage(
+            subject=subject,
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+        )
+        email_message.content_subtype = "html"
+        email_message.send()
+        return True
+    except Exception as e:
+        print(f"Lỗi khi gửi email thông báo: {str(e)}")
+        return False
 
 # ====== Views cho người dùng ======
 
@@ -238,62 +270,92 @@ def notification_create_view(request):
     if request.method == 'POST':
         form = NotificationForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                notification = form.save(commit=False)
-                notification.sender = request.user
-                notification.save()
+            try:
+                with transaction.atomic():
+                    notification = form.save(commit=False)
+                    notification.sender = request.user
+                    notification.save()
 
-                if 'target_buildings' in form.cleaned_data:
-                    notification.target_buildings.set(form.cleaned_data['target_buildings'])
-                if 'target_rooms' in form.cleaned_data:
-                    notification.target_rooms.set(form.cleaned_data['target_rooms'])
+                    if 'target_buildings' in form.cleaned_data:
+                        notification.target_buildings.set(form.cleaned_data['target_buildings'])
+                    if 'target_rooms' in form.cleaned_data:
+                        notification.target_rooms.set(form.cleaned_data['target_rooms'])
 
-                user_target = form.cleaned_data.get('user_target')
+                    user_target = form.cleaned_data.get('user_target')
 
-                recipients = []
+                    recipients = []
 
-                if user_target == 'all':
-                    recipients = User.objects.filter(is_active=True)
-                elif user_target == 'students':
-                    recipients = User.objects.filter(is_active=True, user_type='student')
-                elif user_target == 'staff':
-                    recipients = User.objects.filter(is_active=True, user_type__in=['staff', 'admin'])
-                elif user_target == 'building':
-                    buildings = form.cleaned_data.get('target_buildings')
-                    if buildings:
-                        rooms = Room.objects.filter(building__in=buildings)
-                        from registration.models import Contract
-                        contracts = Contract.objects.filter(
-                            room__in=rooms,
-                            status='active',
-                            start_date__lte=timezone.now().date(),
-                            end_date__gte=timezone.now().date()
+                    if user_target == 'all':
+                        recipients = User.objects.filter(is_active=True)
+                    elif user_target == 'students':
+                        recipients = User.objects.filter(is_active=True, user_type='student')
+                    elif user_target == 'staff':
+                        recipients = User.objects.filter(is_active=True, user_type__in=['staff', 'admin'])
+                    elif user_target == 'building':
+                        buildings = form.cleaned_data.get('target_buildings')
+                        if buildings:
+                            rooms = Room.objects.filter(building__in=buildings)
+                            from registration.models import Contract
+                            contracts = Contract.objects.filter(
+                                room__in=rooms,
+                                status='active',
+                                start_date__lte=timezone.now().date(),
+                                end_date__gte=timezone.now().date()
+                            )
+                            recipients = [contract.user for contract in contracts]
+                    elif user_target == 'room':
+                        rooms = form.cleaned_data.get('target_rooms')
+                        if rooms:
+                            from registration.models import Contract
+                            contracts = Contract.objects.filter(
+                                room__in=rooms,
+                                status='active',
+                                start_date__lte=timezone.now().date(),
+                                end_date__gte=timezone.now().date()
+                            )
+                            recipients = [contract.user for contract in contracts]
+                    elif user_target == 'specific':
+                        specific_users = form.cleaned_data.get('specific_users')
+                        if specific_users:
+                            recipients = specific_users
+
+                    created_notifications = []
+                    for user in recipients:
+                        user_notification = UserNotification.objects.create(
+                            notification=notification,
+                            user=user
                         )
-                        recipients = [contract.user for contract in contracts]
-                elif user_target == 'room':
-                    rooms = form.cleaned_data.get('target_rooms')
-                    if rooms:
-                        from registration.models import Contract
-                        contracts = Contract.objects.filter(
-                            room__in=rooms,
-                            status='active',
-                            start_date__lte=timezone.now().date(),
-                            end_date__gte=timezone.now().date()
-                        )
-                        recipients = [contract.user for contract in contracts]
-                elif user_target == 'specific':
-                    specific_users = form.cleaned_data.get('specific_users')
-                    if specific_users:
-                        recipients = specific_users
+                        created_notifications.append(user_notification)
 
-                for user in recipients:
-                    UserNotification.objects.create(
-                        notification=notification,
-                        user=user
-                    )
+                    for user in recipients:
+                        try:
+                            should_send_email = True
+                            if should_send_email:
+                                subject = f"Thông báo mới: {notification.title}"
 
-            messages.success(request, 'Tạo thông báo mới thành công.')
-            return redirect('notification:list')
+                                email_context = {
+                                    "user": user,
+                                    "notification": notification,
+                                    "site_name": "Hệ thống Quản lý Ký túc xá",
+                                }
+
+                                html_message = render_to_string('notification/email_template.html', email_context)
+
+                                email_message = EmailMessage(
+                                    subject=subject,
+                                    body=html_message,
+                                    from_email=settings.DEFAULT_FROM_EMAIL,
+                                    to=[user.email],
+                                )
+                                email_message.content_subtype = "html"
+                                email_message.send()
+                        except Exception as e:
+                            print(f"Lỗi khi gửi email thông báo cho {user.email}: {str(e)}")
+
+                messages.success(request, 'Tạo thông báo mới thành công.')
+                return redirect('notification:list')
+            except Exception as e:
+                messages.error(request, f'Đã xảy ra lỗi khi tạo thông báo: {str(e)}')
     else:
         form = NotificationForm()
 
@@ -306,7 +368,6 @@ def notification_create_view(request):
         ]
     }
     return render(request, 'notification/notification_form.html', context)
-
 
 @login_required
 @user_passes_test(is_admin_or_staff)
@@ -367,11 +428,41 @@ def announcement_create_view(request):
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, request.FILES)
         if form.is_valid():
-            announcement = form.save(commit=False)
-            announcement.author = request.user
-            announcement.save()
-            messages.success(request, 'Tạo thông báo chung mới thành công.')
-            return redirect('notification:announcement_list')
+            try:
+                with transaction.atomic():
+                    announcement = form.save(commit=False)
+                    announcement.author = request.user
+                    announcement.save()
+
+                    if announcement.is_pinned:
+                        users = User.objects.filter(is_active=True)
+                        for user in users:
+                            try:
+                                subject = f"Thông báo quan trọng: {announcement.title}"
+
+                                email_context = {
+                                    "user": user,
+                                    "announcement": announcement,
+                                    "site_name": "Hệ thống Quản lý Ký túc xá",
+                                }
+
+                                html_message = render_to_string('notification/announcement_email.html', email_context)
+
+                                email_message = EmailMessage(
+                                    subject=subject,
+                                    body=html_message,
+                                    from_email=settings.DEFAULT_FROM_EMAIL,
+                                    to=[user.email],
+                                )
+                                email_message.content_subtype = "html"
+                                email_message.send()
+                            except Exception as e:
+                                print(f"Lỗi khi gửi email thông báo chung cho {user.email}: {str(e)}")
+
+                    messages.success(request, 'Tạo thông báo chung mới thành công.')
+                    return redirect('notification:announcement_list')
+            except Exception as e:
+                messages.error(request, f'Đã xảy ra lỗi khi tạo thông báo chung: {str(e)}')
     else:
         form = AnnouncementForm()
 

@@ -2,12 +2,14 @@
 {% get_unread_notifications_count user as unread_count %}
 
 <!-- Navbar/Header -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white px-3 shadow-sm fixed-top">
-    <div class="container-fluid">
-        <!-- Sidebar Toggle -->
-        <button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggle">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+    <div class="container-fluid d-flex flex-row">
+        <!-- Sidebar Toggle (Mobile) -->
+        {% if user.is_authenticated %}
+        <button class="btn btn-link d-md-none rounded-circle me-2" id="sidebarToggle">
             <i class="fas fa-bars"></i>
         </button>
+        {% endif %}
 
         <!-- Logo/Brand -->
         <a class="navbar-brand" href="{% url 'home' %}">
@@ -15,13 +17,15 @@
             <span>Quản lý Ký túc xá</span>
         </a>
 
+        <!-- Mobile toggle button -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
                 aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarContent">
-            <form class="d-none d-lg-inline-block form-inline me-md-3 my-2 my-md-0 mx-auto w-50">
+            <!-- Search Form - only show on desktop -->
+            <form class="d-none d-lg-inline-block form-inline mx-auto me-0 me-md-3 my-2 my-md-0 w-50">
                 <div class="input-group">
                     <input type="text" class="form-control bg-light border-0 small" placeholder="Tìm kiếm..."
                         aria-label="Tìm kiếm">
@@ -31,23 +35,23 @@
                 </div>
             </form>
 
-            <!-- Phần bên phải navbar -->
-            <ul class="navbar-nav ms-auto">
+            <!-- Right navbar items -->
+            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
                 {% if user.is_authenticated %}
-                    <!-- Thông báo -->
-                    <li class="nav-item dropdown">
+                    <!-- Notifications -->
+                    <li class="nav-item dropdown no-arrow mx-1 position-relative">
                         <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-bell fa-fw"></i>
-                            <!-- Đếm thông báo chưa đọc -->
+                            <!-- Notification count badge -->
                             {% if unread_count > 0 %}
                                 <span class="badge rounded-pill bg-danger">{{ unread_count }}</span>
                             {% endif %}
                         </a>
-                        <!-- Dropdown - Thông báo -->
+                        <!-- Dropdown - Alerts -->
                         <div class="dropdown-list dropdown-menu dropdown-menu-end shadow animated--grow-in"
                             aria-labelledby="alertsDropdown">
-                            <h6 class="dropdown-header bg-primary">
+                            <h6 class="dropdown-header">
                                 Thông báo
                             </h6>
                             {% with notifications=user.user_notifications.all|slice:":5" %}
@@ -66,39 +70,39 @@
                                         </a>
                                     {% endfor %}
                                 {% else %}
-                                    <div class="dropdown-item text-center">Không có thông báo mới</div>
+                                    <div class="dropdown-item text-center small">Không có thông báo mới</div>
                                 {% endif %}
                             {% endwith %}
                             <a class="dropdown-item text-center small text-gray-500" href="{% url 'notification:list' %}">Xem tất cả thông báo</a>
                         </div>
                     </li>
 
-                    <!-- Tin nhắn -->
-                    <li class="nav-item dropdown">
+                    <!-- Messages -->
+                    <li class="nav-item dropdown no-arrow mx-1 position-relative">
                         <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-envelope fa-fw"></i>
                         </a>
-                        <!-- Dropdown - Tin nhắn -->
+                        <!-- Dropdown - Messages -->
                         <div class="dropdown-list dropdown-menu dropdown-menu-end shadow animated--grow-in"
                             aria-labelledby="messagesDropdown">
-                            <h6 class="dropdown-header bg-primary">
+                            <h6 class="dropdown-header">
                                 Tin nhắn
                             </h6>
-                            <div class="dropdown-item text-center">Tính năng đang phát triển</div>
+                            <div class="dropdown-item text-center small">Tính năng đang phát triển</div>
                             <a class="dropdown-item text-center small text-gray-500" href="#">Xem tất cả tin nhắn</a>
                         </div>
                     </li>
 
-                    <div class="topbar-divider d-none d-md-block mx-2"></div>
+                    <div class="topbar-divider d-none d-md-block"></div>
 
                     <!-- User Profile -->
-                    <li class="nav-item dropdown">
+                    <li class="nav-item dropdown no-arrow">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="me-2 d-none d-lg-inline text-gray-600 small">{{ user.get_full_name }}</span>
                             {% if user.avatar %}
-                                <img class="img-profile rounded-circle" src="{{ user.avatar.url }}" style="width: 32px; height: 32px; object-fit: cover;">
+                                <img class="img-profile rounded-circle" src="{{ user.avatar.url }}" alt="Profile">
                             {% else %}
                                 <div class="d-inline-block">
                                     <div class="bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -146,7 +150,7 @@
     </div>
 </nav>
 
-<!-- Logout Modal (giữ nguyên) -->
+<!-- Logout Modal -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

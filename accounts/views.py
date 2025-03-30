@@ -77,10 +77,11 @@ def verify_email_confirm_view(request, uidb64, token):
         user = None
 
     if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True  # Kích hoạt tài khoản
-        user.email_verified = True
-        user.save()
-        messages.success(request, 'Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập.')
+        with transaction.atomic():
+            user.is_active = True
+            user.email_verified = True
+            user.save()
+            messages.success(request, 'Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập.')
         return redirect('accounts:login')
     else:
         messages.error(request, 'Link xác thực không hợp lệ hoặc đã hết hạn.')
@@ -95,79 +96,72 @@ def register_view(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
 
-        if form.is_valid():
+        email = request.POST.get('email')
+        student_id = request.POST.get('student_id')
+        id_card_number = request.POST.get('id_card_number')
+
+        has_errors = False
+
+        if email and User.objects.filter(email=email).exists():
+            form.add_error('email', _('Email này đã được sử dụng. Vui lòng chọn email khác.'))
+            has_errors = True
+
+        if student_id and User.objects.filter(student_id=student_id).exists():
+            form.add_error('student_id', _('Mã sinh viên này đã được sử dụng. Vui lòng kiểm tra lại.'))
+            has_errors = True
+
+        if id_card_number and User.objects.filter(id_card_number=id_card_number).exists():
+            form.add_error('id_card_number', _('Số CMND/CCCD này đã được sử dụng. Vui lòng kiểm tra lại.'))
+            has_errors = True
+
+        if not has_errors and form.is_valid():
             try:
-                email = form.cleaned_data.get('email')
-                student_id = form.cleaned_data.get('student_id')
-                id_card_number = form.cleaned_data.get('id_card_number')
+                with transaction.atomic():
+                    user = form.save(commit=False)
+                    user.is_active = False
+                    user.save()
 
-                existing_email = User.objects.filter(email=email).exists()
-                existing_student_id = User.objects.filter(student_id=student_id).exists()
-                existing_id_card = User.objects.filter(id_card_number=id_card_number).exists()
+                    UserProfile.objects.create(user=user)
 
-                if existing_email:
-                    form.add_error('email', _('Email này đã được sử dụng. Vui lòng chọn email khác.'))
-                    raise forms.ValidationError(_('Email đã tồn tại'))
+                    current_site = get_current_site(request)
+                    token = default_token_generator.make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-                if existing_student_id:
-                    form.add_error('student_id', _('Mã sinh viên này đã được sử dụng. Vui lòng kiểm tra lại.'))
-                    raise forms.ValidationError(_('Mã sinh viên đã tồn tại'))
+                    verify_url = request.build_absolute_uri(
+                        f"/accounts/verify-email-confirm/{uid}/{token}/"
+                    )
 
-                if existing_id_card:
-                    form.add_error('id_card_number', _('Số CMND/CCCD này đã được sử dụng. Vui lòng kiểm tra lại.'))
-                    raise forms.ValidationError(_('Số CMND/CCCD đã tồn tại'))
+                    mail_subject = 'Kích hoạt tài khoản - Hệ thống Quản lý Ký túc xá'
 
-                user = form.save(commit=False)
-                user.is_active = False
-                user.save()
+                    email_context = {
+                        "user": user,
+                        "verify_url": verify_url,
+                        "site_name": "Hệ thống Quản lý Ký túc xá",
+                        "domain": current_site.domain,
+                        "uid": uid,
+                        "token": token,
+                    }
 
-                UserProfile.objects.create(user=user)
+                    mail_body = render_to_string('accounts/email_verification_email.html', email_context)
 
-                current_site = get_current_site(request)
-                token = default_token_generator.make_token(user)
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    email_message = EmailMessage(
+                        subject=mail_subject,
+                        body=mail_body,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[user.email],
+                    )
+                    email_message.content_subtype = "html"
 
-                verify_url = request.build_absolute_uri(
-                    f"/accounts/verify-email-confirm/{uid}/{token}/"
-                )
-
-                mail_subject = 'Kích hoạt tài khoản - Hệ thống Quản lý Ký túc xá'
-
-                email_context = {
-                    "user": user,
-                    "verify_url": verify_url,
-                    "site_name": "Hệ thống Quản lý Ký túc xá",
-                    "domain": current_site.domain,
-                    "uid": uid,
-                    "token": token,
-                }
-
-                mail_body = render_to_string('accounts/email_verification_email.html', email_context)
-
-                email_message = EmailMessage(
-                    subject=mail_subject,
-                    body=mail_body,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[user.email],
-                )
-                email_message.content_subtype = "html"
-
-                try:
                     email_message.send()
+
                     messages.success(
                         request,
                         'Đăng ký tài khoản thành công! Vui lòng kiểm tra email để kích hoạt tài khoản của bạn.'
                     )
                     return redirect('accounts:login')
-                except Exception as e:
-                    messages.warning(
-                        request,
-                        f'Tài khoản đã được tạo nhưng không thể gửi email xác thực: {str(e)}. Vui lòng liên hệ quản trị viên.'
-                    )
-                    return redirect('accounts:login')
 
-            except forms.ValidationError:
-                pass
+            except BadHeaderError:
+                messages.error(request, 'Không thể gửi email xác thực. Vui lòng thử lại sau.')
             except Exception as e:
                 messages.error(request, f'Đã xảy ra lỗi: {str(e)}')
     else:
@@ -185,35 +179,37 @@ def verify_email_view(request):
     """Xác thực email người dùng"""
     if request.method == 'POST':
         user = request.user
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-        verify_url = request.build_absolute_uri(
-            f"/accounts/verify-email-confirm/{uid}/{token}/"
-        )
-
-        subject = "Xác thực email"
-        email_template_html = "email/email_verification.html"
-        email_template_text = "email/email_verification.txt"
-        email_context = {
-            "user": user,
-            "verify_url": verify_url,
-            "site_name": "Hệ thống Quản lý Ký túc xá",
-        }
-
-        html_message = render_to_string(email_template_html, email_context)
-        plain_message = render_to_string(email_template_text, email_context)
 
         try:
-            send_mail(
-                subject=subject,
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                html_message=html_message,
-                fail_silently=False
-            )
-            messages.success(request, 'Email xác thực đã được gửi. Vui lòng kiểm tra hộp thư của bạn.')
+            with transaction.atomic():
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+                verify_url = request.build_absolute_uri(
+                    f"/accounts/verify-email-confirm/{uid}/{token}/"
+                )
+
+                subject = "Xác thực email"
+
+                email_context = {
+                    "user": user,
+                    "verify_url": verify_url,
+                    "site_name": "Hệ thống Quản lý Ký túc xá",
+                }
+
+                html_message = render_to_string("email/email_verification.html", email_context)
+
+                email_message = EmailMessage(
+                    subject=subject,
+                    body=html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                )
+                email_message.content_subtype = "html"
+                email_message.send()
+                messages.success(request, 'Email xác thực đã được gửi. Vui lòng kiểm tra hộp thư của bạn.')
+        except BadHeaderError:
+            messages.error(request, 'Đã xảy ra lỗi khi gửi email. Vui lòng thử lại sau.')
         except Exception as e:
             messages.error(request, f'Có lỗi khi gửi email: {str(e)}')
 
@@ -229,7 +225,6 @@ def verify_email_view(request):
     return render(request, 'accounts/verify_email.html', context)
 
 
-
 def password_reset_request(request):
     """Xử lý yêu cầu đặt lại mật khẩu"""
     if request.method == 'POST':
@@ -239,45 +234,45 @@ def password_reset_request(request):
             user = User.objects.filter(email=email).first()
 
             if user:
-                token = default_token_generator.make_token(user)
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-                expiry_time = timezone.now() + timezone.timedelta(hours=24)
-                password_reset = PasswordReset.objects.create(
-                    user=user,
-                    token=token,
-                    expires_at=expiry_time
-                )
-
-                subject = "Yêu cầu đặt lại mật khẩu"
-                reset_url = request.build_absolute_uri(
-                    f"/accounts/password-reset-confirm/{uid}/{token}/"
-                )
-
-                email_template_html = "email/password_reset.html"
-                email_template_text = "email/password_reset.txt"
-                email_context = {
-                    "user": user,
-                    "reset_url": reset_url,
-                    "site_name": "Hệ thống Quản lý Ký túc xá",
-                    "expiry_time": expiry_time
-                }
-
-                html_message = render_to_string(email_template_html, email_context)
-                plain_message = render_to_string(email_template_text, email_context)
-
                 try:
-                    send_mail(
-                        subject=subject,
-                        message=plain_message,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[user.email],
-                        html_message=html_message,
-                        fail_silently=False
-                    )
-                    return redirect("accounts:password_reset_done")
+                    with transaction.atomic():
+                        token = default_token_generator.make_token(user)
+                        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+                        expiry_time = timezone.now() + timezone.timedelta(hours=24)
+                        password_reset = PasswordReset.objects.create(
+                            user=user,
+                            token=token,
+                            expires_at=expiry_time
+                        )
+
+                        subject = "Yêu cầu đặt lại mật khẩu"
+                        reset_url = request.build_absolute_uri(
+                            f"/accounts/password-reset-confirm/{uid}/{token}/"
+                        )
+
+                        email_context = {
+                            "user": user,
+                            "reset_url": reset_url,
+                            "site_name": "Hệ thống Quản lý Ký túc xá",
+                            "expiry_time": expiry_time
+                        }
+
+                        html_message = render_to_string("email/password_reset.html", email_context)
+
+                        email_message = EmailMessage(
+                            subject=subject,
+                            body=html_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[user.email],
+                        )
+                        email_message.content_subtype = "html"
+                        email_message.send()
                 except BadHeaderError:
                     return HttpResponse("Đã xảy ra lỗi khi gửi email. Vui lòng thử lại sau.")
+                except Exception as e:
+                    messages.error(request, f'Có lỗi khi gửi email: {str(e)}')
+                    return redirect("accounts:password_reset")
 
             return redirect("accounts:password_reset_done")
     else:
