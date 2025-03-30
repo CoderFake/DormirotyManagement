@@ -444,7 +444,7 @@ def fee_type_edit_view(request, fee_type_id):
             {'title': fee_type.name, 'url': None}
         ]
     }
-    return render(request, 'payment/fee_type_form.html', context)
+    return render(request, 'payment/admin/fee_type_form.html', context)
 
 
 @login_required
@@ -468,7 +468,7 @@ def fee_type_delete_view(request, fee_type_id):
             {'title': 'Xóa', 'url': None}
         ]
     }
-    return render(request, 'payment/fee_type_delete.html', context)
+    return render(request, 'payment/admin/fee_type_delete.html', context)
 
 
 @login_required
@@ -497,7 +497,7 @@ def invoice_list_view(request):
             {'title': 'Hóa đơn', 'url': None}
         ]
     }
-    return render(request, 'payment/invoice_list.html', context)
+    return render(request, 'payment/admin/invoice_list.html', context)
 
 
 @login_required
@@ -528,7 +528,7 @@ def invoice_create_view(request):
             {'title': 'Tạo mới', 'url': None}
         ]
     }
-    return render(request, 'payment/invoice_form.html', context)
+    return render(request, 'payment/admin/invoice_form.html', context)
 
 
 @login_required
@@ -557,7 +557,7 @@ def invoice_edit_view(request, invoice_id):
             {'title': 'Chỉnh sửa', 'url': None}
         ]
     }
-    return render(request, 'payment/invoice_form.html', context)
+    return render(request, 'payment/admin/invoice_form.html', context)
 
 
 @login_required
@@ -581,7 +581,7 @@ def invoice_delete_view(request, invoice_id):
             {'title': 'Xóa', 'url': None}
         ]
     }
-    return render(request, 'payment/invoice_delete.html', context)
+    return render(request, 'payment/admin/invoice_delete.html', context)
 
 
 # ====== Hàm hỗ trợ ======

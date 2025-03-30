@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'payment:invoice_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Tạo hóa đơn mới
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Bản nháp</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Chờ thanh toán</option>
+                                <option value="partially_paid" {% if request.GET.status == 'partially_paid' %}selected{% endif %}>Thanh toán một phần</option>
+                                <option value="paid" {% if request.GET.status == 'paid' %}selected{% endif %}>Đã thanh toán</option>
+                                <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Quá hạn</option>
+                                <option value="canceled" {% if request.GET.status == 'canceled' %}selected{% endif %}>Đã hủy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="user" class="form-label">Sinh viên</label>
+                            <select name="user" id="user" class="form-select select2">
+                                <option value="">Tất cả</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if request.GET.user == user.id %}selected{% endif %}>{{ user.full_name }} ({{ user.email }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="room" class="form-label">Phòng</label>
+                            <select name="room" id="room" class="form-select select2">
+                                <option value="">Tất cả</option>
+                                {% for room in rooms %}
+                                <option value="{{ room.id }}" {% if request.GET.room == room.id %}selected{% endif %}>{{ room }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>
+                                Lọc
+                            </button>
+                            <a href="{% url 'payment:invoice_list' %}" class="btn btn-light ms-2">
+                                <i class="fas fa-redo me-1"></i>
+                                Đặt lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Danh sách hóa đơn</h5>
+                    <p class="card-text text-muted small">Quản lý hóa đơn thanh toán.</p>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle datatable">
+                            <thead>
+                                <tr>
+                                    <th>Số hóa đơn</th>
+                                    <th>Sinh viên</th>
+                                    <th>Phòng</th>
+                                    <th>Ngày phát hành</th>
+                                    <th>Ngày hết hạn</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Đã thanh toán</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in invoices %}
+                                <tr>
+                                    <td>{{ invoice.invoice_number }}</td>
+                                    <td>{{ invoice.user.full_name }}</td>
+                                    <td>{% if invoice.room %}{{ invoice.room }}{% else %}--{% endif %}</td>
+                                    <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                                    <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                                    <td>{{ invoice.total_amount|floatformat:0 }} đ</td>
+                                    <td>{{ invoice.paid_amount|floatformat:0 }} đ</td>
+                                    <td>
+                                        {% if invoice.status == 'draft' %}
+                                        <span class="badge bg-secondary">Bản nháp</span>
+                                        {% elif invoice.status == 'pending' %}
+                                        <span class="badge bg-warning">Chờ thanh toán</span>
+                                        {% elif invoice.status == 'partially_paid' %}
+                                        <span class="badge bg-info">Đã thanh toán một phần</span>
+                                        {% elif invoice.status == 'paid' %}
+                                        <span class="badge bg-success">Đã thanh toán</span>
+                                        {% elif invoice.status == 'overdue' %}
+                                        <span class="badge bg-danger">Quá hạn</span>
+                                        {% elif invoice.status == 'canceled' %}
+                                        <span class="badge bg-dark">Đã hủy</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'payment:invoice_detail' invoice_id=invoice.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'payment:invoice_edit' invoice_id=invoice.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'payment:invoice_delete' invoice_id=invoice.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">
+                                        Không có hóa đơn nào. Hãy tạo hóa đơn đầu tiên!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap-5'
+        });
+
+        $('.datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+            },
+            order: [[3, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

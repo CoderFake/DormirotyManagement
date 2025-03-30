@@ -17,7 +17,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Xác nhận xóa danh mục bảo trì</h5>
+                    <h5 class="card-title mb-0">Xác nhận xóa loại phí</h5>
                     <p class="card-text text-muted small">Thao tác này không thể hoàn tác.</p>
                 </div>
 
@@ -25,40 +25,40 @@
                     <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <div>
-                            Bạn có chắc chắn muốn xóa danh mục <strong>{{ category.name }}</strong> không?
-                            Thao tác này sẽ xóa vĩnh viễn danh mục và có thể ảnh hưởng đến các yêu cầu bảo trì liên quan.
+                            Bạn có chắc chắn muốn xóa loại phí <strong>{{ fee_type.name }}</strong> không?
+                            Thao tác này sẽ xóa vĩnh viễn loại phí và tất cả dữ liệu liên quan.
                         </div>
                     </div>
 
                     <div class="table-responsive mb-4">
-                        <table class="table">
+                        <table class="table table-bordered">
                             <tbody>
                                 <tr>
-                                    <th class="bg-light w-25">Tên danh mục</th>
-                                    <td>{{ category.name }}</td>
+                                    <th class="bg-light w-25">Tên loại phí</th>
+                                    <td>{{ fee_type.name }}</td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light">Biểu tượng</th>
+                                    <th class="bg-light">Mã</th>
+                                    <td><code>{{ fee_type.code }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Mô tả</th>
+                                    <td>{{ fee_type.description|default:"--" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Định kỳ</th>
                                     <td>
-                                        {% if category.icon %}
-                                        <i class="fas {{ category.icon }}"></i> {{ category.icon }}
+                                        {% if fee_type.is_recurring %}
+                                        <span class="badge bg-success">Có</span>
                                         {% else %}
-                                        <i class="fas fa-tools"></i> (Mặc định)
+                                        <span class="badge bg-secondary">Không</span>
                                         {% endif %}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light">Mô tả</th>
-                                    <td>{{ category.description|default:"--" }}</td>
-                                </tr>
-                                <tr>
-                                    <th class="bg-light">Thời gian TB</th>
-                                    <td>{{ category.average_time }} giờ</td>
-                                </tr>
-                                <tr>
                                     <th class="bg-light">Trạng thái</th>
                                     <td>
-                                        {% if category.is_active %}
+                                        {% if fee_type.is_active %}
                                         <span class="badge bg-success">Hoạt động</span>
                                         {% else %}
                                         <span class="badge bg-danger">Tạm ngưng</span>
@@ -73,7 +73,7 @@
                         {% csrf_token %}
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'maintenance:category_list' %}" class="btn btn-light">
+                            <a href="{% url 'payment:fee_type_list' %}" class="btn btn-light">
                                 Hủy
                             </a>
                             <button type="submit" class="btn btn-danger">

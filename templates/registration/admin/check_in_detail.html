@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Chi tiết check-in</h5>
+                        <div class="d-flex gap-2">
+                            {% if check_in.status == 'pending' %}
+                            <form method="post" action="{% url 'registration:check_in_complete' check_in.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check2 me-1"></i>
+                                    Hoàn thành check-in
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'registration:check_in_cancel' check_in.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x me-1"></i>
+                                    Hủy check-in
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Thông tin sinh viên -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Thông tin sinh viên</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Họ và tên</label>
+                                <div>{{ check_in.contract.user.full_name }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Mã số sinh viên</label>
+                                <div>{{ check_in.contract.user.student_id }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Email</label>
+                                <div>{{ check_in.contract.user.email }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Số điện thoại</label>
+                                <div>{{ check_in.contract.user.phone_number }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin phòng -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Thông tin phòng</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Tòa nhà</label>
+                                <div>{{ check_in.contract.bed.room.building.name }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Phòng</label>
+                                <div>{{ check_in.contract.bed.room.room_number }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Loại phòng</label>
+                                <div>{{ check_in.contract.bed.room.room_type.name }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Giường</label>
+                                <div>{{ check_in.contract.bed.bed_number }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin check-in -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Thông tin check-in</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Ngày check-in</label>
+                                <div>{{ check_in.check_in_date|date:"d/m/Y" }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Trạng thái</label>
+                                <div>
+                                    {% if check_in.status == 'pending' %}
+                                    <span class="badge bg-warning">Chờ xử lý</span>
+                                    {% elif check_in.status == 'completed' %}
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                    {% elif check_in.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Đã hủy</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted">Ghi chú</label>
+                                <div>{{ check_in.notes|default:"Không có" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tài liệu đính kèm -->
+                    {% if check_in.attachments %}
+                    <div class="mb-4">
+                        <h6 class="mb-3">Tài liệu đính kèm</h6>
+                        <div class="row">
+                            {% for attachment in check_in.attachments.all %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-earmark me-2"></i>
+                                            <div>
+                                                <div class="fw-medium">{{ attachment.name }}</div>
+                                                <div class="small text-muted">{{ attachment.file.size|filesizeformat }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <a href="{{ attachment.file.url }}" class="btn btn-sm btn-primary" target="_blank">
+                                                <i class="bi bi-download me-1"></i>
+                                                Tải xuống
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

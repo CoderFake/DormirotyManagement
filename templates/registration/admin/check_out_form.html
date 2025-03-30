@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Thông tin check-out</h5>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Thông tin hợp đồng</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="{{ form.contract.id_for_label }}" class="form-label">Hợp đồng <span class="text-danger">*</span></label>
+                                            {{ form.contract }}
+                                            {% if form.contract.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.contract.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Thông tin check-out</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="{{ form.check_out_date.id_for_label }}" class="form-label">Ngày check-out <span class="text-danger">*</span></label>
+                                            {{ form.check_out_date }}
+                                            {% if form.check_out_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.check_out_date.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="{{ form.notes.id_for_label }}" class="form-label">Ghi chú</label>
+                                            {{ form.notes }}
+                                            {% if form.notes.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.notes.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="{{ form.attachments.id_for_label }}" class="form-label">Tệp đính kèm</label>
+                                            {{ form.attachments }}
+                                            {% if form.attachments.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.attachments.errors }}
+                                            </div>
+                                            {% endif %}
+                                            <div class="form-text">Có thể chọn nhiều tệp</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'registration:check_out_list' %}" class="btn btn-light">
+                                <i class="bi bi-x-lg me-2"></i>
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-2"></i>
+                                Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

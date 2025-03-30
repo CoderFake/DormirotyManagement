@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Chờ xử lý</option>
+                                <option value="assigned" {% if request.GET.status == 'assigned' %}selected{% endif %}>Đã phân công</option>
+                                <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>Đang xử lý</option>
+                                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Hoàn thành</option>
+                                <option value="canceled" {% if request.GET.status == 'canceled' %}selected{% endif %}>Đã hủy</option>
+                                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Từ chối</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">Danh mục</label>
+                            <select name="category" id="category" class="form-select">
+                                <option value="">Tất cả</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if request.GET.category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="building" class="form-label">Tòa nhà</label>
+                            <select name="building" id="building" class="form-select">
+                                <option value="">Tất cả</option>
+                                {% for b in buildings %}
+                                <option value="{{ b.id }}" {% if request.GET.building == b.id %}selected{% endif %}>{{ b.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="priority" class="form-label">Mức độ ưu tiên</label>
+                            <select name="priority" id="priority" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Thấp</option>
+                                <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Trung bình</option>
+                                <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>Cao</option>
+                                <option value="urgent" {% if request.GET.priority == 'urgent' %}selected{% endif %}>Khẩn cấp</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>
+                                Lọc
+                            </button>
+                            <a href="{% url 'maintenance:request_list' %}" class="btn btn-light ms-2">
+                                <i class="fas fa-redo me-1"></i>
+                                Đặt lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Danh sách yêu cầu bảo trì</h5>
+                    <p class="card-text text-muted small">Quản lý tất cả yêu cầu bảo trì trong hệ thống.</p>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle datatable">
+                            <thead>
+                                <tr>
+                                    <th>Mã yêu cầu</th>
+                                    <th>Tiêu đề</th>
+                                    <th>Người yêu cầu</th>
+                                    <th>Phòng</th>
+                                    <th>Danh mục</th>
+                                    <th>Ưu tiên</th>
+                                    <th>Ngày yêu cầu</th>
+                                    <th>Người xử lý</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in requests %}
+                                <tr>
+                                    <td>{{ req.request_number }}</td>
+                                    <td>{{ req.title|truncatechars:30 }}</td>
+                                    <td>{{ req.user.full_name }}</td>
+                                    <td>{{ req.room.building.code }}-{{ req.room.room_number }}</td>
+                                    <td>{{ req.category.name }}</td>
+                                    <td>
+                                        {% if req.priority == 'low' %}
+                                        <span class="badge bg-secondary">Thấp</span>
+                                        {% elif req.priority == 'medium' %}
+                                        <span class="badge bg-info">Trung bình</span>
+                                        {% elif req.priority == 'high' %}
+                                        <span class="badge bg-warning">Cao</span>
+                                        {% elif req.priority == 'urgent' %}
+                                        <span class="badge bg-danger">Khẩn cấp</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'maintenance:request_detail' request_id=req.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if req.status == 'pending' %}
+                                        <a href="{% url 'maintenance:request_assign' request_id=req.id %}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-user-check"></i>
+                                        </a>
+                                        {% endif %}
+                                        <a href="{% url 'maintenance:request_admin_edit' request_id=req.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center py-4 text-muted">
+                                        Không có yêu cầu bảo trì nào.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+            },
+            order: [[6, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

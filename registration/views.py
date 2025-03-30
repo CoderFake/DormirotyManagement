@@ -734,7 +734,7 @@ def check_in_create_view(request, contract_id):
             {'title': 'Tạo mới', 'url': None}
         ]
     }
-    return render(request, 'registration/check_in_form.html', context)
+    return render(request, 'registration/admin/check_in_form.html', context)
 
 
 @login_required

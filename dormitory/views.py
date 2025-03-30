@@ -20,7 +20,6 @@ def building_list_view(request):
     """Danh sách tòa nhà"""
     buildings = Building.objects.all().order_by('name')
 
-    # Thêm thông tin thống kê
     for building in buildings:
         building.total_rooms = Room.objects.filter(building=building).count()
         building.available_rooms = Room.objects.filter(
@@ -44,7 +43,7 @@ def building_list_view(request):
             {'title': 'Tòa nhà', 'url': None}
         ]
     }
-    return render(request, 'dormitory/building_list.html', context)
+    return render(request, 'dormitory/admin/building_list.html', context)
 
 
 @login_required
@@ -69,7 +68,7 @@ def building_create_view(request):
             {'title': 'Tạo mới', 'url': None}
         ]
     }
-    return render(request, 'dormitory/building_form.html', context)
+    return render(request, 'dormitory/admin/building_form.html', context)
 
 
 @login_required
@@ -79,11 +78,8 @@ def building_detail_view(request, building_id):
     building = get_object_or_404(Building, pk=building_id)
     rooms = Room.objects.filter(building=building).order_by('floor', 'room_number')
 
-    # Thống kê phòng theo trạng thái
     status_stats = rooms.values('status').annotate(count=Count('id'))
-    # Thống kê phòng theo tầng
     floor_stats = rooms.values('floor').annotate(count=Count('id')).order_by('floor')
-    # Thống kê phòng theo loại
     room_type_stats = rooms.values('room_type__name').annotate(count=Count('id'))
 
     context = {
@@ -99,7 +95,7 @@ def building_detail_view(request, building_id):
             {'title': building.name, 'url': None}
         ]
     }
-    return render(request, 'dormitory/building_detail.html', context)
+    return render(request, 'dormitory/admin/building_detail.html', context)
 
 
 @login_required
@@ -128,7 +124,7 @@ def building_edit_view(request, building_id):
             {'title': 'Chỉnh sửa', 'url': None}
         ]
     }
-    return render(request, 'dormitory/building_form.html', context)
+    return render(request, 'dormitory/admin/building_form.html', context)
 
 
 @login_required
@@ -156,7 +152,7 @@ def building_delete_view(request, building_id):
             {'title': 'Xóa', 'url': None}
         ]
     }
-    return render(request, 'dormitory/building_delete.html', context)
+    return render(request, 'dormitory/admin/building_delete.html', context)
 
 
 # ===== Quản lý loại phòng =====
@@ -175,7 +171,7 @@ def room_type_list_view(request):
             {'title': 'Loại phòng', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_type_list.html', context)
+    return render(request, 'dormitory/admin/room_type_list.html', context)
 
 
 @login_required
@@ -200,7 +196,7 @@ def room_type_create_view(request):
             {'title': 'Tạo mới', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_type_form.html', context)
+    return render(request, 'dormitory/admin/room_type_form.html', context)
 
 
 @login_required
@@ -220,7 +216,7 @@ def room_type_detail_view(request, room_type_id):
             {'title': room_type.name, 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_type_detail.html', context)
+    return render(request, 'dormitory/admin/room_type_detail.html', context)
 
 
 @login_required
@@ -249,7 +245,7 @@ def room_type_edit_view(request, room_type_id):
             {'title': 'Chỉnh sửa', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_type_form.html', context)
+    return render(request, 'dormitory/admin/room_type_form.html', context)
 
 
 @login_required
@@ -277,7 +273,7 @@ def room_type_delete_view(request, room_type_id):
             {'title': 'Xóa', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_type_delete.html', context)
+    return render(request, 'dormitory/admin/room_type_delete.html', context)
 
 
 # ===== Quản lý phòng =====
@@ -314,7 +310,7 @@ def room_list_view(request):
             {'title': 'Phòng', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_list.html', context)
+    return render(request, 'dormitory/admin/room_list.html', context)
 
 
 @login_required
@@ -339,7 +335,7 @@ def room_create_view(request):
             {'title': 'Tạo mới', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_form.html', context)
+    return render(request, 'dormitory/admin/room_form.html', context)
 
 
 @login_required
@@ -357,7 +353,7 @@ def room_detail_view(request, room_id):
             {'title': f'{room.building.name} - {room.room_number}', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_detail.html', context)
+    return render(request, 'dormitory/admin/room_detail.html', context)
 
 
 @login_required
@@ -386,7 +382,7 @@ def room_edit_view(request, room_id):
             {'title': 'Chỉnh sửa', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_form.html', context)
+    return render(request, 'dormitory/admin/room_form.html', context)
 
 
 @login_required
@@ -414,4 +410,4 @@ def room_delete_view(request, room_id):
             {'title': 'Xóa', 'url': None}
         ]
     }
-    return render(request, 'dormitory/room_delete.html', context)
+    return render(request, 'dormitory/admin/room_delete.html', context)

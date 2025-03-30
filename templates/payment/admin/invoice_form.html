@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{% if invoice %}Chỉnh sửa{% else %}Tạo mới{% endif %} hóa đơn</h5>
+                    <p class="card-text text-muted small">Nhập thông tin hóa đơn.</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-4">
+                            <h5 class="mb-3">Thông tin cơ bản</h5>
+
+                            <div class="row mb-3">
+                                <label for="{{ form.user.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ form.user.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ form.user }}
+                                    {% if form.user.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.user.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="{{ form.contract.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ form.contract.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ form.contract }}
+                                    {% if form.contract.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.contract.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-text">Chọn hợp đồng liên quan (nếu có)</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="{{ form.room.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ form.room.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ form.room }}
+                                    {% if form.room.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.room.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <h5 class="mb-3">Thông tin thanh toán</h5>
+
+                            <div class="row mb-3">
+                                <label for="{{ form.due_date.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ form.due_date.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ form.due_date }}
+                                    {% if form.due_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.due_date.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="{{ form.month.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ form.month.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ form.month }}
+                                    {% if form.month.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.month.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="{{ form.year.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ form.year.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ form.year }}
+                                    {% if form.year.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.year.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <h5 class="mb-3">Ghi chú</h5>
+
+                            <div class="row mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="col-sm-3 col-form-label">
+                                    {{ form.notes.label }}
+                                </label>
+                                <div class="col-sm-9">
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.notes.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'payment:invoice_list' %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#id_user').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Chọn sinh viên'
+        });
+
+        $('#id_contract').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Chọn hợp đồng'
+        });
+
+        $('#id_room').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Chọn phòng'
+        });
+
+        $('#id_user').on('change', function() {
+            var userId = $(this).val();
+            if(userId) {
+                $.ajax({
+                    url: '/payment/api/get-contracts/',
+                    data: {
+                        'user_id': userId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        var options = '<option value="">---------</option>';
+                        for(var i = 0; i < data.length; i++) {
+                            options += '<option value="' + data[i].id + '">' + data[i].contract_number + '</option>';
+                        }
+                        $('#id_contract').html(options).trigger('change');
+                    }
+                });
+            }
+        });
+
+        $('#id_contract').on('change', function() {
+            var contractId = $(this).val();
+            if(contractId) {
+                $.ajax({
+                    url: '/payment/api/get-room-by-contract/',
+                    data: {
+                        'contract_id': contractId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#id_room').val(data.room_id).trigger('change');
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

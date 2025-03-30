@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Thông tin yêu cầu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="ps-0">Mã yêu cầu:</th>
+                                    <td>{{ maintenance_request.request_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Tiêu đề:</th>
+                                    <td>{{ maintenance_request.title }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Người yêu cầu:</th>
+                                    <td>{{ maintenance_request.user.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Phòng:</th>
+                                    <td>{{ maintenance_request.room.building.name }} - {{ maintenance_request.room.room_number }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="ps-0">Danh mục:</th>
+                                    <td>{{ maintenance_request.category.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Ưu tiên:</th>
+                                    <td>
+                                        {% if maintenance_request.priority == 'low' %}
+                                        <span class="badge bg-secondary">Thấp</span>
+                                        {% elif maintenance_request.priority == 'medium' %}
+                                        <span class="badge bg-info">Trung bình</span>
+                                        {% elif maintenance_request.priority == 'high' %}
+                                        <span class="badge bg-warning">Cao</span>
+                                        {% elif maintenance_request.priority == 'urgent' %}
+                                        <span class="badge bg-danger">Khẩn cấp</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Ngày yêu cầu:</th>
+                                    <td>{{ maintenance_request.requested_date|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Trạng thái:</th>
+                                    <td>
+                                        {% if maintenance_request.status == 'pending' %}
+                                        <span class="badge bg-warning">Chờ xử lý</span>
+                                        {% elif maintenance_request.status == 'assigned' %}
+                                        <span class="badge bg-info">Đã phân công</span>
+                                        {% elif maintenance_request.status == 'in_progress' %}
+                                        <span class="badge bg-primary">Đang xử lý</span>
+                                        {% elif maintenance_request.status == 'completed' %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                        {% elif maintenance_request.status == 'canceled' %}
+                                        <span class="badge bg-secondary">Đã hủy</span>
+                                        {% elif maintenance_request.status == 'rejected' %}
+                                        <span class="badge bg-danger">Từ chối</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <h6>Mô tả:</h6>
+                        <p>{{ maintenance_request.description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Phân công xử lý</h5>
+                    <p class="card-text text-muted small">Chọn nhân viên phụ trách xử lý yêu cầu.</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <label for="{{ form.assigned_to.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.assigned_to.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.assigned_to }}
+                                {% if form.assigned_to.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.assigned_to.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.scheduled_date.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.scheduled_date.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.scheduled_date }}
+                                {% if form.scheduled_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.scheduled_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Thời gian dự kiến xử lý yêu cầu</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Ghi chú khi phân công</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'maintenance:request_detail' request_id=maintenance_request.id %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-check me-1"></i>
+                                Phân công
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#id_assigned_to').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Chọn nhân viên'
+        });
+    });
+</script>
+{% endblock %}

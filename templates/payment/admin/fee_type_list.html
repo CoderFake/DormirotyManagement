@@ -9,9 +9,9 @@
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0">{{ page_title }}</h1>
             <div>
-                <a href="{% url 'maintenance:category_create' %}" class="btn btn-primary">
+                <a href="{% url 'payment:fee_type_create' %}" class="btn btn-primary">
                     <i class="fas fa-plus me-1"></i>
-                    Thêm danh mục
+                    Thêm loại phí
                 </a>
             </div>
         </div>
@@ -23,48 +23,48 @@
 
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Danh mục bảo trì</h5>
-                    <p class="card-text text-muted small">Quản lý danh mục bảo trì trong hệ thống.</p>
+                    <h5 class="card-title mb-0">Danh sách loại phí</h5>
+                    <p class="card-text text-muted small">Quản lý các loại phí trong hệ thống.</p>
                 </div>
 
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle datatable">
+                        <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
-                                    <th>Tên danh mục</th>
-                                    <th>Biểu tượng</th>
+                                    <th>Tên loại phí</th>
+                                    <th>Mã</th>
                                     <th>Mô tả</th>
-                                    <th>Thời gian TB (giờ)</th>
+                                    <th>Định kỳ</th>
                                     <th>Trạng thái</th>
                                     <th class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for category in categories %}
+                                {% for fee_type in fee_types %}
                                 <tr>
-                                    <td>{{ category.name }}</td>
+                                    <td>{{ fee_type.name }}</td>
+                                    <td><code>{{ fee_type.code }}</code></td>
+                                    <td>{{ fee_type.description|default:"--" }}</td>
                                     <td>
-                                        {% if category.icon %}
-                                        <i class="fas {{ category.icon }}"></i>
+                                        {% if fee_type.is_recurring %}
+                                        <span class="badge bg-success">Định kỳ</span>
                                         {% else %}
-                                        <i class="fas fa-tools"></i>
+                                        <span class="badge bg-secondary">Một lần</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ category.description|default:"--"|truncatechars:50 }}</td>
-                                    <td>{{ category.average_time }} giờ</td>
                                     <td>
-                                        {% if category.is_active %}
+                                        {% if fee_type.is_active %}
                                         <span class="badge bg-success">Hoạt động</span>
                                         {% else %}
                                         <span class="badge bg-danger">Tạm ngưng</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
-                                        <a href="{% url 'maintenance:category_edit' category_id=category.id %}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{% url 'payment:fee_type_edit' fee_type_id=fee_type.id %}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'maintenance:category_delete' category_id=category.id %}" class="btn btn-sm btn-outline-danger">
+                                        <a href="{% url 'payment:fee_type_delete' fee_type_id=fee_type.id %}" class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </td>
@@ -72,7 +72,7 @@
                                 {% empty %}
                                 <tr>
                                     <td colspan="6" class="text-center py-4 text-muted">
-                                        Không có danh mục nào. Hãy thêm danh mục đầu tiên!
+                                        Không có loại phí nào. Hãy thêm loại phí đầu tiên!
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -89,7 +89,7 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        $('.datatable').DataTable({
+        $('.table').DataTable({
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
             },

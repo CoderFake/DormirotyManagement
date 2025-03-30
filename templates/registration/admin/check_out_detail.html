@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Thông tin check-out</h5>
+                        <div class="d-flex gap-2">
+                            {% if check_out.status == 'pending' %}
+                            <form method="post" action="{% url 'registration:check_out_cancel' check_out.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-lg me-2"></i>
+                                    Hủy check-out
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'registration:check_out_complete' check_out.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg me-2"></i>
+                                    Hoàn thành check-out
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">Thông tin sinh viên</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-4">
+                                        {% if check_out.contract.user.avatar %}
+                                        <img src="{{ check_out.contract.user.avatar.url }}" alt="{{ check_out.contract.user.full_name }}" class="rounded-circle me-3" width="64" height="64">
+                                        {% else %}
+                                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ check_out.contract.user.full_name }}" class="rounded-circle me-3" width="64" height="64">
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-1">{{ check_out.contract.user.full_name }}</h6>
+                                            <div class="text-muted">{{ check_out.contract.user.student_id }}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <div>{{ check_out.contract.user.email }}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <div>{{ check_out.contract.user.phone_number }}</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label">Địa chỉ</label>
+                                        <div>{{ check_out.contract.user.address }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">Thông tin phòng</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tòa nhà</label>
+                                        <div>{{ check_out.contract.bed.room.building.name }}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Phòng</label>
+                                        <div>{{ check_out.contract.bed.room.room_number }}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Giường</label>
+                                        <div>{{ check_out.contract.bed.bed_number }}</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label">Loại phòng</label>
+                                        <div>{{ check_out.contract.bed.room.room_type.name }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">Thông tin check-out</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày check-out</label>
+                                        <div>{{ check_out.check_out_date|date:"d/m/Y" }}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Trạng thái</label>
+                                        <div>
+                                            {% if check_out.status == 'pending' %}
+                                            <span class="badge bg-warning">Chờ xử lý</span>
+                                            {% elif check_out.status == 'completed' %}
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                            {% elif check_out.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label">Ghi chú</label>
+                                        <div>{{ check_out.notes|default:"Không có" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">Tệp đính kèm</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if check_out.attachments.all %}
+                                    <div class="list-group">
+                                        {% for attachment in check_out.attachments.all %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="bi bi-paperclip me-2"></i>
+                                                    {{ attachment.file.name }}
+                                                </div>
+                                                <a href="{{ attachment.file.url }}" class="btn btn-sm btn-primary" download>
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted">Không có tệp đính kèm</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

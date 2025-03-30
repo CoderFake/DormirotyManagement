@@ -17,12 +17,12 @@
 
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">{% if category %}Chỉnh sửa{% else %}Thêm mới{% endif %} danh mục bảo trì</h5>
-                    <p class="card-text text-muted small">Nhập thông tin danh mục bảo trì.</p>
+                    <h5 class="card-title mb-0">{% if building %}Chỉnh sửa{% else %}Thêm mới{% endif %} tòa nhà</h5>
+                    <p class="card-text text-muted small">Nhập thông tin tòa nhà.</p>
                 </div>
 
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
 
                         {% if form.non_field_errors %}
@@ -53,6 +53,55 @@
                         </div>
 
                         <div class="row mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.code.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.code.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Mã viết tắt của tòa nhà, ví dụ: A, B, C, D</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.address.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.address.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.floors.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.floors.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.floors }}
+                                {% if form.floors.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.floors.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
                             <label for="{{ form.description.id_for_label }}" class="col-sm-3 col-form-label">
                                 {{ form.description.label }}
                             </label>
@@ -69,36 +118,23 @@
                         </div>
 
                         <div class="row mb-3">
-                            <label for="{{ form.icon.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.icon.label }}
+                            <label for="{{ form.image.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.image.label }}
                             </label>
                             <div class="col-sm-9">
-                                {{ form.icon }}
-                                {% if form.icon.errors %}
+                                {% if building.image %}
+                                <div class="mb-3">
+                                    <img src="{{ building.image.url }}" alt="{{ building.name }}" class="img-thumbnail" style="max-height: 200px;">
+                                </div>
+                                {% endif %}
+                                {{ form.image }}
+                                {% if form.image.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {% for error in form.icon.errors %}
+                                    {% for error in form.image.errors %}
                                     {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
-                                <div class="form-text">Nhập biểu tượng Font Awesome, ví dụ: fa-wrench, fa-bolt, fa-water</div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <label for="{{ form.average_time.id_for_label }}" class="col-sm-3 col-form-label">
-                                {{ form.average_time.label }}
-                            </label>
-                            <div class="col-sm-9">
-                                {{ form.average_time }}
-                                {% if form.average_time.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.average_time.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                <div class="form-text">Thời gian trung bình để hoàn thành yêu cầu bảo trì (tính bằng giờ)</div>
                             </div>
                         </div>
 
@@ -117,12 +153,12 @@
                                     </div>
                                     {% endif %}
                                 </div>
-                                <div class="form-text">Đánh dấu nếu danh mục này có hiệu lực</div>
+                                <div class="form-text">Đánh dấu nếu tòa nhà đang hoạt động</div>
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'maintenance:category_list' %}" class="btn btn-light">
+                            <a href="{% url 'dormitory:building_list' %}" class="btn btn-light">
                                 Hủy
                             </a>
                             <button type="submit" class="btn btn-primary">

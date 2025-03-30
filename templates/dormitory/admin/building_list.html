@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'dormitory:building_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Thêm tòa nhà
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="row">
+                {% for building in buildings %}
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">{{ building.name }}</h6>
+                            <span class="badge bg-primary">{{ building.code }}</span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    {% if building.image %}
+                                    <img src="{{ building.image.url }}" alt="{{ building.name }}" class="img-fluid rounded">
+                                    {% else %}
+                                    <div class="bg-light text-center py-5 rounded">
+                                        <i class="fas fa-building fa-4x text-secondary"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tổng số phòng:</small>
+                                        <h5 class="mb-0">{{ building.total_rooms }}</h5>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Phòng còn trống:</small>
+                                        <h5 class="mb-0">{{ building.available_rooms }}</h5>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Số tầng:</small>
+                                        <h5 class="mb-0">{{ building.floors }}</h5>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">Trạng thái:</small>
+                                        {% if building.is_active %}
+                                        <div><span class="badge bg-success">Đang hoạt động</span></div>
+                                        {% else %}
+                                        <div><span class="badge bg-danger">Tạm ngưng</span></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if building.address %}
+                            <div class="mb-3">
+                                <small class="text-muted">Địa chỉ:</small>
+                                <p class="mb-0">{{ building.address }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if building.description %}
+                            <div class="mb-3">
+                                <small class="text-muted">Mô tả:</small>
+                                <p class="mb-0">{{ building.description|truncatechars:100 }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-footer bg-transparent border-top-0">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'dormitory:building_detail' building_id=building.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i> Chi tiết
+                                </a>
+                                <div>
+                                    <a href="{% url 'dormitory:building_edit' building_id=building.id %}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'dormitory:building_delete' building_id=building.id %}" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Chưa có tòa nhà nào. Hãy thêm tòa nhà đầu tiên!
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

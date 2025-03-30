@@ -421,7 +421,7 @@ def request_admin_edit_view(request, request_id):
             {'title': 'Chỉnh sửa', 'url': None}
         ]
     }
-    return render(request, 'maintenance/request_admin_form.html', context)
+    return render(request, 'maintenance/admin/request_admin_form.html', context)
 
 
 @login_required
