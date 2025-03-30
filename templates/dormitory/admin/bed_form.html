@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{% if bed %}Chỉnh sửa{% else %}Thêm mới{% endif %} giường</h5>
+                    <p class="card-text text-muted small">Nhập thông tin giường.</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <label for="{{ form.room.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.room.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.room }}
+                                {% if form.room.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.room.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Chọn phòng chứa giường</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.bed_number.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.bed_number.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.bed_number }}
+                                {% if form.bed_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.bed_number.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Nhập số giường (ví dụ: 1, 2, 3...)</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.status.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.status.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.description.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.is_active.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.is_active.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                <div class="form-check mt-2">
+                                    {{ form.is_active }}
+                                    {% if form.is_active.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.is_active.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Đánh dấu nếu giường đang hoạt động</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% if bed %}{% url 'dormitory:bed_detail' bed_id=bed.id %}{% elif room_id %}{% url 'dormitory:room_detail' room_id=room_id %}{% else %}{% url 'dormitory:bed_list' %}{% endif %}" class="btn btn-light">
+                                Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

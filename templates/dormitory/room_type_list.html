@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="gender" class="form-label">Giới tính</label>
+                            <select name="gender" id="gender" class="form-select">
+                                <option value="">-- Tất cả --</option>
+                                <option value="male" {% if request.GET.gender == 'male' %}selected{% endif %}>Nam</option>
+                                <option value="female" {% if request.GET.gender == 'female' %}selected{% endif %}>Nữ</option>
+                                <option value="mixed" {% if request.GET.gender == 'mixed' %}selected{% endif %}>Nam và Nữ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="capacity" class="form-label">Sức chứa</label>
+                            <select name="capacity" id="capacity" class="form-select">
+                                <option value="">-- Tất cả --</option>
+                                <option value="1" {% if request.GET.capacity == '1' %}selected{% endif %}>1 người</option>
+                                <option value="2" {% if request.GET.capacity == '2' %}selected{% endif %}>2 người</option>
+                                <option value="4" {% if request.GET.capacity == '4' %}selected{% endif %}>4 người</option>
+                                <option value="6" {% if request.GET.capacity == '6' %}selected{% endif %}>6 người</option>
+                                <option value="8" {% if request.GET.capacity == '8' %}selected{% endif %}>8 người</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="price" class="form-label">Giá phòng</label>
+                            <select name="price" id="price" class="form-select">
+                                <option value="">-- Tất cả --</option>
+                                <option value="asc" {% if request.GET.price == 'asc' %}selected{% endif %}>Giá thấp đến cao</option>
+                                <option value="desc" {% if request.GET.price == 'desc' %}selected{% endif %}>Giá cao đến thấp</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <a href="{% url 'dormitory:room_type_public_list' %}" class="btn btn-light me-2">Đặt lại</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i> Lọc
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for room_type in room_types %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header py-3">
+                            <h5 class="card-title mb-0">{{ room_type.name }}</h5>
+                            <div class="badge bg-primary">{{ room_type.code }}</div>
+                        </div>
+                        {% if room_type.image %}
+                        <img src="{{ room_type.image.url }}" class="card-img-top img-fluid" alt="{{ room_type.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light text-center py-5">
+                            <i class="fas fa-home fa-4x text-secondary"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fas fa-users me-2"></i> Sức chứa:</span>
+                                    <strong>{{ room_type.capacity }} người</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fas fa-vector-square me-2"></i> Diện tích:</span>
+                                    <strong>{{ room_type.area }} m²</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fas fa-money-bill-wave me-2"></i> Giá/tháng:</span>
+                                    <strong class="text-danger">{{ room_type.price_per_month|floatformat:0 }} VNĐ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><i class="fas fa-venus-mars me-2"></i> Giới tính:</span>
+                                    <strong>
+                                        {% if room_type.gender_allowed == 'male' %}
+                                            <span class="text-primary">Nam</span>
+                                        {% elif room_type.gender_allowed == 'female' %}
+                                            <span class="text-danger">Nữ</span>
+                                        {% else %}
+                                            <span class="text-success">Nam và Nữ</span>
+                                        {% endif %}
+                                    </strong>
+                                </div>
+                            </div>
+
+                            {% if room_type.amenities %}
+                            <div class="mb-3">
+                                <h6 class="card-subtitle mb-2 text-muted">Tiện nghi:</h6>
+                                <p class="card-text">{{ room_type.amenities|truncatechars:100 }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a href="{% url 'dormitory:room_type_public_detail' room_type_id=room_type.id %}" class="btn btn-primary w-100">
+                                <i class="fas fa-info-circle me-1"></i> Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Không tìm thấy loại phòng nào phù hợp với tiêu chí tìm kiếm.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

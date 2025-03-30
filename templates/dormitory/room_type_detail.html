@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3">
+                            <h5 class="card-title mb-0">Thông tin loại phòng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                {% if room_type.image %}
+                                <img src="{{ room_type.image.url }}" alt="{{ room_type.name }}" class="img-fluid rounded mb-3" style="max-height: 250px;">
+                                {% else %}
+                                <div class="bg-light text-center py-5 rounded mb-3">
+                                    <i class="fas fa-home fa-4x text-secondary"></i>
+                                </div>
+                                {% endif %}
+                                <h4>{{ room_type.name }}</h4>
+                                <div class="badge bg-primary mb-2">{{ room_type.code }}</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th class="bg-light w-50"><i class="fas fa-users me-2"></i> Sức chứa</th>
+                                            <td><strong>{{ room_type.capacity }} người</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light"><i class="fas fa-vector-square me-2"></i> Diện tích</th>
+                                            <td><strong>{{ room_type.area }} m²</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light"><i class="fas fa-money-bill-wave me-2"></i> Giá/tháng</th>
+                                            <td><strong class="text-danger">{{ room_type.price_per_month|floatformat:0 }} VNĐ</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light"><i class="fas fa-money-check me-2"></i> Tiền đặt cọc</th>
+                                            <td><strong>{{ room_type.deposit|floatformat:0 }} VNĐ</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light"><i class="fas fa-venus-mars me-2"></i> Giới tính</th>
+                                            <td>
+                                                {% if room_type.gender_allowed == 'male' %}
+                                                    <span class="text-primary"><i class="fas fa-male me-1"></i> Nam</span>
+                                                {% elif room_type.gender_allowed == 'female' %}
+                                                    <span class="text-danger"><i class="fas fa-female me-1"></i> Nữ</span>
+                                                {% else %}
+                                                    <span class="text-success"><i class="fas fa-male me-1"></i><i class="fas fa-female me-1"></i> Nam và Nữ</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {% if room_type.description %}
+                            <div class="mb-4">
+                                <h5 class="border-bottom pb-2 mb-3">Mô tả</h5>
+                                <p>{{ room_type.description|linebreaks }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if room_type.amenities %}
+                            <div class="mb-4">
+                                <h5 class="border-bottom pb-2 mb-3">Tiện nghi</h5>
+                                <ul class="list-group list-group-flush">
+                                    {% for amenity in room_type.amenities.split %}
+                                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> {{ amenity }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'registration:apply' %}" class="btn btn-primary">
+                                    <i class="fas fa-clipboard-list me-1"></i> Đăng ký phòng
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3">
+                            <h5 class="card-title mb-0">Phòng trống hiện có</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if rooms %}
+                            <div class="table-responsive">
+                                <table class="table table-hover border">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">Tòa nhà</th>
+                                            <th scope="col">Phòng</th>
+                                            <th scope="col">Tầng</th>
+                                            <th scope="col">Giường trống</th>
+                                            <th scope="col">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for room in rooms %}
+                                        <tr>
+                                            <td>{{ room.building.name }}</td>
+                                            <td>{{ room.room_number }}</td>
+                                            <td>{{ room.floor }}</td>
+                                            <td>
+                                                {% with available=room.available_beds_count %}
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-2">
+                                                        {{ available }}/{{ room.room_type.capacity }}
+                                                    </div>
+                                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ available|floatformat:0 }}%" aria-valuenow="{{ available }}" aria-valuemin="0" aria-valuemax="{{ room.room_type.capacity }}"></div>
+                                                    </div>
+                                                </div>
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'dormitory:room_public_detail' room_id=room.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i> Chi tiết
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Hiện không có phòng trống nào thuộc loại này.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3">
+                            <h5 class="card-title mb-0">Hình ảnh phòng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                {% if room_type.image %}
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <img src="{{ room_type.image.url }}" class="card-img-top" alt="{{ room_type.name }}" style="height: 200px; object-fit: cover;">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Phòng mẫu {{ room_type.name }}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Phần này có thể thêm các hình ảnh khác của loại phòng khi có -->
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="bg-light text-center py-5" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-camera fa-4x text-secondary"></i>
+                                        </div>
+                                        <div class="card-body">
+                                            <h6 class="card-title text-center">Hình ảnh khác</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if not room_type.image %}
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i> Chưa có hình ảnh cho loại phòng này.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

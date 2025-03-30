@@ -19,17 +19,33 @@
         <!-- Phòng và khu vực -->
         {% if user.user_type == 'admin' or user.user_type == 'staff' %}
             <li class="nav-item">
-                <a class="nav-link {% if 'dormitory' in request.path %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseDormitory"
-                    aria-expanded="{% if 'dormitory' in request.path %}true{% else %}false{% endif %}" aria-controls="collapseDormitory">
+                <a class="nav-link {% if 'dormitory' in request.path and not 'public' in request.path %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseDormitory"
+                    aria-expanded="{% if 'dormitory' in request.path and not 'public' in request.path %}true{% else %}false{% endif %}" aria-controls="collapseDormitory">
                     <i class="fas fa-fw fa-building"></i>
                     <span>Quản lý Ký túc xá</span>
                 </a>
-                <div id="collapseDormitory" class="collapse {% if 'dormitory' in request.path %}show{% endif %}" aria-labelledby="headingTwo" data-bs-parent="#accordionSidebar">
+                <div id="collapseDormitory" class="collapse {% if 'dormitory' in request.path and not 'public' in request.path %}show{% endif %}" aria-labelledby="headingTwo" data-bs-parent="#accordionSidebar">
                     <div class="bg-white collapse-inner mx-2 rounded d-flex flex-column">
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/building' in request.path %}active{% endif %}" href="{% url 'dormitory:building_list' %}">Tòa nhà</a>
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/room-type' in request.path %}active{% endif %}" href="{% url 'dormitory:room_type_list' %}">Loại phòng</a>
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/room' in request.path %}active{% endif %}" href="{% url 'dormitory:room_list' %}">Danh sách phòng</a>
-{#                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/amenity' in request.path %}active{% endif %}" href="{% url 'dormitory:amenity_list' %}">Tiện nghi</a>#}
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/buildings' in request.path %}active{% endif %}" href="{% url 'dormitory:building_list' %}">Tòa nhà</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/room-types' in request.path %}active{% endif %}" href="{% url 'dormitory:room_type_list' %}">Loại phòng</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/rooms' in request.path %}active{% endif %}" href="{% url 'dormitory:room_list' %}">Danh sách phòng</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/beds' in request.path %}active{% endif %}" href="{% url 'dormitory:bed_list' %}">Danh sách giường</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/amenities' in request.path %}active{% endif %}" href="{% url 'dormitory:amenity_list' %}">Tiện nghi</a>
+                    </div>
+                </div>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link {% if 'dormitory/public' in request.path %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePublicDormitory"
+                    aria-expanded="{% if 'dormitory/public' in request.path %}true{% else %}false{% endif %}" aria-controls="collapsePublicDormitory">
+                    <i class="fas fa-fw fa-building"></i>
+                    <span>Thông tin Ký túc xá</span>
+                </a>
+                <div id="collapsePublicDormitory" class="collapse {% if 'dormitory/public' in request.path %}show{% endif %}" aria-labelledby="headingPublicDormitory" data-bs-parent="#accordionSidebar">
+                    <div class="bg-white collapse-inner mx-2 rounded d-flex flex-column">
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/public/buildings' in request.path %}active{% endif %}" href="{% url 'dormitory:building_public_list' %}">Tòa nhà</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/public/room-types' in request.path %}active{% endif %}" href="{% url 'dormitory:room_type_public_list' %}">Loại phòng</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dormitory/public/rooms' in request.path %}active{% endif %}" href="{% url 'dormitory:room_public_list' %}">Danh sách phòng</a>
                     </div>
                 </div>
             </li>
@@ -76,14 +92,11 @@
                 <div class="bg-white collapse-inner mx-2 rounded d-flex flex-column">
                     {% if user.user_type == 'student' %}
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/my-invoices' in request.path %}active{% endif %}" href="{% url 'payment:my_invoices' %}">Hóa đơn của tôi</a>
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/pay' in request.path %}active{% endif %}" href="{% url 'payment:payment_methods' %}">Thanh toán</a>
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/history' in request.path %}active{% endif %}" href="{% url 'payment:payment_history' %}">Lịch sử thanh toán</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/payment-methods' in request.path %}active{% endif %}" href="{% url 'payment:payment_methods' %}">Thanh toán</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/payment-history' in request.path %}active{% endif %}" href="{% url 'payment:payment_history' %}">Lịch sử thanh toán</a>
                     {% elif user.user_type == 'admin' or user.user_type == 'staff' %}
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/fee-type' in request.path %}active{% endif %}" href="{% url 'payment:fee_type_list' %}">Loại phí</a>
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/invoice' in request.path %}active{% endif %}" href="{% url 'payment:invoice_list' %}">Quản lý hóa đơn</a>
-{#                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/electricity' in request.path %}active{% endif %}" href="{% url 'payment:electricity_list' %}">Chỉ số điện</a>#}
-{#                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/water' in request.path %}active{% endif %}" href="{% url 'payment:water_list' %}">Chỉ số nước</a>#}
-{#                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'payment/transaction' in request.path %}active{% endif %}" href="{% url 'payment:transaction_list' %}">Giao dịch</a>#}
                     {% endif %}
                 </div>
             </div>
@@ -105,7 +118,7 @@
             <div id="collapseMaintenance" class="collapse {% if 'maintenance' in request.path %}show{% endif %}" aria-labelledby="headingMaintenance" data-bs-parent="#accordionSidebar">
                 <div class="bg-white collapse-inner mx-2 rounded d-flex flex-column">
                     {% if user.user_type == 'student' %}
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'maintenance/request' in request.path %}active{% endif %}" href="{% url 'maintenance:request_create' %}">Yêu cầu mới</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'maintenance/request/create' in request.path %}active{% endif %}" href="{% url 'maintenance:request_create' %}">Yêu cầu mới</a>
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'maintenance/my-requests' in request.path %}active{% endif %}" href="{% url 'maintenance:my_requests' %}">Yêu cầu của tôi</a>
                     {% elif user.user_type == 'admin' or user.user_type == 'staff' %}
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'maintenance/category' in request.path %}active{% endif %}" href="{% url 'maintenance:category_list' %}">Danh mục</a>
@@ -124,10 +137,12 @@
             </a>
             <div id="collapseNotification" class="collapse {% if 'notification' in request.path %}show{% endif %}" aria-labelledby="headingNotification" data-bs-parent="#accordionSidebar">
                 <div class="bg-white collapse-inner mx-2 rounded d-flex flex-column">
-                    <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'notification/list' in request.path %}active{% endif %}" href="{% url 'notification:list' %}">Danh sách thông báo</a>
+                    <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'notification/list' in request.path %}active{% endif %}" href="{% url 'notification:list' %}">Thông báo của tôi</a>
+                    <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'notification/announcements' in request.path %}active{% endif %}" href="{% url 'notification:announcement_list' %}">Thông báo chung</a>
                     {% if user.user_type == 'admin' or user.user_type == 'staff' %}
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'notification/category' in request.path %}active{% endif %}" href="{% url 'notification:category_list' %}">Danh mục</a>
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'notification/create' in request.path %}active{% endif %}" href="{% url 'notification:create' %}">Tạo thông báo</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'notification/announcement/create' in request.path %}active{% endif %}" href="{% url 'notification:announcement_create' %}">Tạo thông báo chung</a>
                     {% endif %}
                 </div>
             </div>
@@ -149,7 +164,7 @@
                 </a>
                 <div id="collapseUsers" class="collapse {% if 'accounts/admin' in request.path %}show{% endif %}" aria-labelledby="headingUsers" data-bs-parent="#accordionSidebar">
                     <div class="bg-white collapse-inner mx-2 rounded d-flex flex-column">
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'accounts/admin/student' in request.path %}active{% endif %}" href="{% url 'accounts:student_list' %}">Sinh viên</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'accounts/admin/students' in request.path %}active{% endif %}" href="{% url 'accounts:student_list' %}">Sinh viên</a>
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'accounts/admin/staff' in request.path %}active{% endif %}" href="{% url 'accounts:staff_list' %}">Nhân viên</a>
                         <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'accounts/admin/create' in request.path %}active{% endif %}" href="{% url 'accounts:user_create' %}">Tạo tài khoản</a>
                     </div>
@@ -165,16 +180,16 @@
                 </a>
                 <div id="collapseReports" class="collapse {% if 'report' in request.path %}show{% endif %}" aria-labelledby="headingReports" data-bs-parent="#accordionSidebar">
                     <div class="bg-white collapse-inner mx-2 rounded d-flex flex-column">
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'report/occupancy' in request.path %}active{% endif %}" href="{% url 'dashboard:occupancy_report' %}">Báo cáo lưu trú</a>
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'report/revenue' in request.path %}active{% endif %}" href="{% url 'dashboard:revenue_report' %}">Báo cáo doanh thu</a>
-                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'report/maintenance' in request.path %}active{% endif %}" href="{% url 'dashboard:maintenance_report' %}">Báo cáo bảo trì</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dashboard/occupancy-report' in request.path %}active{% endif %}" href="{% url 'dashboard:occupancy_report' %}">Báo cáo lưu trú</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dashboard/revenue-report' in request.path %}active{% endif %}" href="{% url 'dashboard:revenue_report' %}">Báo cáo doanh thu</a>
+                        <a class="collapse-item pl-3 my-2 ms-2 border-bottom border-2 border-light text-decoration-none {% if 'dashboard/maintenance-report' in request.path %}active{% endif %}" href="{% url 'dashboard:maintenance_report' %}">Báo cáo bảo trì</a>
                     </div>
                 </div>
             </li>
 
             <!-- Thiết lập hệ thống -->
             <li class="nav-item">
-                <a class="nav-link {% if 'settings' in request.path %}active{% endif %}" href="{% url 'dashboard:system_settings' %}">
+                <a class="nav-link {% if 'dashboard/system-settings' in request.path %}active{% endif %}" href="{% url 'dashboard:system_settings' %}">
                     <i class="fas fa-fw fa-cogs"></i>
                     <span>Thiết lập hệ thống</span>
                 </a>

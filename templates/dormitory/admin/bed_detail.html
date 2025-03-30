@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'dormitory:bed_edit' bed_id=bed.id %}" class="btn btn-primary me-2">
+                    <i class="fas fa-edit me-1"></i>
+                    Chỉnh sửa
+                </a>
+                <a href="{% url 'dormitory:bed_delete' bed_id=bed.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>
+                    Xóa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'components/breadcrumb.html' %}
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Thông tin giường</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                <div class="bg-light text-center py-5 rounded mb-3">
+                                    <i class="fas fa-bed fa-4x text-primary"></i>
+                                </div>
+                                <h5 class="card-title">Giường {{ bed.bed_number }}</h5>
+                                <div>
+                                    <span class="badge bg-primary">{{ bed.room.building.name }}</span>
+                                    <span class="badge bg-secondary">Phòng {{ bed.room.room_number }}</span>
+                                </div>
+                            </div>
+
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th class="bg-light">Tòa nhà</th>
+                                        <td>{{ bed.room.building.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Phòng</th>
+                                        <td>{{ bed.room.room_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Tầng</th>
+                                        <td>{{ bed.room.floor }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Loại phòng</th>
+                                        <td>{{ bed.room.room_type.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Trạng thái</th>
+                                        <td>
+                                            {% if bed.status == 'available' %}
+                                            <span class="badge bg-success">Còn trống</span>
+                                            {% elif bed.status == 'occupied' %}
+                                            <span class="badge bg-danger">Đã có người</span>
+                                            {% elif bed.status == 'reserved' %}
+                                            <span class="badge bg-warning">Đã đặt trước</span>
+                                            {% elif bed.status == 'maintenance' %}
+                                            <span class="badge bg-secondary">Bảo trì</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Tình trạng</th>
+                                        <td>
+                                            {% if bed.is_active %}
+                                            <span class="badge bg-success">Đang hoạt động</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Không hoạt động</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if bed.description %}
+                                    <tr>
+                                        <th class="bg-light">Mô tả</th>
+                                        <td>{{ bed.description }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Thông tin hợp đồng</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if active_contract %}
+                            <div class="alert alert-info">
+                                <strong>Giường đang được sử dụng</strong>
+                            </div>
+
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th class="bg-light">Sinh viên</th>
+                                        <td>
+                                            <a href="{% url 'accounts:student_detail' user_id=active_contract.user.id %}">
+                                                {{ active_contract.user.full_name }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Hợp đồng</th>
+                                        <td>
+                                            <a href="{% url 'registration:contract_admin_detail' contract_id=active_contract.id %}">
+                                                {{ active_contract.contract_number }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Từ ngày</th>
+                                        <td>{{ active_contract.start_date }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Đến ngày</th>
+                                        <td>{{ active_contract.end_date }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="alert alert-success">
+                                <strong>Giường hiện đang trống</strong>
+                            </div>
+                            <p>Chưa có sinh viên nào đăng ký sử dụng giường này.</p>
+
+                            <div class="text-center mt-4">
+                                <a href="{% url 'registration:application_list' %}" class="btn btn-primary">
+                                    <i class="fas fa-users me-1"></i> Xem danh sách đăng ký
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

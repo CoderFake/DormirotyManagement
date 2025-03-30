@@ -21,18 +21,130 @@
         <div class="col-12">
             {% include 'components/breadcrumb.html' %}
 
+            <!-- Stats Overview -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Tổng số tòa nhà</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ buildings|length }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-building fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Tổng số phòng</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {% with total=0 %}
+                                            {% for building in buildings %}
+                                                {% with total=total|add:building.total_rooms %}{% endwith %}
+                                            {% endfor %}
+                                            {{ total }}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-door-open fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Tỷ lệ lấp đầy
+                                    </div>
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col-auto">
+                                            <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
+                                                {% with available=0 total=0 %}
+                                                    {% for building in buildings %}
+                                                        {% with available=available|add:building.available_rooms %}{% endwith %}
+                                                        {% with total=total|add:building.total_rooms %}{% endwith %}
+                                                    {% endfor %}
+                                                    {% if total > 0 %}
+                                                        {{ available|floatformat:0 }}%
+                                                    {% else %}
+                                                        0%
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="progress progress-sm mr-2">
+                                                <div class="progress-bar bg-info" role="progressbar"
+                                                    style="width: 50%" aria-valuenow="50" aria-valuemin="0"
+                                                    aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Phòng trống</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {% with available=0 %}
+                                            {% for building in buildings %}
+                                                {% with available=available|add:building.available_rooms %}{% endwith %}
+                                            {% endfor %}
+                                            {{ available }}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-bed fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Building List -->
             <div class="row">
                 {% for building in buildings %}
                 <div class="col-xl-4 col-md-6 mb-4">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ building.name }}</h6>
-                            <span class="badge bg-primary">{{ building.code }}</span>
+                        <!-- Card Header -->
+                        <div class="card-header bg-gradient-primary text-white py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-white">{{ building.name }}</h6>
+                            <span class="badge bg-light text-dark">{{ building.code }}</span>
                         </div>
 
+                        <!-- Card Body -->
                         <div class="card-body">
                             <div class="row mb-3">
-                                <div class="col-6">
+                                <div class="col-md-5">
                                     {% if building.image %}
                                     <img src="{{ building.image.url }}" alt="{{ building.name }}" class="img-fluid rounded">
                                     {% else %}
@@ -41,21 +153,21 @@
                                     </div>
                                     {% endif %}
                                 </div>
-                                <div class="col-6">
+                                <div class="col-md-7">
                                     <div class="mb-2">
-                                        <small class="text-muted">Tổng số phòng:</small>
-                                        <h5 class="mb-0">{{ building.total_rooms }}</h5>
+                                        <span class="text-muted font-weight-light">Tổng số phòng:</span>
+                                        <h5 class="mb-0 font-weight-bold">{{ building.total_rooms }}</h5>
                                     </div>
                                     <div class="mb-2">
-                                        <small class="text-muted">Phòng còn trống:</small>
-                                        <h5 class="mb-0">{{ building.available_rooms }}</h5>
+                                        <span class="text-muted font-weight-light">Phòng trống:</span>
+                                        <h5 class="mb-0 font-weight-bold text-success">{{ building.available_rooms }}</h5>
                                     </div>
                                     <div class="mb-2">
-                                        <small class="text-muted">Số tầng:</small>
-                                        <h5 class="mb-0">{{ building.floors }}</h5>
+                                        <span class="text-muted font-weight-light">Số tầng:</span>
+                                        <h5 class="mb-0 font-weight-bold">{{ building.floors }}</h5>
                                     </div>
                                     <div>
-                                        <small class="text-muted">Trạng thái:</small>
+                                        <span class="text-muted font-weight-light">Trạng thái:</span>
                                         {% if building.is_active %}
                                         <div><span class="badge bg-success">Đang hoạt động</span></div>
                                         {% else %}
@@ -67,30 +179,46 @@
 
                             {% if building.address %}
                             <div class="mb-3">
-                                <small class="text-muted">Địa chỉ:</small>
-                                <p class="mb-0">{{ building.address }}</p>
+                                <span class="text-muted">Địa chỉ:</span>
+                                <p class="mb-0 border-left-primary pl-2" style="border-left: 3px solid #4e73df; padding-left: 10px;">{{ building.address }}</p>
                             </div>
                             {% endif %}
 
                             {% if building.description %}
                             <div class="mb-3">
-                                <small class="text-muted">Mô tả:</small>
-                                <p class="mb-0">{{ building.description|truncatechars:100 }}</p>
+                                <span class="text-muted">Mô tả:</span>
+                                <p class="mb-0 border-left-info pl-2" style="border-left: 3px solid #36b9cc; padding-left: 10px;">{{ building.description|truncatechars:100 }}</p>
                             </div>
                             {% endif %}
+
+                            <!-- Occupancy Chart -->
+                            <div class="mb-2">
+                                <span class="text-muted">Tỷ lệ lấp đầy:</span>
+                                <div class="progress mb-1" style="height: 15px;">
+                                    {% with occupancy_rate=building.occupied_rooms|floatformat:0|slugify|add:".0"|floatformat:0 %}
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ occupancy_rate }}%"
+                                        aria-valuenow="{{ occupancy_rate }}" aria-valuemin="0" aria-valuemax="100">{{ occupancy_rate }}%</div>
+                                    {% endwith %}
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>{{ building.available_rooms }} phòng trống</span>
+                                    <span>{{ building.occupied_rooms }} phòng đã đặt</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="card-footer bg-transparent border-top-0">
+                        <!-- Card Footer -->
+                        <div class="card-footer bg-white border-top-0">
                             <div class="d-flex justify-content-between">
-                                <a href="{% url 'dormitory:building_detail' building_id=building.id %}" class="btn btn-outline-primary btn-sm">
+                                <a href="{% url 'dormitory:building_detail' building_id=building.id %}" class="btn btn-primary btn-sm">
                                     <i class="fas fa-eye me-1"></i> Chi tiết
                                 </a>
                                 <div>
-                                    <a href="{% url 'dormitory:building_edit' building_id=building.id %}" class="btn btn-outline-secondary btn-sm">
-                                        <i class="fas fa-edit"></i>
+                                    <a href="{% url 'dormitory:building_edit' building_id=building.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-edit me-1"></i> Sửa
                                     </a>
-                                    <a href="{% url 'dormitory:building_delete' building_id=building.id %}" class="btn btn-outline-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
+                                    <a href="{% url 'dormitory:building_delete' building_id=building.id %}" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash me-1"></i> Xóa
                                     </a>
                                 </div>
                             </div>
@@ -112,4 +240,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
 {% endblock %}
