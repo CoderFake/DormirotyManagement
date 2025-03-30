@@ -43,7 +43,7 @@ html, body {
     left: 0;
     bottom: 0;
     width: 250px;
-    z-index: 100;
+    z-index: 9999;
     padding: 0;
     background-color: #fff;
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
@@ -926,18 +926,12 @@ html, body {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
-
-
-
 main {
     margin-top: 56px;
     transition: margin-left 0.3s ease;
 }
 
 @media (min-width: 992px) {
-    main {
-        margin-left: 250px;
-    }
 
     main.sidebar-toggled {
         margin-left: 0;
