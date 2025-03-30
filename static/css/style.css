@@ -36,7 +36,7 @@ main {
 .navbar {
   padding: 0.5rem 1rem;
   min-height: 56px;
-  z-index: 1030;
+  z-index: 999;
 }
 
 .navbar .navbar-brand {
@@ -166,7 +166,7 @@ main {
     left: 0;
     bottom: 0;
     width: 16rem !important;
-    z-index: 1028;
+    z-index: 99;
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
     overflow-y: auto;
@@ -317,7 +317,27 @@ main {
   font-weight: 600;
 }
 
-/* Sidebar toggled state */
+
+.sidebar.toggled {
+    width: 80px !important;
+}
+
+.sidebar.toggled .nav-item .nav-link span {
+    display: none;
+}
+
+.sidebar.toggled .sidebar-heading {
+    display: none;
+}
+
+.sidebar.toggled .collapse-inner {
+    display: none !important;
+}
+
+body.sidebar-toggled .col-lg-10 {
+    width: calc(100% - 80px);
+}
+
 #sidebarToggle {
   background-color: rgba(231, 74, 59, 0.1);
   width: 2.5rem;
@@ -348,7 +368,6 @@ main {
   transform: rotate(180deg);
 }
 
-/* Main content shifting when sidebar is toggled */
 @media (min-width: 992px) {
   .sidebar.toggled + .col-lg-10 {
     width: 100%;
@@ -356,6 +375,22 @@ main {
   }
 }
 
+@media (max-width: 991.98px) {
+    .sidebar {
+        width: 0;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        height: 100vh;
+        z-index: 99;
+        background-color: white;
+        transition: all 0.3s;
+    }
+
+    .sidebar.toggled {
+        width: 240px !important;
+    }
+}
 /* ========== CARD STYLES ========== */
 
 .card {

@@ -325,3 +325,26 @@ function initMobileSidebar() {
 document.addEventListener('DOMContentLoaded', function () {
     initMobileSidebar();
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.toggle('sidebar-toggled');
+            document.querySelector('.sidebar').classList.toggle('toggled');
+
+            const icon = sidebarToggle.querySelector('i');
+            if (icon) {
+                if (icon.classList.contains('fa-chevron-left')) {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                } else {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                }
+            }
+        });
+    }
+});
