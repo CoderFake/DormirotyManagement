@@ -15,6 +15,24 @@ python manage.py migrate
 echo "Đang thu thập static files..."
 python manage.py collectstatic --noinput
 
+# Tạo hoặc cập nhật Django Site
+python manage.py shell -c "
+from django.contrib.sites.models import Site
+try:
+    site = Site.objects.get(id=1)
+    site.domain = '${SITE_URL}'
+    site.name = 'Hệ thống Quản lý Ký túc xá'
+    site.save()
+    print('Đã cập nhật thông tin Site')
+except Site.DoesNotExist:
+    Site.objects.create(
+        id=1,
+        domain='localhost:8000',
+        name='Hệ thống Quản lý Ký túc xá'
+    )
+    print('Đã tạo mới Site')
+"
+
 python manage.py shell -c "
 from accounts.models import User
 if not User.objects.filter(email='${SUPERUSER_EMAIL}').exists():

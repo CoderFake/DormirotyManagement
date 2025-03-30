@@ -37,21 +37,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Sidebar */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: var(--sidebar-width);
-    height: 100vh;
-    padding-top: 70px;
-    background-color: #4e73df;
-    background-image: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
-    z-index: 100;
-    transition: all 0.3s;
-    overflow-y: auto;
-}
-
 .sidebar .nav-link {
     color: rgba(255, 255, 255, 0.8);
     padding: 0.75rem 1rem;
@@ -871,6 +856,227 @@ body {
     color: white;
 }
 
+.sidebar {
+    position: fixed;
+    top: 56px; /* Chiều cao của navbar */
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    z-index: 100;
+    padding: 0;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    background-color: #fff;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+}
+
+.sidebar.toggled {
+    width: 0;
+    overflow: hidden;
+}
+
+#sidebarToggle {
+    width: 2.5rem;
+    height: 2.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+#sidebarToggle:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+
+body {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fc;
+    overflow-x: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 56px; /* Chiều cao của navbar */
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    z-index: 100;
+    padding: 0;
+    background-color: #fff;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transition: width 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar.toggled {
+    width: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+#sidebarToggle {
+    background-color: transparent;
+    border: none;
+    color: #3a3b45;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#sidebarToggle:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+
+main {
+    margin-top: 56px;
+    transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 992px) {
+    main {
+        margin-left: 250px;
+    }
+
+    main.sidebar-toggled {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        width: 0;
+    }
+
+    .sidebar.toggled {
+        width: 250px;
+    }
+
+    main {
+        margin-left: 0;
+    }
+}
+
+/* Navbar */
+.navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    height: 56px;
+}
+
+/* Dropdown menu */
+.navbar .dropdown-menu {
+    position: absolute;
+}
+
+.navbar .dropdown-menu.dropdown-list {
+    width: 20rem;
+    max-width: 100%;
+    padding: 0;
+}
+
+/* Tùy chỉnh thêm cho dropdown thông báo */
+.icon-circle {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+/* Menu items trong sidebar */
+.sidebar .navbar-nav {
+    width: 100%;
+    padding-top: 1rem;
+}
+
+.sidebar .nav-item {
+    position: relative;
+    width: 100%;
+}
+
+.sidebar .nav-item .nav-link {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    color: #3a3b45;
+}
+
+.sidebar .nav-item .nav-link i {
+    margin-right: 0.5rem;
+    width: 1.25em;
+    text-align: center;
+}
+
+.sidebar .nav-item .nav-link.active {
+    font-weight: 700;
+    color: #4e73df;
+}
+
+.sidebar .nav-item .nav-link:hover {
+    background-color: rgba(78, 115, 223, 0.05);
+    color: #4e73df;
+}
+
+/* Separator */
+.sidebar-divider {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 1rem 0;
+}
+
+/* Heading in sidebar */
+.sidebar-heading {
+    padding: 0 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #b7b9cc;
+}
+
+/* Submenu items */
+.sidebar .collapse-inner {
+    background-color: #f8f9fc;
+    border-radius: 0.35rem;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar .collapse-item {
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    display: block;
+    color: #3a3b45;
+    text-decoration: none;
+    border-radius: 0.35rem;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.sidebar .collapse-item:hover {
+    background-color: #eaecf4;
+}
+
+.sidebar .collapse-item.active {
+    color: #4e73df;
+    font-weight: 700;
+    background-color: #eaecf4;
+}
 
 @media (max-width: 767.98px) {
     .sidebar {

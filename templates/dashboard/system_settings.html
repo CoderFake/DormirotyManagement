@@ -1,0 +1,210 @@
+<!-- Tạo file templates/dashboard/system_settings.html -->
+{% extends 'base.html' %}
+
+{% block title %}Cài đặt Hệ thống - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Cài đặt Hệ thống</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Cài đặt trang web</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'dashboard:system_settings' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="site_name" class="form-label">Tên trang web</label>
+                            <input type="text" class="form-control" id="site_name" name="site_name" value="{{ current_site.name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="site_domain" class="form-label">Tên miền</label>
+                            <input type="text" class="form-control" id="site_domain" name="site_domain" value="{{ current_site.domain }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Cài đặt email</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i> Cài đặt email được quản lý thông qua file cấu hình .env
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Host</label>
+                        <input type="text" class="form-control" value="smtp.gmail.com" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Port</label>
+                        <input type="text" class="form-control" value="587" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Host User</label>
+                        <input type="text" class="form-control" value="***@gmail.com" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Cài đặt thanh toán</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i> Cài đặt thanh toán được quản lý thông qua file cấu hình .env
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cổng thanh toán</label>
+                        <input type="text" class="form-control" value="VNPay" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mode</label>
+                        <input type="text" class="form-control" value="Sandbox" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin hệ thống</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Phiên bản Django</label>
+                        <input type="text" class="form-control" value="5.1.7" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phiên bản ứng dụng</label>
+                        <input type="text" class="form-control" value="1.0.0" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Database</label>
+                        <input type="text" class="form-control" value="MySQL 8.0" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- Tạo file templates/dashboard/notification_settings.html -->
+{% extends 'base.html' %}
+
+{% block title %}Cài đặt Thông báo - Quản lý Ký túc xá{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Cài đặt Thông báo</h1>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Tùy chỉnh loại thông báo</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Loại thông báo</th>
+                                <th>Mô tả</th>
+                                <th>Email</th>
+                                <th>Ứng dụng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{{ category.color }}">
+                                            <i class="fas {{ category.icon }} me-1"></i>
+                                            {{ category.name }}
+                                        </span>
+                                    </td>
+                                    <td>{{ category.description }}</td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="email_{{ category.id }}"
+                                                   name="email_{{ category.id }}" checked>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="category_{{ category.id }}"
+                                                   name="category_{{ category.id }}" checked>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Không có danh mục thông báo nào</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Lưu thay đổi</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Cài đặt hiển thị</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Số lượng thông báo hiển thị</label>
+                            <select class="form-select" name="notification_count">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Thời gian làm mới thông báo (giây)</label>
+                            <select class="form-select" name="refresh_interval">
+                                <option value="30">30</option>
+                                <option value="60" selected>60</option>
+                                <option value="120">120</option>
+                                <option value="300">300</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Lưu thay đổi</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

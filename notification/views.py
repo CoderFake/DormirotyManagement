@@ -438,6 +438,34 @@ def announcement_delete_view(request, announcement_id):
     return render(request, 'notification/announcement_delete.html', context)
 
 
+def update_notifications_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+
+    unread_count = UserNotification.objects.filter(user=request.user, is_read=False).count()
+
+    notifications = []
+    user_notifications = UserNotification.objects.filter(
+        user=request.user
+    ).select_related('notification').order_by('-created_at')[:5]
+
+    for notification in user_notifications:
+        notifications.append({
+            'id': str(notification.notification.id),
+            'title': notification.notification.title,
+            'category': notification.notification.category.name,
+            'color': notification.notification.category.color,
+            'icon': notification.notification.category.icon,
+            'is_read': notification.is_read,
+            'created_at': notification.created_at.strftime('%d/%m/%Y %H:%M')
+        })
+
+    return JsonResponse({
+        'success': True,
+        'count': unread_count,
+        'notifications': notifications
+    })
+
 @login_required
 def unread_count_api(request):
     """API trả về số lượng thông báo chưa đọc"""

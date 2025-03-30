@@ -30,4 +30,5 @@ urlpatterns = [
 
     # API
     path('api/unread-count/', views.unread_count_api, name='unread_count_api'),
+    path('api/update-notifications/', views.update_notifications_api, name='update_notifications_api'),
 ]

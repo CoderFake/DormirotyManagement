@@ -244,20 +244,29 @@ def revenue_report_detailed_view(request):
     return render(request, 'dashboard/revenue_report_detailed.html', context)
 
 
-
-@login_required
 def system_settings(request):
-    """Trang cài đặt hệ thống"""
+    from django.contrib.sites.models import Site
 
     if request.user.user_type != 'admin':
         messages.error(request, 'Bạn không có quyền truy cập trang này.')
         return redirect('dashboard:index')
 
+    current_site = Site.objects.get_current()
+
     if request.method == 'POST':
+        site_name = request.POST.get('site_name')
+        site_domain = request.POST.get('site_domain')
+
+        if site_name and site_domain:
+            current_site.name = site_name
+            current_site.domain = site_domain
+            current_site.save()
+
         messages.success(request, 'Đã lưu cài đặt hệ thống.')
         return redirect('dashboard:system_settings')
 
     context = {
+        'current_site': current_site,
         'page_title': 'Cài đặt Hệ thống',
         'breadcrumbs': [
             {'title': 'Dashboard', 'url': '/dashboard/'},
@@ -399,12 +408,34 @@ def maintenance_report(request):
 @login_required
 def notification_settings(request):
     """Cài đặt thông báo"""
+    from notification.models import NotificationCategory, NotificationSettings
+
+    categories = NotificationCategory.objects.all().order_by('name')
+    user_settings = NotificationSettings.get_settings_for_user(request.user)
 
     if request.method == 'POST':
+        for category in categories:
+            setting = user_settings.get(category.id)
+            if not setting:
+                setting = NotificationSettings(user=request.user, category=category)
+
+            setting.app_enabled = request.POST.get(f'category_{category.id}', '') == 'on'
+            setting.email_enabled = request.POST.get(f'email_{category.id}', '') == 'on'
+            setting.save()
+
         messages.success(request, 'Đã lưu cài đặt thông báo.')
         return redirect('dashboard:notification_settings')
 
+    formatted_settings = {}
+    for category_id, setting in user_settings.items():
+        formatted_settings[category_id] = {
+            'app_enabled': setting.app_enabled,
+            'email_enabled': setting.email_enabled
+        }
+
     context = {
+        'categories': categories,
+        'settings': formatted_settings,
         'page_title': 'Cài đặt Thông báo',
         'breadcrumbs': [
             {'title': 'Dashboard', 'url': '/dashboard/'},

@@ -133,3 +133,40 @@ class Announcement(models.Model):
         if self.end_date and now > self.end_date:
             return False
         return True
+
+
+class NotificationSettings(models.Model):
+    """Mô hình cài đặt thông báo cho người dùng"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_settings',
+                                verbose_name=_('người dùng'))
+    category = models.ForeignKey(NotificationCategory, on_delete=models.CASCADE, related_name='user_settings',
+                                 verbose_name=_('danh mục'))
+    app_enabled = models.BooleanField(_('bật trong ứng dụng'), default=True)
+    email_enabled = models.BooleanField(_('bật thông báo email'), default=True)
+    created_at = models.DateTimeField(_('thời gian tạo'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('thời gian cập nhật'), auto_now=True)
+
+    class Meta:
+        verbose_name = _('cài đặt thông báo')
+        verbose_name_plural = _('cài đặt thông báo')
+        unique_together = ('user', 'category')
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.category.name}"
+
+    @classmethod
+    def get_settings_for_user(cls, user, category=None):
+        if category:
+            try:
+                return cls.objects.get(user=user, category=category)
+            except cls.DoesNotExist:
+                return cls.objects.create(user=user, category=category)
+        else:
+            user_settings = {}
+            categories = NotificationCategory.objects.all()
+            for cat in categories:
+                setting, created = cls.objects.get_or_create(user=user, category=cat)
+                user_settings[cat.id] = setting
+            return user_settings
