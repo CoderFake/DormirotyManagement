@@ -1,3 +1,4 @@
+from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -12,6 +13,7 @@ from django.http import HttpResponse
 from django.db import transaction
 from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 import uuid
 
 from .forms import (
@@ -72,17 +74,51 @@ def register_view(request):
 
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
+
         if form.is_valid():
-            user = form.save()
+            try:
+                email = form.cleaned_data.get('email')
+                student_id = form.cleaned_data.get('student_id')
+                id_card_number = form.cleaned_data.get('id_card_number')
 
-            UserProfile.objects.create(user=user)
+                existing_email = User.objects.filter(email=email).exists()
+                existing_student_id = User.objects.filter(student_id=student_id).exists()
+                existing_id_card = User.objects.filter(id_card_number=id_card_number).exists()
 
-            raw_password = form.cleaned_data.get('password1')
-            user = authenticate(username=user.email, password=raw_password)
-            login(request, user)
+                if existing_email:
+                    form.add_error('email', _('Email này đã được sử dụng. Vui lòng chọn email khác.'))
+                    raise forms.ValidationError(_('Email đã tồn tại'))
 
-            messages.success(request, 'Đăng ký tài khoản thành công! Chào mừng bạn đến với hệ thống Quản lý Ký túc xá.')
-            return redirect('dashboard:index')
+                if existing_student_id:
+                    form.add_error('student_id', _('Mã sinh viên này đã được sử dụng. Vui lòng kiểm tra lại.'))
+                    raise forms.ValidationError(_('Mã sinh viên đã tồn tại'))
+
+                if existing_id_card:
+                    form.add_error('id_card_number', _('Số CMND/CCCD này đã được sử dụng. Vui lòng kiểm tra lại.'))
+                    raise forms.ValidationError(_('Số CMND/CCCD đã tồn tại'))
+
+                user = form.save(commit=False)
+                user.is_active = True
+                user.save()
+
+                UserProfile.objects.create(user=user)
+
+                raw_password = form.cleaned_data.get('password1')
+                authenticated_user = authenticate(username=user.email, password=raw_password)
+
+                if authenticated_user is not None:
+                    login(request, authenticated_user)
+                    messages.success(request,
+                                     'Đăng ký tài khoản thành công! Chào mừng bạn đến với hệ thống Quản lý Ký túc xá.')
+                    return redirect('dashboard:index')
+                else:
+                    messages.error(request, 'Có lỗi xảy ra trong quá trình đăng nhập.')
+                    return redirect('accounts:login')
+
+            except forms.ValidationError:
+                pass
+            except Exception as e:
+                messages.error(request, f'Đã xảy ra lỗi: {str(e)}')
     else:
         form = UserRegistrationForm()
 

@@ -446,7 +446,7 @@ def building_list_view(request):
             {'title': 'Tạo hàng loạt', 'url': None}
         ]
     }
-    return render(request, 'dormitory/admin/bulk_bed_form.html', context)
+    return render(request, 'dormitory/admin/building_list.html', context)
 
 
 @login_required

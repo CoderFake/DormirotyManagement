@@ -105,23 +105,96 @@ class UserRegistrationForm(UserCreationForm):
             'id_card_number', 'university', 'faculty', 'password1', 'password2', 'agree_terms'
         )
 
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if not cleaned_data.get('agree_terms'):
+            raise forms.ValidationError(_("Bạn phải đồng ý với điều khoản và chính sách để tiếp tục."))
+
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError(_("Mật khẩu xác nhận không khớp."))
+
+        date_of_birth = cleaned_data.get('date_of_birth')
+        if date_of_birth:
+            import datetime
+            age = (datetime.date.today() - date_of_birth).days / 365.25
+            if age < 16:
+                raise forms.ValidationError(_("Bạn phải từ 16 tuổi trở lên để đăng ký."))
+
+        return cleaned_data
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError(_("Email này đã được sử dụng. Vui lòng chọn email khác."))
+        if not email:
+            raise forms.ValidationError(_("Email là bắt buộc."))
+
+        import re
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+
+        if not re.match(email_regex, email):
+            raise forms.ValidationError(_("Địa chỉ email không hợp lệ."))
+
         return email
 
     def clean_student_id(self):
-        student_id = self.cleaned_data.get('student_id')
-        if User.objects.filter(student_id=student_id).exists():
-            raise forms.ValidationError(_("Mã sinh viên này đã được sử dụng. Vui lòng kiểm tra lại."))
+        student_id = self.cleaned_data.get('student_id').upper()
+
+        if not student_id:
+            raise forms.ValidationError(_("Mã sinh viên là bắt buộc."))
+
+        import re
+        student_id_regex = r'^[A-Z]\d{2}[A-Z]{4}\d{3}'
+
+        if not re.match(student_id_regex, student_id):
+            raise forms.ValidationError(_("Mã sinh viên không đúng định dạng. Ví dụ: B21DCCN123"))
+
         return student_id
+
 
     def clean_id_card_number(self):
         id_card_number = self.cleaned_data.get('id_card_number')
-        if User.objects.filter(id_card_number=id_card_number).exists():
-            raise forms.ValidationError(_("Số CMND/CCCD này đã được sử dụng. Vui lòng kiểm tra lại."))
+        if not id_card_number:
+            raise forms.ValidationError(_("Số CMND/CCCD là bắt buộc."))
+
+        if not (len(id_card_number) == 9 or len(id_card_number) == 12):
+            raise forms.ValidationError(_("Số CMND/CCCD phải có 9 hoặc 12 chữ số."))
+
+        if not id_card_number.isdigit():
+            raise forms.ValidationError(_("Số CMND/CCCD chỉ được chứa các chữ số."))
+
         return id_card_number
+
+    def clean_phone_number(self):
+        phone_number = self.cleaned_data.get('phone_number')
+        if not phone_number:
+            raise forms.ValidationError(_("Số điện thoại là bắt buộc."))
+
+        import re
+        phone_regex = r'^(0[3|5|7|8|9])+([0-9]{8})'
+
+        if not re.match(phone_regex, phone_number):
+            raise forms.ValidationError(_("Số điện thoại không đúng định dạng. Ví dụ: 0387367162"))
+
+        return phone_number
+
+    def clean_date_of_birth(self):
+        date_of_birth = self.cleaned_data.get('date_of_birth')
+        if not date_of_birth:
+            raise forms.ValidationError(_("Ngày sinh là bắt buộc."))
+
+        import datetime
+        today = datetime.date.today()
+        age = (today - date_of_birth).days / 365.25
+
+        if age < 16:
+            raise forms.ValidationError(_("Bạn phải từ 16 tuổi trở lên để đăng ký."))
+
+        if age > 100:
+            raise forms.ValidationError(_("Ngày sinh không hợp lệ."))
+
+        return date_of_birth
 
     def save(self, commit=True):
         user = super().save(commit=False)

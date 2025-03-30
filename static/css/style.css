@@ -19,6 +19,24 @@ body {
     font-size: 0.9rem;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1 0 auto;
+}
+
+.footer {
+  flex-shrink: 0;
+}
+
 /* Sidebar */
 .sidebar {
     position: fixed;
@@ -851,4 +869,46 @@ body {
 .toast-info .toast-header {
     background-color: #36b9cc;
     color: white;
+}
+
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        width: 250px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .sidebar.toggled {
+        left: 0;
+    }
+
+    .sidebar.mobile-sidebar {
+        display: block !important;
+    }
+
+    main.sidebar-toggled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+        transition: width 0.3s ease;
+    }
+
+    .sidebar.toggled {
+        width: 60px;
+    }
+
+    .sidebar.toggled .nav-link span {
+        display: none;
+    }
 }

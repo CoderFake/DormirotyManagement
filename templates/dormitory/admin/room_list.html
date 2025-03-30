@@ -9,9 +9,13 @@
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0">{{ page_title }}</h1>
             <div>
-                <a href="{% url 'dormitory:room_type_create' %}" class="btn btn-primary">
+                <a href="{% url 'dormitory:bulk_room_create' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-plus-circle me-1"></i>
+                    Tạo nhiều phòng
+                </a>
+                <a href="{% url 'dormitory:room_create' %}" class="btn btn-primary">
                     <i class="fas fa-plus me-1"></i>
-                    Thêm loại phòng
+                    Thêm phòng
                 </a>
             </div>
         </div>
@@ -21,77 +25,146 @@
         <div class="col-12">
             {% include 'components/breadcrumb.html' %}
 
-            <div class="row">
-                {% for room_type in room_types %}
-                <div class="col-xl-4 col-md-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ room_type.name }}</h6>
-                            <span class="badge bg-primary">{{ room_type.code }}</span>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Bộ lọc</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="building" class="form-label">Tòa nhà</label>
+                            <select name="building" id="building" class="form-select">
+                                <option value="">-- Tất cả tòa nhà --</option>
+                                {% for building in buildings %}
+                                <option value="{{ building.id }}" {% if request.GET.building == building.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ building.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    {% if room_type.image %}
-                                    <img src="{{ room_type.image.url }}" alt="{{ room_type.name }}" class="img-fluid rounded">
-                                    {% else %}
-                                    <div class="bg-light text-center py-5 rounded">
-                                        <i class="fas fa-door-open fa-4x text-secondary"></i>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    <div class="mb-2">
-                                        <small class="text-muted">Sức chứa:</small>
-                                        <h5 class="mb-0">{{ room_type.capacity }} người</h5>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">Diện tích:</small>
-                                        <h5 class="mb-0">{{ room_type.area }} m²</h5>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">Giá/tháng:</small>
-                                        <h5 class="mb-0">{{ room_type.price_per_month|floatformat:0 }} VNĐ</h5>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {% if room_type.description %}
-                            <div class="mb-3">
-                                <small class="text-muted">Mô tả:</small>
-                                <p class="mb-0">{{ room_type.description|truncatechars:100 }}</p>
-                            </div>
-                            {% endif %}
+                        <div class="col-md-3">
+                            <label for="room_type" class="form-label">Loại phòng</label>
+                            <select name="room_type" id="room_type" class="form-select">
+                                <option value="">-- Tất cả loại phòng --</option>
+                                {% for room_type in room_types %}
+                                <option value="{{ room_type.id }}" {% if request.GET.room_type == room_type.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ room_type.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-
-                        <div class="card-footer bg-transparent">
-                            <div class="d-flex justify-content-between">
-                                <a href="{% url 'dormitory:room_type_detail' room_type_id=room_type.id %}" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye me-1"></i> Chi tiết
-                                </a>
-                                <div>
-                                    <a href="{% url 'dormitory:room_type_edit' room_type_id=room_type.id %}" class="btn btn-outline-secondary btn-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'dormitory:room_type_delete' room_type_id=room_type.id %}" class="btn btn-outline-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </div>
-                            </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="available" {% if request.GET.status == 'available' %}selected{% endif %}>Còn trống</option>
+                                <option value="partially_occupied" {% if request.GET.status == 'partially_occupied' %}selected{% endif %}>Còn chỗ</option>
+                                <option value="fully_occupied" {% if request.GET.status == 'fully_occupied' %}selected{% endif %}>Đã đầy</option>
+                                <option value="maintenance" {% if request.GET.status == 'maintenance' %}selected{% endif %}>Bảo trì</option>
+                            </select>
                         </div>
+                        <div class="col-md-2">
+                            <label for="floor" class="form-label">Tầng</label>
+                            <input type="number" class="form-control" id="floor" name="floor" min="1" placeholder="Tầng" value="{{ request.GET.floor }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="is_active" class="form-label">Trạng thái hoạt động</label>
+                            <select name="is_active" id="is_active" class="form-select">
+                                <option value="">-- Tất cả --</option>
+                                <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>Đang hoạt động</option>
+                                <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>Không hoạt động</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <a href="{% url 'dormitory:room_list' %}" class="btn btn-light me-2">Đặt lại</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i> Lọc
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Danh sách phòng</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover datatable">
+                            <thead>
+                                <tr>
+                                    <th>Tòa nhà</th>
+                                    <th>Phòng</th>
+                                    <th>Tầng</th>
+                                    <th>Loại phòng</th>
+                                    <th>Sức chứa</th>
+                                    <th>Hiện tại</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                <tr>
+                                    <td>{{ room.building.name }}</td>
+                                    <td>{{ room.room_number }}</td>
+                                    <td>{{ room.floor }}</td>
+                                    <td>{{ room.room_type.name }}</td>
+                                    <td>{{ room.room_type.capacity }}</td>
+                                    <td>{{ room.current_occupancy }}</td>
+                                    <td>
+                                        {% if room.status == 'available' %}
+                                        <span class="badge bg-success">Còn trống</span>
+                                        {% elif room.status == 'partially_occupied' %}
+                                        <span class="badge bg-warning">Còn chỗ</span>
+                                        {% elif room.status == 'fully_occupied' %}
+                                        <span class="badge bg-danger">Đã đầy</span>
+                                        {% elif room.status == 'maintenance' %}
+                                        <span class="badge bg-secondary">Bảo trì</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ room.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'dormitory:room_detail' room_id=room.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'dormitory:room_edit' room_id=room.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'dormitory:room_delete' room_id=room.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">Không tìm thấy phòng nào.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-info" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Chưa có loại phòng nào. Hãy thêm loại phòng đầu tiên!
-                    </div>
-                </div>
-                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.datatable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+        },
+        "pageLength": 25,
+        "order": [[1, "asc"], [2, "asc"]]
+    });
+});
+</script>
 {% endblock %}

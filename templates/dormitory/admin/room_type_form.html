@@ -68,7 +68,156 @@
                             </div>
                         </div>
 
-                        <!-- Các trường khác tương tự -->
+                        <div class="row mb-3">
+                            <label for="{{ form.capacity.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.capacity.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.capacity }}
+                                {% if form.capacity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.capacity.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.area.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.area.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.area }}
+                                {% if form.area.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.area.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.price_per_month.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.price_per_month.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.price_per_month }}
+                                {% if form.price_per_month.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.price_per_month.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.deposit.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.deposit.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.deposit }}
+                                {% if form.deposit.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.deposit.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.gender_allowed.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.gender_allowed.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.gender_allowed }}
+                                {% if form.gender_allowed.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.gender_allowed.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.amenities.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.amenities.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.amenities }}
+                                {% if form.amenities.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.amenities.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.description.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.image.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.image.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {% if room_type.image %}
+                                <div class="mb-3">
+                                    <img src="{{ room_type.image.url }}" alt="{{ room_type.name }}" class="img-thumbnail" style="max-height: 200px;">
+                                </div>
+                                {% endif %}
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.image.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.is_active.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.is_active.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                <div class="form-check mt-2">
+                                    {{ form.is_active }}
+                                    {% if form.is_active.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.is_active.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{% url 'dormitory:room_type_list' %}" class="btn btn-light">
