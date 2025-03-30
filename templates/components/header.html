@@ -3,18 +3,19 @@
 
 <!-- Navbar/Header -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-    <div class="container-fluid d-flex flex-row">
-        <!-- Sidebar Toggle (Mobile) -->
-        {% if user.is_authenticated %}
-            <button class="btn btn-link d-md-none rounded-circle me-2" id="sidebarToggle">
-                <i class="fas fa-bars fa-chevron-left"></i>
-            </button>
-        {% endif %}
-
+    <div class="container-fluid d-flex flex-row  justify-md-content-end">
         <!-- Logo/Brand -->
         <a class="navbar-brand" href="{% url 'home' %}">
             <img src="{% static 'images/ptit-logo.png' %}" alt="PTIT Logo" height="30">
         </a>
+
+        <!-- Sidebar Toggle (Mobile) -->
+        {% if user.is_authenticated %}
+            <button class="btn btn-link d-lg-none rounded-circle me-2" id="sidebarToggle">
+                <i class="fas fa-bars fa-chevron-left"></i>
+            </button>
+        {% endif %}
+
 
         <!-- Mobile toggle button -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"

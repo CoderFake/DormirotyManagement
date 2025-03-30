@@ -7,7 +7,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding-top: 56px;
+  padding-top: 64px;
   background-color: #f8f9fc;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -35,7 +35,7 @@ main {
 
 .navbar {
   padding: 0.5rem 1rem;
-  min-height: 56px;
+  min-height: 64px;
   z-index: 999;
 }
 
@@ -87,14 +87,14 @@ main {
 @media (max-width: 991.98px) {
   .navbar-collapse {
     position: absolute;
-    top: 56px;
+    top: 64px;
     left: 0;
     right: 0;
     background-color: #fff;
     padding: 1rem;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     z-index: 1029;
-    max-height: calc(100vh - 56px);
+    max-height: calc(100vh - 64px);
     overflow-y: auto;
   }
 
@@ -149,17 +149,23 @@ main {
 }
 
 @media (max-width: 767.98px) {
-  #sidebarToggle {
-    margin-right: 0.5rem;
+  .navbar-brand{
+    display: none;
   }
 
   .navbar > .container-fluid {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+    justify-content: end;
   }
 }
 
 @media (max-width: 991.98px) {
+   #sidebarToggle {
+    position: absolute !important;
+    left: 30px;
+  }
+
   .sidebar {
     position: fixed;
     top: 56px;
@@ -233,7 +239,7 @@ main {
 /* ========== SIDEBAR STYLES ========== */
 
 .sidebar {
-  width: 19rem !important;
+  width: auto !important;
   min-height: calc(100vh - 56px);
   background-color: #ffffff;
   transition: all 0.3s ease;
@@ -388,7 +394,7 @@ body.sidebar-toggled .col-lg-10 {
     }
 
     .sidebar.toggled {
-        width: 240px !important;
+        width: auto !important;
     }
 }
 /* ========== CARD STYLES ========== */

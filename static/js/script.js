@@ -45,21 +45,15 @@ function handleSidebarActiveState() {
     // Get current URL path
     const currentPath = window.location.pathname;
 
-    // Find and mark active sidebar items
     const sidebarLinks = document.querySelectorAll('.sidebar .nav-link, .sidebar .collapse-item');
 
     sidebarLinks.forEach(link => {
         const href = link.getAttribute('href');
 
-        // Skip empty hrefs or # links
         if (!href || href === '#') return;
-
-        // Check if the current path matches or starts with the link href (except for root path)
         if (currentPath === href || (currentPath.startsWith(href) && href !== '/')) {
-            // Mark the link as active
             link.classList.add('active');
 
-            // If it's inside a collapse menu, expand that menu
             const collapseMenu = link.closest('.collapse');
             if (collapseMenu) {
                 collapseMenu.classList.add('show');
@@ -72,18 +66,13 @@ function handleSidebarActiveState() {
         }
     });
 
-    // Store active link when clicking
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function () {
-            // Skip if this is a toggle or # link
             if (this.getAttribute('data-bs-toggle') || this.getAttribute('href') === '#') return;
-
-            // Store this link as the active one in localStorage
             localStorage.setItem('activeLink', this.getAttribute('href'));
         });
     });
 
-    // Also check for previously active link in localStorage
     const storedActiveLink = localStorage.getItem('activeLink');
     if (storedActiveLink) {
         const matchingLink = document.querySelector(`.sidebar a[href="${storedActiveLink}"]`);
@@ -110,31 +99,30 @@ function handleSidebarActiveState() {
 function handleSidebarToggle() {
     const sidebarToggle = document.getElementById('sidebarToggle');
     if (sidebarToggle) {
-        // Check for stored state
         const sidebarState = localStorage.getItem('sidebarToggled');
         if (sidebarState === 'true') {
             document.body.classList.add('sidebar-toggled');
-            document.querySelector('.sidebar').classList.add('toggled');
         }
 
         sidebarToggle.addEventListener('click', function (e) {
             e.preventDefault();
             document.body.classList.toggle('sidebar-toggled');
             const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('toggled');
 
-            // Store state in localStorage
-            localStorage.setItem('sidebarToggled', sidebar.classList.contains('toggled'));
+            localStorage.setItem('sidebarToggled', 'true');
         });
     }
-
-    // Close any open menu when window is resized below 992px
     window.addEventListener('resize', function () {
+        const sidebar = document.querySelector('.sidebar');
         if (window.innerWidth < 992) {
             document.querySelectorAll('.sidebar .collapse.show').forEach(el => {
                 const bsCollapse = new bootstrap.Collapse(el);
                 bsCollapse.hide();
             });
+        }
+        if (window.innerWidth < 576) {
+             sidebar.classList.remove('show');
+             sidebar.classList.remove('toggled');
         }
     });
 }
