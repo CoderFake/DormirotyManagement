@@ -99,66 +99,78 @@ def register_view(request):
         email = request.POST.get('email')
         student_id = request.POST.get('student_id')
         id_card_number = request.POST.get('id_card_number')
+        phone_number = request.POST.get('phone_number')
 
-        has_errors = False
+        has_error = False
 
         if email and User.objects.filter(email=email).exists():
             form.add_error('email', _('Email này đã được sử dụng. Vui lòng chọn email khác.'))
-            has_errors = True
+            has_error = True
 
         if student_id and User.objects.filter(student_id=student_id).exists():
             form.add_error('student_id', _('Mã sinh viên này đã được sử dụng. Vui lòng kiểm tra lại.'))
-            has_errors = True
+            has_error = True
 
         if id_card_number and User.objects.filter(id_card_number=id_card_number).exists():
             form.add_error('id_card_number', _('Số CMND/CCCD này đã được sử dụng. Vui lòng kiểm tra lại.'))
-            has_errors = True
+            has_error = True
 
-        if not has_errors and form.is_valid():
+        if phone_number and User.objects.filter(phone_number=phone_number).exists():
+            form.add_error('phone_number', _('Số điện thoại này đã được sử dụng. Vui lòng kiểm tra lại.'))
+            has_error = True
+
+        if not has_error and form.is_valid():
             try:
                 with transaction.atomic():
-                    user = form.save(commit=False)
-                    user.is_active = False
-                    user.save()
+                    from django.db.models.signals import post_save
+                    receivers = post_save.receivers
+                    post_save.receivers = []
 
-                    UserProfile.objects.create(user=user)
+                    try:
+                        user = form.save(commit=False)
+                        user.is_active = False
+                        user.save()
 
-                    current_site = get_current_site(request)
-                    token = default_token_generator.make_token(user)
-                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                        UserProfile.objects.create(user=user)
 
-                    verify_url = request.build_absolute_uri(
-                        f"/accounts/verify-email-confirm/{uid}/{token}/"
-                    )
+                        current_site = get_current_site(request)
+                        token = default_token_generator.make_token(user)
+                        uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-                    mail_subject = 'Kích hoạt tài khoản - Hệ thống Quản lý Ký túc xá'
+                        verify_url = request.build_absolute_uri(
+                            f"/accounts/verify-email-confirm/{uid}/{token}/"
+                        )
 
-                    email_context = {
-                        "user": user,
-                        "verify_url": verify_url,
-                        "site_name": "Hệ thống Quản lý Ký túc xá",
-                        "domain": current_site.domain,
-                        "uid": uid,
-                        "token": token,
-                    }
+                        mail_subject = 'Kích hoạt tài khoản - Hệ thống Quản lý Ký túc xá'
 
-                    mail_body = render_to_string('accounts/email_verification_email.html', email_context)
+                        email_context = {
+                            "user": user,
+                            "verify_url": verify_url,
+                            "site_name": "Hệ thống Quản lý Ký túc xá",
+                            "domain": current_site.domain,
+                            "uid": uid,
+                            "token": token,
+                        }
 
-                    email_message = EmailMessage(
-                        subject=mail_subject,
-                        body=mail_body,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=[user.email],
-                    )
-                    email_message.content_subtype = "html"
+                        mail_body = render_to_string('accounts/email_verification_email.html', email_context)
 
-                    email_message.send()
+                        email_message = EmailMessage(
+                            subject=mail_subject,
+                            body=mail_body,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[user.email],
+                        )
+                        email_message.content_subtype = "html"
 
-                    messages.success(
-                        request,
-                        'Đăng ký tài khoản thành công! Vui lòng kiểm tra email để kích hoạt tài khoản của bạn.'
-                    )
-                    return redirect('accounts:login')
+                        email_message.send()
+
+                        messages.success(
+                            request,
+                            'Đăng ký tài khoản thành công! Vui lòng kiểm tra email để kích hoạt tài khoản của bạn.'
+                        )
+                        return redirect('accounts:login')
+                    finally:
+                        post_save.receivers = receivers
 
             except BadHeaderError:
                 messages.error(request, 'Không thể gửi email xác thực. Vui lòng thử lại sau.')

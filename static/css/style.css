@@ -132,7 +132,7 @@ main {
 }
 
 .dropdown-list .dropdown-header {
-  background-color: #0d6efd;
+  background-color:#de2219;
   color: #fff;
   padding: 0.75rem 1rem;
   font-weight: 600;
@@ -271,14 +271,14 @@ main {
 
 .sidebar .nav-link:hover,
 .sidebar .nav-link:focus {
-  background-color: rgba(13, 110, 253, 0.1);
-  border-left-color: rgba(13, 110, 253, 0.5);
+  background-color: rgba(231, 74, 59, 0.1);
+  border-left-color: rgba(231, 74, 59, 0.5);
 }
 
 .sidebar .nav-link.active {
-  border-left-color: #0d6efd;
-  background-color: rgba(13, 110, 253, 0.15);
-  color: #0d6efd;
+  border-left-color: #de2219;
+  background-color: rgba(231, 74, 59, 0.15);
+  color: #de2219;
   font-weight: 600;
 }
 
@@ -306,20 +306,20 @@ main {
 
 .sidebar .collapse-item:hover,
 .sidebar .collapse-item:focus {
-  background-color: rgba(13, 110, 253, 0.1);
-  border-left-color: rgba(13, 110, 253, 0.5);
+  background-color: rgba(231, 74, 59, 0.1);
+  border-left-color: rgba(231, 74, 59, 0.5);
 }
 
 .sidebar .collapse-item.active {
-  border-left-color: #0d6efd;
-  background-color: rgba(13, 110, 253, 0.15);
-  color: #0d6efd;
+  border-left-color: #de2219;
+  background-color: rgba(231, 74, 59, 0.15);
+  color: #de2219;
   font-weight: 600;
 }
 
 /* Sidebar toggled state */
 #sidebarToggle {
-  background-color: rgba(13, 110, 253, 0.1);
+  background-color: rgba(231, 74, 59, 0.1);
   width: 2.5rem;
   height: 2.5rem;
   text-align: center;
@@ -331,7 +331,7 @@ main {
 }
 
 #sidebarToggle:hover {
-  background-color: #0d6efd;
+  background-color: #de2219;
   color: #fff;
 }
 
@@ -375,7 +375,7 @@ main {
 }
 
 .card-stats-primary {
-  border-left: 0.25rem solid #0d6efd;
+  border-left: 0.25rem solid #de2219;
 }
 
 .card-stats-success {
@@ -445,13 +445,34 @@ main {
 }
 
 .btn-primary {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+  background-color: #de2219;
+  border-color: #de2219;
 }
 
+.btn-outline-primary{
+  border-color: #de2219;
+  color: #de2219;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: #de2219;
+    --bs-btn-border-color: #de2219;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #de2219;
+    --bs-btn-hover-border-color:#de2219;
+    --bs-btn-focus-shadow-rgb: 13, 110, 253;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg:#de2219;
+    --bs-btn-active-border-color:#de2219;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color:#de2219;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color:#de2219;
+    --bs-gradient: none;
+}
 .btn-primary:hover {
-  background-color: #0b5ed7;
-  border-color: #0a58ca;
+  background-color: #f0537d;
+  border-color: #f0537d;
 }
 
 .btn-success {
@@ -482,6 +503,11 @@ main {
 .btn-danger:hover {
   background-color: #e32f1c;
   border-color: #d82518;
+}
+
+.form-check-input:checked {
+    background-color:#de2219;
+    border-color:#de2219;
 }
 
 /* ========== BREADCRUMB STYLES ========== */
@@ -554,7 +580,7 @@ main {
 
 /* Text colors */
 .text-primary {
-  color: #0d6efd !important;
+  color:#de2219 !important;
 }
 
 .text-success {
@@ -611,7 +637,7 @@ main {
 
 /* Background colors */
 .bg-primary {
-  background-color: #0d6efd !important;
+  background-color:#de2219 !important;
 }
 
 .bg-success {
@@ -668,7 +694,7 @@ main {
 
 /* Border utilities */
 .border-left-primary {
-  border-left: 0.25rem solid #0d6efd !important;
+  border-left: 0.25rem solid #de2219 !important;
 }
 
 .border-left-success {
@@ -686,6 +712,42 @@ main {
 .border-left-info {
   border-left: 0.25rem solid #36b9cc !important;
 }
+
+.btn-primary {
+  background-color: #de2219 !important;
+  border-color: #de2219 !important;
+}
+
+.bg-primary {
+  background-color: #de2219 !important;
+}
+
+.text-primary {
+  color: #e05b55 !important;
+}
+
+.badge-primary {
+  background-color: #de2219 !important;
+}
+
+.border-primary {
+  border-color: #de2219 !important;
+}
+a {
+    color: #e05b55;
+    text-decoration: underline;
+}
+
+.page-link {
+    color: #e05b55 !important;
+    border: solid #de2219 1px !important;
+}
+
+.active>.page-link, .page-link.active {
+    z-index: 3;
+    color: white !important;
+    background-color: #de2219;
+    border-color: #e05b55 !important;
 
 /* ========== RESPONSIVE STYLES ========== */
 

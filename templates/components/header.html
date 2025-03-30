@@ -1,4 +1,4 @@
-{% load custom_filters %}
+{% load static custom_filters %}
 {% get_unread_notifications_count user as unread_count %}
 
 <!-- Navbar/Header -->
@@ -13,8 +13,7 @@
 
         <!-- Logo/Brand -->
         <a class="navbar-brand" href="{% url 'home' %}">
-            <i class="fas fa-building me-2"></i>
-            <span>Quản lý Ký túc xá</span>
+            <img src="{% static 'images/ptit-logo.png' %}" alt="PTIT Logo" height="30">
         </a>
 
         <!-- Mobile toggle button -->

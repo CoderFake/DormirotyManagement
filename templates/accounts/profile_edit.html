@@ -43,7 +43,7 @@
                             <h5 class="mb-3">Thông tin cá nhân</h5>
 
                             {% for field in user_form %}
-                            {% if field.name in 'full_name,phone_number,gender,date_of_birth,id_card_number,address'|split:',' %}
+                            {% if field.full_name or field.phone_number or field.gender or field.date_of_birth or field.id_card_number or field.address %}
                             <div class="row mb-3">
                                 <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
                                     {{ field.label }}
@@ -72,7 +72,7 @@
                             <h5 class="mb-3">Thông tin học tập</h5>
 
                             {% for field in user_form %}
-                            {% if field.name in 'student_id,university,faculty,major,academic_year'|split:',' %}
+                            {% if  field.student_id or field.university or field.faculty or field.major or field.academic_year %}
                             <div class="row mb-3">
                                 <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
                                     {{ field.label }}

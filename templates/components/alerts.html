@@ -1,7 +1,7 @@
 <!-- Alerts -->
 {% if messages %}
     {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible alert-auto-close fade show" role="alert">
+        <div class="alert alert-{{ message.tags }} alert-dismissible alert-auto-close fade show d-none" role="alert">
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
