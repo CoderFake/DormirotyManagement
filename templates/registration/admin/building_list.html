@@ -6,23 +6,10 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            {% for item in breadcrumbs %}
-                {% if item.url %}
-                    <li class="breadcrumb-item"><a href="{{ item.url }}">{{ item.title }}</a></li>
-                {% else %}
-                    <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
-                {% endif %}
-            {% endfor %}
-        </ol>
-    </nav>
-
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -200,7 +187,7 @@
         </div>
     </div>
 </div>
-
+{% endblock %}
 {% block extra_js %}
 <script>
 // Auto submit form when select changes
