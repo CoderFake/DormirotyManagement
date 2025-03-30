@@ -1,60 +1,119 @@
-/**
- * Handles sidebar toggle functionality for all screen sizes
- */
 function handleSidebarToggle() {
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.querySelector('.sidebar');
-    
+
     if (!sidebarToggle || !sidebar) return;
-    
-    // Check initial state based on screen size
+
     function updateSidebarState() {
         if (window.innerWidth < 768) {
-            // Mobile view - sidebar should be hidden by default
             document.body.classList.add('sidebar-collapsed');
             sidebar.classList.add('collapsed');
+            sidebar.classList.remove('show');
+
+            const icon = sidebarToggle.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
         } else {
-            // Desktop view - sidebar should be visible by default
             document.body.classList.remove('sidebar-collapsed');
             sidebar.classList.remove('collapsed');
+
+            const icon = sidebarToggle.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
         }
     }
-    
-    // Initial state
+
     updateSidebarState();
-    
-    // Toggle sidebar when button is clicked
+
     sidebarToggle.addEventListener('click', function(e) {
         e.preventDefault();
-        document.body.classList.toggle('sidebar-collapsed');
-        sidebar.classList.toggle('collapsed');
-        
+
+        if (window.innerWidth < 768) {
+            sidebar.classList.toggle('show');
+            sidebar.classList.remove('collapsed');
+
+            if (sidebar.classList.contains('show')) {
+                let overlay = document.querySelector('.sidebar-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'sidebar-overlay';
+                    document.body.appendChild(overlay);
+
+                    overlay.addEventListener('click', function() {
+                        sidebar.classList.remove('show');
+                        overlay.remove();
+
+                        const icon = sidebarToggle.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                            sidebarToggle.classList.add('rotate-right');
+                            sidebarToggle.classList.remove('rotate-left');
+                        }
+                    });
+                }
+            } else {
+                const overlay = document.querySelector('.sidebar-overlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+            }
+        } else {
+            document.body.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('collapsed');
+        }
+
         const icon = this.querySelector('i');
         if (icon) {
-            if (icon.classList.contains('fa-chevron-left')) {
-                icon.classList.remove('fa-chevron-left');
-                icon.classList.add('fa-chevron-right');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+                sidebarToggle.classList.add('rotate-left');
+                sidebarToggle.classList.remove('rotate-right');
             } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-chevron-left');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+                sidebarToggle.classList.add('rotate-right');
+                sidebarToggle.classList.remove('rotate-left');
             }
         }
     });
-    
-    // Update sidebar state when window is resized
+
     window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768) {
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
         updateSidebarState();
     });
-    
-    // Close sidebar when clicking outside on mobile
+
     document.addEventListener('click', function(event) {
         if (window.innerWidth < 768) {
             const isOutsideSidebar = !sidebar.contains(event.target);
             const isNotToggleButton = !sidebarToggle.contains(event.target);
-            
-            if (isOutsideSidebar && isNotToggleButton && !document.body.classList.contains('sidebar-collapsed')) {
-                document.body.classList.add('sidebar-collapsed');
-                sidebar.classList.add('collapsed');
+
+            if (isOutsideSidebar && isNotToggleButton && sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+
+                const overlay = document.querySelector('.sidebar-overlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+
+                const icon = sidebarToggle.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                    sidebarToggle.classList.add('rotate-right');
+                    sidebarToggle.classList.remove('rotate-left');
+                }
             }
         }
     });
@@ -62,31 +121,29 @@ function handleSidebarToggle() {
 
 document.addEventListener('DOMContentLoaded', function() {
     handleSidebarToggle();
-    
-    // Initialize other components
+
     initializeNavigation();
     initializeComponents();
+
+    const alerts = document.querySelectorAll('.alert-auto-close');
+    alerts.forEach(alert => {
+        alert.classList.remove('d-none');
+    });
 });
 
-/**
- * Initialize navigation items (active state, etc.)
- */
 function initializeNavigation() {
-    // Get current URL path
     const currentPath = window.location.pathname;
-    
-    // Find and activate the current page in the navigation
+
     const sidebarLinks = document.querySelectorAll('.sidebar .nav-link, .sidebar .collapse-item');
-    
+
     sidebarLinks.forEach(link => {
         const href = link.getAttribute('href');
-        
+
         if (!href || href === '#') return;
-        
+
         if (currentPath === href || (currentPath.startsWith(href) && href !== '/')) {
             link.classList.add('active');
-            
-            // If in collapse menu, expand that menu
+
             const collapseMenu = link.closest('.collapse');
             if (collapseMenu) {
                 collapseMenu.classList.add('show');
@@ -100,17 +157,12 @@ function initializeNavigation() {
     });
 }
 
-/**
- * Initialize other UI components
- */
 function initializeComponents() {
-    // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Initialize datepickers
     if (typeof flatpickr !== 'undefined') {
         flatpickr(".datepicker", {
             locale: "vn",
@@ -127,7 +179,6 @@ function initializeComponents() {
         });
     }
 
-    // Initialize select2 dropdowns
     if (typeof $.fn.select2 !== 'undefined') {
         $('.select2').select2({
             theme: 'bootstrap-5'
@@ -137,5 +188,28 @@ function initializeComponents() {
             theme: 'bootstrap-5',
             allowClear: true
         });
+    }
+
+    function updateNotificationCount() {
+        fetch('/notification/api/unread-count/')
+            .then(response => response.json())
+            .then(data => {
+                const badgeElement = document.querySelector('#alertsDropdown .badge');
+                if (badgeElement) {
+                    if (data.count > 0) {
+                        badgeElement.textContent = data.count;
+                        badgeElement.classList.remove('d-none');
+                    } else {
+                        badgeElement.classList.add('d-none');
+                    }
+                }
+            })
+            .catch(error => console.error('Error fetching notification count:', error));
+    }
+
+    if (document.querySelector('#alertsDropdown')) {
+        updateNotificationCount();
+
+        setInterval(updateNotificationCount, 60000);
     }
 }

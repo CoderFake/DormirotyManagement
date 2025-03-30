@@ -9,3 +9,4 @@ django-vnpay==0.0.19
 humanize==4.12.2
 Pillow==11.1.0
 cryptography==44.0.2
+django-smtp-ssl==1.0
