@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.humanize",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
 
     # Cài đặt bên thứ 3
     "corsheaders",
@@ -176,10 +177,9 @@ LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
 
 
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
+# ID của site mặc định
+SITE_ID = 1
+
 
 # Cấu hình email
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")

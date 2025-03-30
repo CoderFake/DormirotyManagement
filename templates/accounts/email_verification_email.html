@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt lại mật khẩu - Hệ thống Quản lý Ký túc xá</title>
+    <title>Xác thực tài khoản - Hệ thống Quản lý Ký túc xá</title>
     <style>
         * {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -86,20 +86,20 @@
             <div class="logo">Hệ thống Quản lý Ký túc xá</div>
         </div>
         <div class="content">
-            <h1>Đặt lại mật khẩu</h1>
+            <h1>Xác thực tài khoản</h1>
             <p>Xin chào {{ user.full_name }},</p>
-            <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Vui lòng nhấp vào nút bên dưới để đặt lại mật khẩu:</p>
+            <p>Cảm ơn bạn đã đăng ký tài khoản tại Hệ thống Quản lý Ký túc xá. Để kích hoạt tài khoản của bạn, vui lòng nhấp vào nút bên dưới:</p>
             <div style="text-align: center;">
-                <a href="{{ reset_url }}" class="button">Đặt lại mật khẩu</a>
+                <a href="{{ verify_url }}" class="button">Kích hoạt tài khoản</a>
             </div>
             <p>Hoặc, bạn có thể sao chép và dán đường dẫn sau vào trình duyệt của mình:</p>
-            <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 5px;">{{ reset_url }}</p>
+            <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 5px;">{{ verify_url }}</p>
             <div class="warning">
-                <strong>Lưu ý:</strong> Liên kết này sẽ hết hạn sau <strong>24 giờ</strong> tính từ thời điểm {{ expiry_time|date:"H:i" }} ngày {{ expiry_time|date:"d/m/Y" }}.
+                <strong>Lưu ý:</strong> Liên kết này sẽ hết hạn sau <strong>48 giờ</strong>.
             </div>
-            <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này hoặc liên hệ ngay với chúng tôi nếu bạn cho rằng tài khoản của mình đang bị xâm phạm.</p>
+            <p>Nếu bạn không yêu cầu tạo tài khoản này, vui lòng bỏ qua email này.</p>
             <div class="note">
-                <p>Nếu bạn gặp vấn đề trong quá trình đặt lại mật khẩu, vui lòng liên hệ với chúng tôi qua email: <a href="mailto:support@kytucxa.edu.vn">support@kytucxa.edu.vn</a></p>
+                <p>Nếu bạn gặp vấn đề trong quá trình kích hoạt tài khoản, vui lòng liên hệ với chúng tôi qua email: <a href="mailto:support@kytucxa.edu.vn">support@kytucxa.edu.vn</a></p>
             </div>
         </div>
         <div class="footer">

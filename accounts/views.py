@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -8,7 +9,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
-from django.core.mail import send_mail, BadHeaderError
+from django.core.mail import send_mail, BadHeaderError, EmailMessage
 from django.http import HttpResponse
 from django.db import transaction
 from django.conf import settings
@@ -67,6 +68,25 @@ def logout_view(request):
     return redirect('home')
 
 
+def verify_email_confirm_view(request, uidb64, token):
+    """Xác nhận email từ link trong email"""
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True  # Kích hoạt tài khoản
+        user.email_verified = True
+        user.save()
+        messages.success(request, 'Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập.')
+        return redirect('accounts:login')
+    else:
+        messages.error(request, 'Link xác thực không hợp lệ hoặc đã hết hạn.')
+        return redirect('accounts:login')
+
+
 def register_view(request):
     """Xử lý đăng ký tài khoản mới"""
     if request.user.is_authenticated:
@@ -98,21 +118,52 @@ def register_view(request):
                     raise forms.ValidationError(_('Số CMND/CCCD đã tồn tại'))
 
                 user = form.save(commit=False)
-                user.is_active = True
+                user.is_active = False
                 user.save()
 
                 UserProfile.objects.create(user=user)
 
-                raw_password = form.cleaned_data.get('password1')
-                authenticated_user = authenticate(username=user.email, password=raw_password)
+                current_site = get_current_site(request)
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-                if authenticated_user is not None:
-                    login(request, authenticated_user)
-                    messages.success(request,
-                                     'Đăng ký tài khoản thành công! Chào mừng bạn đến với hệ thống Quản lý Ký túc xá.')
-                    return redirect('dashboard:index')
-                else:
-                    messages.error(request, 'Có lỗi xảy ra trong quá trình đăng nhập.')
+                verify_url = request.build_absolute_uri(
+                    f"/accounts/verify-email-confirm/{uid}/{token}/"
+                )
+
+                mail_subject = 'Kích hoạt tài khoản - Hệ thống Quản lý Ký túc xá'
+
+                email_context = {
+                    "user": user,
+                    "verify_url": verify_url,
+                    "site_name": "Hệ thống Quản lý Ký túc xá",
+                    "domain": current_site.domain,
+                    "uid": uid,
+                    "token": token,
+                }
+
+                mail_body = render_to_string('accounts/email_verification_email.html', email_context)
+
+                email_message = EmailMessage(
+                    subject=mail_subject,
+                    body=mail_body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                )
+                email_message.content_subtype = "html"
+
+                try:
+                    email_message.send()
+                    messages.success(
+                        request,
+                        'Đăng ký tài khoản thành công! Vui lòng kiểm tra email để kích hoạt tài khoản của bạn.'
+                    )
+                    return redirect('accounts:login')
+                except Exception as e:
+                    messages.warning(
+                        request,
+                        f'Tài khoản đã được tạo nhưng không thể gửi email xác thực: {str(e)}. Vui lòng liên hệ quản trị viên.'
+                    )
                     return redirect('accounts:login')
 
             except forms.ValidationError:
@@ -177,24 +228,6 @@ def verify_email_view(request):
     }
     return render(request, 'accounts/verify_email.html', context)
 
-
-def verify_email_confirm_view(request, uidb64, token):
-    """Xác nhận email từ link trong email"""
-    try:
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.email_verified = True
-        user.save()
-        messages.success(request, 'Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập.')
-        return redirect('accounts:login')
-    else:
-        messages.error(request, 'Link xác thực không hợp lệ hoặc đã hết hạn.')
-        return redirect('accounts:login')
 
 
 def password_reset_request(request):
