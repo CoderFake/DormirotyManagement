@@ -47,7 +47,7 @@
                     {% include 'components/sidebar.html' %}
                 </div>
             {% endif %}
-                <main class="{% if user.is_authenticated %}col-lg-10{% else %}col-12{% endif %} px-md-4 pt-4 pb-0 d-flex flex-column flex-grow-1">
+                <main class="{% if user.is_authenticated %}col-lg-10{% else %}col-12{% endif %} px-0 pt-4 pb-0 d-flex flex-column flex-grow-1">
                     {% if user.is_authenticated %}
                         {% include 'components/breadcrumb.html' %}
                     {% endif %}
