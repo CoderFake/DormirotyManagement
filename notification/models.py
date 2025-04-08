@@ -43,7 +43,7 @@ class Notification(models.Model):
     category = models.ForeignKey(NotificationCategory, on_delete=models.CASCADE, related_name='notifications',
                                  verbose_name=_('danh mục'))
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications',
-                               verbose_name=_('người gửi'))
+                               verbose_name=_('người gửi'), null=True, blank=True)
     created_at = models.DateTimeField(_('thời gian tạo'), auto_now_add=True)
     updated_at = models.DateTimeField(_('thời gian cập nhật'), auto_now=True)
     is_active = models.BooleanField(_('đang hoạt động'), default=True)
