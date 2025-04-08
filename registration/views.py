@@ -411,31 +411,33 @@ def period_edit_view(request, period_id):
 @user_passes_test(is_admin_or_staff)
 def application_list_view(request):
     """Danh sách đơn đăng ký (cho Admin)"""
-    registrations = RoomRegistration.objects.all().order_by('-registration_date')
+    applications = RoomRegistration.objects.all().order_by('-registration_date')
 
     status = request.GET.get('status')
     if status:
-        registrations = registrations.filter(status=status)
+        applications = applications.filter(status=status)
 
     period_id = request.GET.get('period')
     if period_id:
-        registrations = registrations.filter(registration_period_id=period_id)
+        applications = applications.filter(registration_period_id=period_id)
 
-    building_id = request.GET.get('building')
-    if building_id:
-        registrations = registrations.filter(preferred_building_id=building_id)
+    search = request.GET.get('search')
+    if search:
+        applications = applications.filter(
+            Q(user__student_id__icontains=search) |
+            Q(user__full_name__icontains=search)
+        )
 
     context = {
-        'registrations': registrations,
+        'applications': applications,
         'periods': RegistrationPeriod.objects.all(),
-        'buildings': Building.objects.all(),
         'page_title': 'Danh sách đơn đăng ký',
         'breadcrumbs': [
             {'title': 'Đăng ký phòng', 'url': '#'},
             {'title': 'Đơn đăng ký', 'url': None}
         ]
     }
-    return render(request, 'registration/application_list.html', context)
+    return render(request, 'registration/admin/application_list.html', context)
 
 
 @login_required
