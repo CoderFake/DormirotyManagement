@@ -27,7 +27,7 @@
                 <div>
                     <strong>Kỳ đăng ký hiện tại:</strong> {{ current_period.name }} ({{ current_period.academic_year }} - {{ current_period.semester }})
                     <br>
-                    <span class="small">Thời gian đăng ký: {{ current_period.registration_start|date:"d/m/Y H:i" }} - {{ current_period.registration_end|date:"d/m/Y H:i" }}</span>
+                    <span class="small">Thời gian đăng ký: {{ current_period.registration_start|date:"Y-m-d H:i" }} - {{ current_period.registration_end|date:"Y-m-d H:i" }}</span>
                 </div>
             </div>
             {% else %}

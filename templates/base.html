@@ -130,29 +130,6 @@
         {% endif %}
     </script>
 
-    <script>
-        $(document).ready(function() {
-
-            $(".datepicker").flatpickr({
-                locale: "vn",
-                dateFormat: "Y-m-d",
-                allowInput: true
-            });
-
-            $(".datetimepicker").flatpickr({
-                locale: "vn",
-                dateFormat: "d/m/Y H:i",
-                enableTime: true,
-                time_24hr: true,
-                allowInput: true
-            });
-
-            $('.select2').select2({
-                theme: 'bootstrap-5'
-            });
-        });
-    </script>
-
     {% block extra_js %}{% endblock %}
 
 </body>

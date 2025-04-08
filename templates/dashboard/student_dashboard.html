@@ -39,7 +39,7 @@
                                     </p>
                                     <p class="mb-1">
                                         <i class="fas fa-calendar-alt me-2 text-primary"></i>
-                                        <strong>Thời hạn hợp đồng:</strong> {{ current_contract.start_date|date:"d/m/Y" }} - {{ current_contract.end_date|date:"d/m/Y" }}
+                                        <strong>Thời hạn hợp đồng:</strong> {{ current_contract.start_date|date:"Y-m-d" }} - {{ current_contract.end_date|date:"Y-m-d" }}
                                     </p>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@
                             <hr>
                             <p class="mb-0">
                                 <strong>Trạng thái:</strong> {{ current_registration.get_status_display }}<br>
-                                <strong>Ngày đăng ký:</strong> {{ current_registration.registration_date|date:"d/m/Y H:i" }}
+                                <strong>Ngày đăng ký:</strong> {{ current_registration.registration_date|date:"Y-m-d H:i" }}
                             </p>
                             <div class="mt-3">
                                 <a href="{% url 'registration:my_applications' %}" class="btn btn-primary btn-sm">
@@ -230,7 +230,7 @@
                                     {% for invoice in unpaid_invoices|slice:":5" %}
                                         <tr>
                                             <td>{{ invoice.invoice_number }}</td>
-                                            <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                                            <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
                                             <td>{{ invoice.total_amount|floatformat:0 }} đ</td>
                                             <td>
                                                 {% if invoice.status == 'pending' %}
@@ -289,7 +289,7 @@
                                         <tr>
                                             <td>{{ request.request_number }}</td>
                                             <td>{{ request.title|truncatechars:30 }}</td>
-                                            <td>{{ request.requested_date|date:"d/m/Y" }}</td>
+                                            <td>{{ request.requested_date|date:"Y-m-d" }}</td>
                                             <td>
                                                 {% if request.status == 'pending' %}
                                                     <span class="badge bg-warning">Chờ xử lý</span>
@@ -344,7 +344,7 @@
                                 <a href="{% url 'notification:detail' notification.notification.id %}" class="list-group-item list-group-item-action">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1 fw-bold">{{ notification.notification.title }}</h6>
-                                        <small>{{ notification.created_at|date:"d/m/Y H:i" }}</small>
+                                        <small>{{ notification.created_at|date:"Y-m-d H:i" }}</small>
                                     </div>
                                     <p class="mb-1 text-truncate">{{ notification.notification.content|truncatechars:100 }}</p>
                                     <small class="text-{{ notification.notification.category.color }}">

@@ -11,7 +11,7 @@
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -54,18 +54,18 @@
                                 </li>
                                 <li class="mb-2">
                                     <i class="fas fa-clock text-primary"></i> <strong>Ngày tạo:</strong><br>
-                                    <span class="ps-4">{{ contract.created_at|date:"d/m/Y H:i" }}</span>
+                                    <span class="ps-4">{{ contract.created_at|date:"Y-m-d H:i" }}</span>
                                 </li>
                                 {% if contract.signed_at %}
                                     <li class="mb-2">
                                         <i class="fas fa-signature text-primary"></i> <strong>Ngày ký:</strong><br>
-                                        <span class="ps-4">{{ contract.signed_at|date:"d/m/Y H:i" }}</span>
+                                        <span class="ps-4">{{ contract.signed_at|date:"Y-m-d H:i" }}</span>
                                     </li>
                                 {% endif %}
                                 {% if contract.terminated_at %}
                                     <li class="mb-2">
                                         <i class="fas fa-times text-danger"></i> <strong>Ngày chấm dứt:</strong><br>
-                                        <span class="ps-4">{{ contract.terminated_at|date:"d/m/Y H:i" }}</span>
+                                        <span class="ps-4">{{ contract.terminated_at|date:"Y-m-d H:i" }}</span>
                                     </li>
                                 {% endif %}
                             </ul>
@@ -100,13 +100,13 @@
                             <div class="col-md-6">
                                 <div class="alert alert-info mb-3">
                                     <p class="mb-1"><strong>Ngày bắt đầu:</strong></p>
-                                    <h5 class="mb-0">{{ contract.start_date|date:"d/m/Y" }}</h5>
+                                    <h5 class="mb-0">{{ contract.start_date|date:"Y-m-d" }}</h5>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="alert alert-info mb-3">
                                     <p class="mb-1"><strong>Ngày kết thúc:</strong></p>
-                                    <h5 class="mb-0">{{ contract.end_date|date:"d/m/Y" }}</h5>
+                                    <h5 class="mb-0">{{ contract.end_date|date:"Y-m-d" }}</h5>
                                 </div>
                             </div>
                         </div>
@@ -195,7 +195,7 @@
                             <div class="timeline-marker bg-primary"></div>
                             <div class="timeline-content">
                                 <h6 class="mb-1">Tạo hợp đồng</h6>
-                                <small class="text-muted">{{ contract.created_at|date:"d/m/Y H:i" }}</small>
+                                <small class="text-muted">{{ contract.created_at|date:"Y-m-d H:i" }}</small>
                             </div>
                         </div>
 
@@ -205,7 +205,7 @@
                                 <div class="timeline-marker bg-success"></div>
                                 <div class="timeline-content">
                                     <h6 class="mb-1">Ký hợp đồng</h6>
-                                    <small class="text-muted">{{ contract.signed_at|date:"d/m/Y H:i" }}</small>
+                                    <small class="text-muted">{{ contract.signed_at|date:"Y-m-d H:i" }}</small>
                                 </div>
                             </div>
                         {% endif %}
@@ -216,7 +216,7 @@
                                 <div class="timeline-marker bg-danger"></div>
                                 <div class="timeline-content">
                                     <h6 class="mb-1">Chấm dứt hợp đồng</h6>
-                                    <small class="text-muted">{{ contract.terminated_at|date:"d/m/Y H:i" }}</small>
+                                    <small class="text-muted">{{ contract.terminated_at|date:"Y-m-d H:i" }}</small>
                                     {% if contract.termination_reason %}
                                         <p class="mb-0 mt-2">{{ contract.termination_reason }}</p>
                                     {% endif %}
@@ -230,7 +230,7 @@
                                 <div class="timeline-marker bg-secondary"></div>
                                 <div class="timeline-content">
                                     <h6 class="mb-1">Hết hạn hợp đồng</h6>
-                                    <small class="text-muted">{{ contract.end_date|date:"d/m/Y" }}</small>
+                                    <small class="text-muted">{{ contract.end_date|date:"Y-m-d" }}</small>
                                 </div>
                             </div>
                         {% endif %}

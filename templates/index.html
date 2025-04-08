@@ -159,7 +159,7 @@
                             <a href="{% url 'notification:announcement_detail' announcement.id %}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ announcement.title }}</h6>
-                                    <small>{{ announcement.created_at|date:"d/m/Y" }}</small>
+                                    <small>{{ announcement.created_at|date:"Y-m-d" }}</small>
                                 </div>
                                 <p class="mb-1 text-truncate">{{ announcement.content|truncatechars:100 }}</p>
                                 <small class="text-muted">

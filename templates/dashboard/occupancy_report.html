@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Báo cáo công suất sử dụng{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Báo cáo công suất sử dụng</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Bộ lọc -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="building">Tòa nhà</label>
+                                <select class="form-select" id="building">
+                                    <option value="">Tất cả</option>
+                                    {% for building in buildings %}
+                                        <option value="{{ building.id }}">{{ building.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="room_type">Loại phòng</label>
+                                <select class="form-select" id="room_type">
+                                    <option value="">Tất cả</option>
+                                    {% for room_type in room_types %}
+                                        <option value="{{ room_type.id }}">{{ room_type.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="occupancy_status">Trạng thái</label>
+                                <select class="form-select" id="occupancy_status">
+                                    <option value="">Tất cả</option>
+                                    <option value="occupied">Đã cho thuê</option>
+                                    <option value="available">Còn trống</option>
+                                    <option value="maintenance">Đang bảo trì</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="date_range">Khoảng thời gian</label>
+                                <input type="text" class="form-control" id="date_range">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thống kê tổng quan -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Tổng số phòng</h5>
+                                    <h2 class="mb-0">{{ total_rooms }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Đã cho thuê</h5>
+                                    <h2 class="mb-0">{{ occupied_rooms }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Còn trống</h5>
+                                    <h2 class="mb-0">{{ available_rooms }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Đang bảo trì</h5>
+                                    <h2 class="mb-0">{{ maintenance_rooms }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Biểu đồ -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Công suất theo tòa nhà</h5>
+                                    <canvas id="buildingChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Công suất theo loại phòng</h5>
+                                    <canvas id="roomTypeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bảng danh sách phòng -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mã phòng</th>
+                                    <th>Tòa nhà</th>
+                                    <th>Loại phòng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Số giường</th>
+                                    <th>Số giường đã sử dụng</th>
+                                    <th>Tỷ lệ sử dụng</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                <tr>
+                                    <td>{{ room.code }}</td>
+                                    <td>{{ room.building.name }}</td>
+                                    <td>{{ room.room_type.name }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ room.status_color }}">
+                                            {{ room.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ room.total_beds }}</td>
+                                    <td>{{ room.occupied_beds }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ room.occupancy_rate }}%"
+                                                 aria-valuenow="{{ room.occupancy_rate }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ room.occupancy_rate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'dormitory:room_detail' room.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Phân trang -->
+                    {% if rooms.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if rooms.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ rooms.previous_page_number }}">Trước</a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in rooms.paginator.page_range %}
+                            <li class="page-item {% if rooms.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+
+                            {% if rooms.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ rooms.next_page_number }}">Sau</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Khởi tạo date range picker
+    $('#date_range').daterangepicker({
+        locale: {
+            format: 'DD/MM/YYYY'
+        }
+    });
+
+    // Khởi tạo biểu đồ công suất theo tòa nhà
+    const buildingCtx = document.getElementById('buildingChart').getContext('2d');
+    new Chart(buildingCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ building_labels|safe }},
+            datasets: [{
+                label: 'Tỷ lệ sử dụng (%)',
+                data: {{ building_data|safe }},
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Khởi tạo biểu đồ công suất theo loại phòng
+    const roomTypeCtx = document.getElementById('roomTypeChart').getContext('2d');
+    new Chart(roomTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ room_type_labels|safe }},
+            datasets: [{
+                label: 'Tỷ lệ sử dụng (%)',
+                data: {{ room_type_data|safe }},
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

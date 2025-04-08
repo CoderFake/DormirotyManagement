@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'payment:fee_type_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Thêm loại phí mới
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Danh sách loại phí</h5>
+                    <p class="card-text text-muted small">Quản lý các loại phí trong hệ thống</p>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle datatable">
+                            <thead>
+                                <tr>
+                                    <th>Tên loại phí</th>
+                                    <th>Mã loại phí</th>
+                                    <th>Mô tả</th>
+                                    <th>Đơn vị tính</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fee_type in fee_types %}
+                                <tr>
+                                    <td>{{ fee_type.name }}</td>
+                                    <td>{{ fee_type.code }}</td>
+                                    <td>{{ fee_type.description|default:"-" }}</td>
+                                    <td>{{ fee_type.unit }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ fee_type.is_active|yesno:'success,danger' }}">
+                                            {{ fee_type.is_active|yesno:'Đang hoạt động,Đã khóa' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{% url 'payment:fee_type_edit' fee_type.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'payment:fee_type_delete' fee_type.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Chưa có loại phí nào được tạo
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

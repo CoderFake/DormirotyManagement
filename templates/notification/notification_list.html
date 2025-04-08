@@ -100,7 +100,7 @@
                         <a href="{% url 'notification:detail' user_notification.notification.id %}" class="list-group-item list-group-item-action {% if not user_notification.is_read %}list-group-item-light fw-bold{% endif %}">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">{{ user_notification.notification.title }}</h6>
-                                <small>{{ user_notification.created_at|date:"d/m/Y H:i" }}</small>
+                                <small>{{ user_notification.created_at|date:"Y-m-d H:i" }}</small>
                             </div>
                             <p class="mb-1 text-truncate">{{ user_notification.notification.content|truncatechars:150 }}</p>
                             <div class="d-flex w-100 justify-content-between mt-2">

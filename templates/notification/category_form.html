@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{% if category %}Chỉnh sửa{% else %}Tạo mới{% endif %} danh mục</h5>
+                    <p class="card-text text-muted small">Nhập thông tin chi tiết về danh mục</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Thông tin chung</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.name.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.name.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.description.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.description }}
+                                        {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.description.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Cài đặt</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.is_active.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.is_active.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.is_active }}
+                                        {% if form.is_active.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.is_active.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.color.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.color.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.color }}
+                                        {% if form.color.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.color.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.icon.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.icon.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.icon }}
+                                        {% if form.icon.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.icon.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'notification:category_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if category %}
+                                    Cập nhật danh mục
+                                {% else %}
+                                    Tạo danh mục
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

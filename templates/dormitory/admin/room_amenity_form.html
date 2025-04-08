@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if room_amenity %}Sửa tiện nghi{% else %}Thêm tiện nghi{% endif %} - {{ room.name }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        {% if room_amenity %}Sửa tiện nghi{% else %}Thêm tiện nghi{% endif %} cho phòng {{ room.name }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="amenity" class="form-label">Tiện nghi</label>
+                            <select name="amenity" id="amenity" class="form-select" required>
+                                <option value="">Chọn tiện nghi</option>
+                                {% for amenity in amenities %}
+                                    <option value="{{ amenity.id }}" {% if room_amenity and room_amenity.amenity.id == amenity.id %}selected{% endif %}>
+                                        {{ amenity.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Số lượng</label>
+                            <input type="number" name="quantity" id="quantity" class="form-control" 
+                                   value="{{ room_amenity.quantity|default:1 }}" min="1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Ghi chú</label>
+                            <textarea name="notes" id="notes" class="form-control" rows="3">{{ room_amenity.notes|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dormitory:admin:room_detail' room.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

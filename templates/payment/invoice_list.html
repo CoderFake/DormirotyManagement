@@ -117,8 +117,8 @@
                                         -
                                     {% endif %}
                                 </td>
-                                <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
-                                <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                                <td>{{ invoice.issue_date|date:"Y-m-d" }}</td>
+                                <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
                                 <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
                                 <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
                                 <td>
@@ -166,23 +166,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        $('.datatable').DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
-            },
-            "order": [[ 3, "desc" ]]
-        });
-
-        $('.searchable-select').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Tìm kiếm...',
-            allowClear: true
-        });
-    });
-</script>
 {% endblock %}

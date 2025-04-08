@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+            <div>
+                <a href="{% url 'registration:period_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Thêm kỳ đăng ký mới
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Danh sách kỳ đăng ký</h5>
+                    <p class="card-text text-muted small">Quản lý các kỳ đăng ký ký túc xá</p>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle datatable">
+                            <thead>
+                                <tr>
+                                    <th>Tên kỳ đăng ký</th>
+                                    <th>Năm học</th>
+                                    <th>Học kỳ</th>
+                                    <th>Thời gian đăng ký</th>
+                                    <th>Thời gian nhận phòng</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for period in periods %}
+                                <tr>
+                                    <td>{{ period.name }}</td>
+                                    <td>{{ period.academic_year }}</td>
+                                    <td>{{ period.semester }}</td>
+                                    <td>
+                                        {{ period.registration_start|date:"Y-m-d" }} -
+                                        {{ period.registration_end|date:"Y-m-d" }}
+                                    </td>
+                                    <td>
+                                        {{ period.check_in_start|date:"Y-m-d" }} -
+                                        {{ period.check_in_end|date:"Y-m-d" }}
+                                    </td>
+                                    <td>
+                                        {% if period.status == 'upcoming' %}
+                                        <span class="badge bg-secondary">Sắp diễn ra</span>
+                                        {% elif period.status == 'active' %}
+                                        <span class="badge bg-success">Đang diễn ra</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Đã kết thúc</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'registration:period_edit' period_id=period.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'registration:period_delete' period_id=period.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        Không có kỳ đăng ký nào. Hãy thêm kỳ đăng ký đầu tiên!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}

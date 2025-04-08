@@ -11,7 +11,7 @@
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -98,7 +98,7 @@
                                     </td>
                                     <td>{{ payment.period_start|date:"m/Y" }} - {{ payment.period_end|date:"m/Y" }}</td>
                                     <td>{{ payment.amount|intcomma }} VNĐ</td>
-                                    <td>{{ payment.paid_at|date:"d/m/Y H:i"|default:"-" }}</td>
+                                    <td>{{ payment.paid_at|date:"Y-m-d H:i"|default:"-" }}</td>
                                     <td>
                                         {% if payment.status == 'pending' %}
                                             <span class="badge bg-warning">Chờ thanh toán</span>

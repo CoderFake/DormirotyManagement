@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{% if period %}Chỉnh sửa{% else %}Tạo mới{% endif %} kỳ đăng ký</h5>
+                    <p class="card-text text-muted small">Nhập thông tin chi tiết về kỳ đăng ký</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Thông tin chung</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.name.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.name.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.academic_year.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.academic_year.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.academic_year }}
+                                        {% if form.academic_year.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.academic_year.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.semester.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.semester.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.semester }}
+                                        {% if form.semester.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.semester.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Mô tả & Trạng thái</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.description.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.description }}
+                                        {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.description.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.is_active.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.is_active.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        <div class="form-check mt-2">
+                                            {{ form.is_active }}
+                                            {% if form.is_active.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.is_active.errors %}
+                                                {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Thời gian đăng ký</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.registration_start.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.registration_start.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.registration_start }}
+                                        {% if form.registration_start.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.registration_start.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.registration_end.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.registration_end.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.registration_end }}
+                                        {% if form.registration_end.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.registration_end.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Thời gian nhận phòng</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.check_in_start.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.check_in_start.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.check_in_start }}
+                                        {% if form.check_in_start.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.check_in_start.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.check_in_end.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.check_in_end.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.check_in_end }}
+                                        {% if form.check_in_end.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.check_in_end.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Thời gian hợp đồng</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.contract_start.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.contract_start.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.contract_start }}
+                                        {% if form.contract_start.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.contract_start.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.contract_end.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.contract_end.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.contract_end }}
+                                        {% if form.contract_end.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.contract_end.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Thông tin bổ sung</h5>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Thời gian hợp đồng sẽ tự động được áp dụng cho các sinh viên đăng ký trong kỳ này.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'registration:period_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if period %}
+                                    Cập nhật kỳ đăng ký
+                                {% else %}
+                                    Tạo kỳ đăng ký
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Cấu hình Flatpickr cho các trường ngày
+        $(".datetimepicker").flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            locale: "vn"
+        });
+
+        $(".datepicker").flatpickr({
+            dateFormat: "Y-m-d",
+            locale: "vn"
+        });
+    });
+</script>
+{% endblock %}

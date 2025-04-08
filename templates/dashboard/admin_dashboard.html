@@ -176,7 +176,7 @@
                                     {% for registration in new_registrations %}
                                         <tr>
                                             <td>{{ registration.user.full_name }}</td>
-                                            <td>{{ registration.registration_date|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ registration.registration_date|date:"Y-m-d H:i" }}</td>
                                             <td>{{ registration.registration_period.name }}</td>
                                             <td>
                                                 <a href="{% url 'registration:application_detail' registration.id %}" class="btn btn-sm btn-primary">

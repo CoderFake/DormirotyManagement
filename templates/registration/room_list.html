@@ -11,7 +11,7 @@
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -27,10 +27,10 @@
                     <p><strong>Kỳ đăng ký:</strong> {{ current_period.name }}</p>
                 </div>
                 <div class="col-md-4">
-                    <p><strong>Thời gian bắt đầu:</strong> {{ current_period.registration_start|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Thời gian bắt đầu:</strong> {{ current_period.registration_start|date:"Y-m-d H:i" }}</p>
                 </div>
                 <div class="col-md-4">
-                    <p><strong>Thời gian kết thúc:</strong> {{ current_period.registration_end|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Thời gian kết thúc:</strong> {{ current_period.registration_end|date:"Y-m-d H:i" }}</p>
                 </div>
             </div>
         </div>

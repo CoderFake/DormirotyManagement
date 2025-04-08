@@ -11,7 +11,7 @@
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -125,7 +125,7 @@
                                             <td>
                                                 <div>{{ payment.payment_period|date:"m/Y" }}</div>
                                                 {% if payment.payment_date %}
-                                                    <small class="text-muted">{{ payment.payment_date|date:"d/m/Y H:i" }}</small>
+                                                    <small class="text-muted">{{ payment.payment_date|date:"Y-m-d H:i" }}</small>
                                                 {% endif %}
                                             </td>
                                             <td>{{ payment.amount|intcomma }} đ</td>

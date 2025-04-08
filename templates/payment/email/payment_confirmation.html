@@ -1,0 +1,81 @@
+{% extends 'email/base.html' %}
+
+{% block title %}Xác nhận thanh toán{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Xác nhận thanh toán thành công</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <p class="lead">Kính gửi {{ payment.student.get_full_name }},</p>
+                    
+                    <p>Chúng tôi xác nhận rằng khoản thanh toán của bạn đã được xử lý thành công.</p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 40%">Mã thanh toán:</th>
+                                <td>{{ payment.code }}</td>
+                            </tr>
+                            <tr>
+                                <th>Ngày thanh toán:</th>
+                                <td>{{ payment.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Số tiền:</th>
+                                <td>{{ payment.amount|floatformat:0 }} VNĐ</td>
+                            </tr>
+                            <tr>
+                                <th>Phương thức:</th>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Chi tiết hóa đơn:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Mục</th>
+                                        <th class="text-end">Số tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in payment.invoice.items.all %}
+                                    <tr>
+                                        <td>{{ item.description }}</td>
+                                        <td class="text-end">{{ item.amount|floatformat:0 }} VNĐ</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr>
+                                        <th>Tổng cộng:</th>
+                                        <td class="text-end"><strong>{{ payment.invoice.total_amount|floatformat:0 }} VNĐ</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p>Bạn có thể xem chi tiết thanh toán và tải hóa đơn tại đây:</p>
+                        <a href="{{ payment_url }}" class="btn btn-primary">Xem chi tiết</a>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-muted small">
+                            Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi:<br>
+                            Email: {{ support_email }}<br>
+                            Điện thoại: {{ support_phone }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

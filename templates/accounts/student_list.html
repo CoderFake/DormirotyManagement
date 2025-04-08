@@ -94,16 +94,3 @@
     </div>
 </div>
 {% endblock %}
-
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        $('.datatable').DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
-            },
-            "order": [[ 5, "desc" ]]
-        });
-    });
-</script>
-{% endblock %}

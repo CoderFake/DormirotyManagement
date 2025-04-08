@@ -1,0 +1,95 @@
+{% extends 'email/base.html' %}
+
+{% block title %}Thông báo hóa đơn mới{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Thông báo hóa đơn mới</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Thông báo:</strong> Một hóa đơn mới đã được tạo cho bạn
+                    </div>
+
+                    <p class="lead">Kính gửi {{ invoice.student.get_full_name }},</p>
+                    
+                    <p>Chúng tôi thông báo rằng một hóa đơn mới đã được tạo cho bạn. Vui lòng kiểm tra chi tiết và thanh toán trước hạn.</p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 40%">Mã hóa đơn:</th>
+                                <td>{{ invoice.code }}</td>
+                            </tr>
+                            <tr>
+                                <th>Ngày lập:</th>
+                                <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Hạn thanh toán:</th>
+                                <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Tổng số tiền:</th>
+                                <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Chi tiết hóa đơn:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Mục</th>
+                                        <th class="text-end">Số tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in invoice.items.all %}
+                                    <tr>
+                                        <td>{{ item.description }}</td>
+                                        <td class="text-end">{{ item.amount|floatformat:0 }} VNĐ</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr>
+                                        <th>Tổng cộng:</th>
+                                        <td class="text-end"><strong>{{ invoice.total_amount|floatformat:0 }} VNĐ</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p>Bạn có thể thanh toán trực tuyến bằng cách nhấp vào nút bên dưới:</p>
+                        <a href="{{ payment_url }}" class="btn btn-primary">Thanh toán ngay</a>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Lưu ý quan trọng:</h5>
+                        <ul>
+                            <li>Vui lòng thanh toán trước hạn để tránh phí phạt</li>
+                            <li>Bạn có thể xem lịch sử thanh toán và tải hóa đơn từ tài khoản của mình</li>
+                            <li>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-muted small">
+                            Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi:<br>
+                            Email: {{ support_email }}<br>
+                            Điện thoại: {{ support_phone }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

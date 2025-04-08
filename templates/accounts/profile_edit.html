@@ -13,23 +13,21 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm">
+            <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Chỉnh sửa thông tin hồ sơ</h5>
+                    <h5 class="card-title mb-0">Chỉnh sửa thông tin cá nhân</h5>
+                    <p class="card-text text-muted small">Cập nhật thông tin cá nhân của bạn.</p>
                 </div>
 
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
 
-                        {% if user_form.non_field_errors or profile_form.non_field_errors %}
+                        {% if form.non_field_errors %}
                         <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
                             <div>
-                                {% for error in user_form.non_field_errors %}
-                                {{ error }}
-                                {% endfor %}
-                                {% for error in profile_form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
                                 {{ error }}
                                 {% endfor %}
                             </div>
@@ -38,86 +36,100 @@
 
                         <!-- Thông tin cơ bản -->
                         <div class="mb-4">
-                            <h5 class="mb-3">Thông tin cá nhân</h5>
+                            <h5 class="mb-3">Thông tin cơ bản</h5>
+                            <p class="text-muted small mb-4">Thông tin cá nhân của bạn.</p>
 
-                            {% for field in user_form %}
-                            {% if field.full_name or field.phone_number or field.gender or field.date_of_birth or field.id_card_number or field.address %}
                             <div class="row mb-3">
-                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
-                                    {{ field.label }}
-                                </label>
+                                <label for="email" class="col-sm-3 col-form-label">Email</label>
                                 <div class="col-sm-9">
-                                    {{ field }}
-                                    {% if field.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in field.errors %}
-                                        {{ error }}
-                                        {% endfor %}
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="full_name" class="col-sm-3 col-form-label">Họ và tên</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.full_name }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="phone_number" class="col-sm-3 col-form-label">Số điện thoại</label>
+                                <div class="col-sm-9">
+                                    <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ user.phone_number }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="gender" class="col-sm-3 col-form-label">Giới tính</label>
+                                <div class="col-sm-9">
+                                    <select class="form-select" id="gender" name="gender" required>
+                                        <option value="">Chọn giới tính</option>
+                                        <option value="M" {% if user.gender == 'M' %}selected{% endif %}>Nam</option>
+                                        <option value="F" {% if user.gender == 'F' %}selected{% endif %}>Nữ</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="date_of_birth" class="col-sm-3 col-form-label">Ngày sinh</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ user.date_of_birth|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="id_card_number" class="col-sm-3 col-form-label">Số CCCD</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="id_card_number" name="id_card_number" value="{{ user.id_card_number }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="address" class="col-sm-3 col-form-label">Địa chỉ</label>
+                                <div class="col-sm-9">
+                                    <textarea class="form-control" id="address" name="address" rows="3" required>{{ user.address }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="avatar" class="col-sm-3 col-form-label">Ảnh đại diện</label>
+                                <div class="col-sm-9">
+                                    <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
+                                    {% if user.avatar %}
+                                    <div class="mt-2">
+                                        <img src="{{ user.avatar.url }}" alt="Avatar" class="img-thumbnail" style="max-width: 150px;">
                                     </div>
-                                    {% endif %}
-                                    {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
                                     {% endif %}
                                 </div>
                             </div>
-                            {% endif %}
-                            {% endfor %}
                         </div>
 
-                        <!-- Thông tin sinh viên -->
-                        {% if user.user_type == 'student' %}
+                        <!-- Thông tin tài khoản -->
                         <div class="mb-4">
-                            <h5 class="mb-3">Thông tin học tập</h5>
+                            <h5 class="mb-3">Thông tin tài khoản</h5>
+                            <p class="text-muted small mb-4">Cập nhật mật khẩu của bạn.</p>
 
-                            {% for field in user_form %}
-                            {% if  field.student_id or field.university or field.faculty or field.major or field.academic_year %}
                             <div class="row mb-3">
-                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
-                                    {{ field.label }}
-                                </label>
+                                <label for="current_password" class="col-sm-3 col-form-label">Mật khẩu hiện tại</label>
                                 <div class="col-sm-9">
-                                    {{ field }}
-                                    {% if field.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in field.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                    {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
-                                    {% endif %}
+                                    <input type="password" class="form-control" id="current_password" name="current_password">
                                 </div>
                             </div>
-                            {% endif %}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
 
-                        <!-- Thông tin bổ sung -->
-                        <div class="mb-4">
-                            <h5 class="mb-3">Thông tin bổ sung</h5>
-
-                            {% for field in profile_form %}
                             <div class="row mb-3">
-                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
-                                    {{ field.label }}
-                                </label>
+                                <label for="new_password" class="col-sm-3 col-form-label">Mật khẩu mới</label>
                                 <div class="col-sm-9">
-                                    {{ field }}
-                                    {% if field.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in field.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                    {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
-                                    {% endif %}
+                                    <input type="password" class="form-control" id="new_password" name="new_password">
                                 </div>
                             </div>
-                            {% endfor %}
+
+                            <div class="row mb-3">
+                                <label for="confirm_password" class="col-sm-3 col-form-label">Xác nhận mật khẩu</label>
+                                <div class="col-sm-9">
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">

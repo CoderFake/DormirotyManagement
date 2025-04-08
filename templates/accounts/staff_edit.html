@@ -39,28 +39,58 @@
                             <h5 class="mb-3">Thông tin cơ bản</h5>
                             <p class="text-muted small mb-4">Thông tin cá nhân của nhân viên.</p>
 
-                            {% for field in form %}
-                            {% if field.name in 'email,full_name,phone_number,gender,date_of_birth,id_card_number,address'|split:',' %}
                             <div class="row mb-3">
-                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
-                                    {{ field.label }}
-                                </label>
+                                <label for="email" class="col-sm-3 col-form-label">Email</label>
                                 <div class="col-sm-9">
-                                    {{ field }}
-                                    {% if field.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in field.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                    {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
-                                    {% endif %}
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ staff.email }}" required>
                                 </div>
                             </div>
-                            {% endif %}
-                            {% endfor %}
+
+                            <div class="row mb-3">
+                                <label for="full_name" class="col-sm-3 col-form-label">Họ và tên</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ staff.full_name }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="phone_number" class="col-sm-3 col-form-label">Số điện thoại</label>
+                                <div class="col-sm-9">
+                                    <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ staff.phone_number }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="gender" class="col-sm-3 col-form-label">Giới tính</label>
+                                <div class="col-sm-9">
+                                    <select class="form-select" id="gender" name="gender" required>
+                                        <option value="">Chọn giới tính</option>
+                                        <option value="M" {% if staff.gender == 'M' %}selected{% endif %}>Nam</option>
+                                        <option value="F" {% if staff.gender == 'F' %}selected{% endif %}>Nữ</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="date_of_birth" class="col-sm-3 col-form-label">Ngày sinh</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ staff.date_of_birth|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="id_card_number" class="col-sm-3 col-form-label">Số CCCD</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="id_card_number" name="id_card_number" value="{{ staff.id_card_number }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="address" class="col-sm-3 col-form-label">Địa chỉ</label>
+                                <div class="col-sm-9">
+                                    <textarea class="form-control" id="address" name="address" rows="3" required>{{ staff.address }}</textarea>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Thông tin tài khoản -->
@@ -68,28 +98,26 @@
                             <h5 class="mb-3">Thông tin tài khoản</h5>
                             <p class="text-muted small mb-4">Trạng thái và quyền hạn của tài khoản.</p>
 
-                            {% for field in form %}
-                            {% if field.name in 'user_type,is_active'|split:',' %}
                             <div class="row mb-3">
-                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
-                                    {{ field.label }}
-                                </label>
+                                <label for="user_type" class="col-sm-3 col-form-label">Loại người dùng</label>
                                 <div class="col-sm-9">
-                                    {{ field }}
-                                    {% if field.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in field.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                    {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
-                                    {% endif %}
+                                    <select class="form-select" id="user_type" name="user_type" required>
+                                        <option value="">Chọn loại người dùng</option>
+                                        <option value="admin" {% if staff.user_type == 'admin' %}selected{% endif %}>Quản trị viên</option>
+                                        <option value="staff" {% if staff.user_type == 'staff' %}selected{% endif %}>Nhân viên</option>
+                                    </select>
                                 </div>
                             </div>
-                            {% endif %}
-                            {% endfor %}
+
+                            <div class="row mb-3">
+                                <label for="is_active" class="col-sm-3 col-form-label">Trạng thái</label>
+                                <div class="col-sm-9">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if staff.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">Kích hoạt</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">

@@ -64,7 +64,7 @@
                                     </td>
                                     <td>{{ check_in.contract.bed.room.building.name }} - {{ check_in.contract.bed.room.room_number }}</td>
                                     <td>{{ check_in.contract.bed.bed_number }}</td>
-                                    <td>{{ check_in.check_in_date|date:"d/m/Y" }}</td>
+                                    <td>{{ check_in.check_in_date|date:"Y-m-d" }}</td>
                                     <td>
                                         {% if check_in.status == 'pending' %}
                                         <span class="badge bg-warning">Chờ xử lý</span>

@@ -59,11 +59,11 @@
                         </tr>
                         <tr>
                             <th>Ngày lập:</th>
-                            <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                            <td>{{ invoice.issue_date|date:"Y-m-d" }}</td>
                         </tr>
                         <tr>
                             <th>Ngày đến hạn:</th>
-                            <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                            <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
                         </tr>
                         <tr>
                             <th>Thời gian:</th>
@@ -216,7 +216,7 @@
                         {% for payment in payments %}
                             <tr>
                                 <td>{{ forloop.counter }}</td>
-                                <td>{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                                <td>{{ payment.payment_date|date:"Y-m-d H:i" }}</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
                                 <td>{{ payment.transaction_id|default:"-" }}</td>
                                 <td>{{ payment.amount|floatformat:0 }} VNĐ</td>

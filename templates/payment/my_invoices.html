@@ -96,8 +96,8 @@
                         {% for invoice in invoices %}
                             <tr>
                                 <td>{{ invoice.invoice_number }}</td>
-                                <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
-                                <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                                <td>{{ invoice.issue_date|date:"Y-m-d" }}</td>
+                                <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
                                 <td>
                                     {% if invoice.month and invoice.year %}
                                         Tháng {{ invoice.month }}/{{ invoice.year }}
@@ -156,13 +156,6 @@
 
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        $('.datatable').DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json"
-            },
-            "order": [[ 1, "desc" ]]
-        });
-    });
+    
 </script>
 {% endblock %}

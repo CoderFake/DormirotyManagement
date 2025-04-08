@@ -33,7 +33,7 @@
                             {% for registration in registrations %}
                                 <tr>
                                     <td>{{ registration.registration_period.name }}</td>
-                                    <td>{{ registration.registration_date|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ registration.registration_date|date:"Y-m-d H:i" }}</td>
                                     <td>{{ registration.preferred_room_type.name }}</td>
                                     <td>{{ registration.preferred_building.name }}</td>
                                     <td>

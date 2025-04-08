@@ -11,7 +11,7 @@
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -47,8 +47,8 @@
                             <p class="mb-2"><strong>Mã thanh toán:</strong> {{ payment.code }}</p>
                             <p class="mb-2"><strong>Kỳ thanh toán:</strong> {{ payment.period_start|date:"m/Y" }} - {{ payment.period_end|date:"m/Y" }}</p>
                             <p class="mb-2"><strong>Số tiền:</strong> {{ payment.amount|intcomma }} VNĐ</p>
-                            <p class="mb-2"><strong>Ngày tạo:</strong> {{ payment.created_at|date:"d/m/Y H:i" }}</p>
-                            <p class="mb-2"><strong>Ngày thanh toán:</strong> {{ payment.paid_at|date:"d/m/Y H:i"|default:"Chưa thanh toán" }}</p>
+                            <p class="mb-2"><strong>Ngày tạo:</strong> {{ payment.created_at|date:"Y-m-d H:i" }}</p>
+                            <p class="mb-2"><strong>Ngày thanh toán:</strong> {{ payment.paid_at|date:"Y-m-d H:i"|default:"Chưa thanh toán" }}</p>
                             <p class="mb-2">
                                 <strong>Trạng thái:</strong>
                                 {% if payment.status == 'pending' %}
@@ -108,7 +108,7 @@
                     <p class="mb-2"><strong>Họ và tên:</strong> {{ payment.contract.student.full_name }}</p>
                     <p class="mb-2"><strong>MSSV:</strong> {{ payment.contract.student.student_id }}</p>
                     <p class="mb-2"><strong>Giới tính:</strong> {{ payment.contract.student.get_gender_display }}</p>
-                    <p class="mb-2"><strong>Ngày sinh:</strong> {{ payment.contract.student.date_of_birth|date:"d/m/Y" }}</p>
+                    <p class="mb-2"><strong>Ngày sinh:</strong> {{ payment.contract.student.date_of_birth|date:"Y-m-d" }}</p>
                     <p class="mb-2"><strong>Email:</strong> {{ payment.contract.student.email }}</p>
                     <p class="mb-2"><strong>Số điện thoại:</strong> {{ payment.contract.student.phone_number }}</p>
                     <p class="mb-2"><strong>CMND/CCCD:</strong> {{ payment.contract.student.id_number }}</p>

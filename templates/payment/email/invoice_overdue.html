@@ -1,0 +1,99 @@
+{% extends 'email/base.html' %}
+
+{% block title %}Thông báo hóa đơn quá hạn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Thông báo hóa đơn quá hạn</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Thông báo:</strong> Hóa đơn của bạn đã quá hạn thanh toán
+                    </div>
+
+                    <p class="lead">Kính gửi {{ invoice.student.get_full_name }},</p>
+                    
+                    <p>Chúng tôi thông báo rằng hóa đơn của bạn đã quá hạn thanh toán. Vui lòng thanh toán sớm để tránh các khoản phí phát sinh.</p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 40%">Mã hóa đơn:</th>
+                                <td>{{ invoice.code }}</td>
+                            </tr>
+                            <tr>
+                                <th>Ngày lập:</th>
+                                <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Hạn thanh toán:</th>
+                                <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Số ngày quá hạn:</th>
+                                <td>{{ invoice.days_overdue }} ngày</td>
+                            </tr>
+                            <tr>
+                                <th>Tổng số tiền:</th>
+                                <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Chi tiết hóa đơn:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Mục</th>
+                                        <th class="text-end">Số tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in invoice.items.all %}
+                                    <tr>
+                                        <td>{{ item.description }}</td>
+                                        <td class="text-end">{{ item.amount|floatformat:0 }} VNĐ</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr>
+                                        <th>Tổng cộng:</th>
+                                        <td class="text-end"><strong>{{ invoice.total_amount|floatformat:0 }} VNĐ</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p>Bạn có thể thanh toán trực tuyến bằng cách nhấp vào nút bên dưới:</p>
+                        <a href="{{ payment_url }}" class="btn btn-primary">Thanh toán ngay</a>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Lưu ý quan trọng:</h5>
+                        <ul>
+                            <li>Thanh toán chậm có thể dẫn đến việc phát sinh phí phạt</li>
+                            <li>Nếu không thanh toán, bạn có thể bị tạm dừng các dịch vụ</li>
+                            <li>Vui lòng liên hệ với chúng tôi nếu bạn gặp khó khăn trong việc thanh toán</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-muted small">
+                            Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi:<br>
+                            Email: {{ support_email }}<br>
+                            Điện thoại: {{ support_phone }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

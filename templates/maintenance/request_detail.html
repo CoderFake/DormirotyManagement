@@ -127,7 +127,7 @@
                         </tr>
                         <tr>
                             <th>Ngày yêu cầu:</th>
-                            <td>{{ maintenance_request.requested_date|date:"d/m/Y H:i" }}</td>
+                            <td>{{ maintenance_request.requested_date|date:"Y-m-d H:i" }}</td>
                         </tr>
                         <tr>
                             <th>Tòa nhà:</th>
@@ -146,13 +146,13 @@
                         {% if maintenance_request.scheduled_date %}
                             <tr>
                                 <th>Ngày dự kiến:</th>
-                                <td>{{ maintenance_request.scheduled_date|date:"d/m/Y H:i" }}</td>
+                                <td>{{ maintenance_request.scheduled_date|date:"Y-m-d H:i" }}</td>
                             </tr>
                         {% endif %}
                         {% if maintenance_request.completed_date %}
                             <tr>
                                 <th>Ngày hoàn thành:</th>
-                                <td>{{ maintenance_request.completed_date|date:"d/m/Y H:i" }}</td>
+                                <td>{{ maintenance_request.completed_date|date:"Y-m-d H:i" }}</td>
                             </tr>
                         {% endif %}
                     </table>
@@ -218,7 +218,7 @@
                                                     <span class="badge bg-primary ms-1">{{ comment.user.get_user_type_display }}</span>
                                                 {% endif %}
                                             </h6>
-                                            <small class="text-muted">{{ comment.created_at|date:"d/m/Y H:i" }}</small>
+                                            <small class="text-muted">{{ comment.created_at|date:"Y-m-d H:i" }}</small>
                                         </div>
                                         <p class="mb-0 mt-1">{{ comment.comment|linebreaks }}</p>
                                     </div>

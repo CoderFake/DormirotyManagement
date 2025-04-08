@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{% if template %}Chỉnh sửa{% else %}Tạo mới{% endif %} mẫu email</h5>
+                    <p class="card-text text-muted small">Nhập thông tin chi tiết về mẫu email</p>
+                </div>
+
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Thông tin chung</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.name.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.name.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.subject.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.subject.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.subject }}
+                                        {% if form.subject.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.subject.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.type.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.type.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.type }}
+                                        {% if form.type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.type.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Nội dung email</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.content.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.content.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.content }}
+                                        {% if form.content.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.content.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="text-muted">
+                                            Các biến có thể sử dụng: {{ user }}, {{ name }}, {{ email }}, {{ dormitory }}, {{ room }}, {{ date }}, {{ time }}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.is_active.id_for_label }}" class="col-sm-4 col-form-label">
+                                        {{ form.is_active.label }}
+                                    </label>
+                                    <div class="col-sm-8">
+                                        {{ form.is_active }}
+                                        {% if form.is_active.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.is_active.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'notification:email_template_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if template %}
+                                    Cập nhật mẫu email
+                                {% else %}
+                                    Tạo mẫu email
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Cấu hình CKEditor cho trường nội dung
+        CKEDITOR.replace('{{ form.content.id_for_label }}', {
+            height: 300,
+            removeButtons: 'Source,Save,NewPage,Preview,Print,Templates,Cut,Copy,Paste,PasteText,PasteFromWord,Find,Replace,SelectAll,Scayt,Form,Checkbox,Radio,TextField,Textarea,Select,Button,ImageButton,HiddenField,Strike,Subscript,Superscript,CopyFormatting,RemoveFormat,NumberedList,BulletedList,Outdent,Indent,Blockquote,CreateDiv,JustifyLeft,JustifyCenter,JustifyRight,JustifyBlock,BidiLtr,BidiRtl,Link,Unlink,Anchor,Image,Flash,Table,HorizontalRule,Smiley,SpecialChar,PageBreak,Iframe,Maximize,ShowBlocks,About'
+        });
+    });
+</script>
+{% endblock %}

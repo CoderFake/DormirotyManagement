@@ -11,7 +11,7 @@
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -54,12 +54,12 @@
                                 </li>
                                 <li class="mb-2">
                                     <i class="fas fa-clock text-primary"></i> <strong>Ngày đăng ký:</strong><br>
-                                    <span class="ps-4">{{ application.created_at|date:"d/m/Y H:i" }}</span>
+                                    <span class="ps-4">{{ application.created_at|date:"Y-m-d H:i" }}</span>
                                 </li>
                                 {% if application.updated_at %}
                                     <li class="mb-2">
                                         <i class="fas fa-history text-primary"></i> <strong>Cập nhật lần cuối:</strong><br>
-                                        <span class="ps-4">{{ application.updated_at|date:"d/m/Y H:i" }}</span>
+                                        <span class="ps-4">{{ application.updated_at|date:"Y-m-d H:i" }}</span>
                                     </li>
                                 {% endif %}
                             </ul>
@@ -113,8 +113,8 @@
                             <h6 class="card-subtitle mb-3">Thông tin hợp đồng</h6>
                             <div class="alert alert-success">
                                 <p class="mb-1"><strong>Mã hợp đồng:</strong> {{ application.contract.code }}</p>
-                                <p class="mb-1"><strong>Ngày bắt đầu:</strong> {{ application.contract.start_date|date:"d/m/Y" }}</p>
-                                <p class="mb-1"><strong>Ngày kết thúc:</strong> {{ application.contract.end_date|date:"d/m/Y" }}</p>
+                                <p class="mb-1"><strong>Ngày bắt đầu:</strong> {{ application.contract.start_date|date:"Y-m-d" }}</p>
+                                <p class="mb-1"><strong>Ngày kết thúc:</strong> {{ application.contract.end_date|date:"Y-m-d" }}</p>
                                 <p class="mb-0"><strong>Trạng thái:</strong> 
                                     {% if application.contract.status == 'pending' %}
                                         <span class="badge bg-warning">Chờ ký</span>
@@ -195,7 +195,7 @@
                             <div class="timeline-marker bg-primary"></div>
                             <div class="timeline-content">
                                 <h6 class="mb-1">Tạo đơn đăng ký</h6>
-                                <small class="text-muted">{{ application.created_at|date:"d/m/Y H:i" }}</small>
+                                <small class="text-muted">{{ application.created_at|date:"Y-m-d H:i" }}</small>
                             </div>
                         </div>
 
@@ -214,7 +214,7 @@
                                                 Đơn bị hủy
                                             {% endif %}
                                         </h6>
-                                        <small class="text-muted">{{ update.created_at|date:"d/m/Y H:i" }}</small>
+                                        <small class="text-muted">{{ update.created_at|date:"Y-m-d H:i" }}</small>
                                         {% if update.note %}
                                             <p class="mb-0 mt-2">{{ update.note }}</p>
                                         {% endif %}
@@ -229,7 +229,7 @@
                                 <div class="timeline-marker bg-info"></div>
                                 <div class="timeline-content">
                                     <h6 class="mb-1">Tạo hợp đồng</h6>
-                                    <small class="text-muted">{{ application.contract.created_at|date:"d/m/Y H:i" }}</small>
+                                    <small class="text-muted">{{ application.contract.created_at|date:"Y-m-d H:i" }}</small>
                                 </div>
                             </div>
 
@@ -238,7 +238,7 @@
                                     <div class="timeline-marker bg-success"></div>
                                     <div class="timeline-content">
                                         <h6 class="mb-1">Ký hợp đồng thành công</h6>
-                                        <small class="text-muted">{{ application.contract.signed_at|date:"d/m/Y H:i" }}</small>
+                                        <small class="text-muted">{{ application.contract.signed_at|date:"Y-m-d H:i" }}</small>
                                     </div>
                                 </div>
                             {% endif %}

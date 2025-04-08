@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Báo cáo bảo trì{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Báo cáo bảo trì</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Bộ lọc -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="building">Tòa nhà</label>
+                                <select class="form-select" id="building">
+                                    <option value="">Tất cả</option>
+                                    {% for building in buildings %}
+                                        <option value="{{ building.id }}">{{ building.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="category">Danh mục</label>
+                                <select class="form-select" id="category">
+                                    <option value="">Tất cả</option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="status">Trạng thái</label>
+                                <select class="form-select" id="status">
+                                    <option value="">Tất cả</option>
+                                    <option value="pending">Chờ xử lý</option>
+                                    <option value="in_progress">Đang xử lý</option>
+                                    <option value="completed">Hoàn thành</option>
+                                    <option value="cancelled">Đã hủy</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="date_range">Khoảng thời gian</label>
+                                <input type="text" class="form-control" id="date_range">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thống kê tổng quan -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Tổng số yêu cầu</h5>
+                                    <h2 class="mb-0">{{ total_requests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Đang xử lý</h5>
+                                    <h2 class="mb-0">{{ in_progress_requests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Hoàn thành</h5>
+                                    <h2 class="mb-0">{{ completed_requests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Đã hủy</h5>
+                                    <h2 class="mb-0">{{ cancelled_requests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Biểu đồ -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Yêu cầu theo danh mục</h5>
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Yêu cầu theo trạng thái</h5>
+                                    <canvas id="statusChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bảng danh sách yêu cầu -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mã yêu cầu</th>
+                                    <th>Tiêu đề</th>
+                                    <th>Tòa nhà</th>
+                                    <th>Danh mục</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Ngày hoàn thành</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in maintenance_requests %}
+                                <tr>
+                                    <td>{{ request.code }}</td>
+                                    <td>{{ request.title }}</td>
+                                    <td>{{ request.room.building.name }}</td>
+                                    <td>{{ request.category.name }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ request.status_color }}">
+                                            {{ request.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ request.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ request.completed_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                                    <td>
+                                        <a href="{% url 'maintenance:request_detail' request.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Phân trang -->
+                    {% if maintenance_requests.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if maintenance_requests.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ maintenance_requests.previous_page_number }}">Trước</a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in maintenance_requests.paginator.page_range %}
+                            <li class="page-item {% if maintenance_requests.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+
+                            {% if maintenance_requests.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ maintenance_requests.next_page_number }}">Sau</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Khởi tạo date range picker
+    $('#date_range').daterangepicker({
+        locale: {
+            format: 'DD/MM/YYYY'
+        }
+    });
+
+    // Khởi tạo biểu đồ theo danh mục
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                data: {{ category_data|safe }},
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        }
+    });
+
+    // Khởi tạo biểu đồ theo trạng thái
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Chờ xử lý', 'Đang xử lý', 'Hoàn thành', 'Đã hủy'],
+            datasets: [{
+                label: 'Số lượng yêu cầu',
+                data: {{ status_data|safe }},
+                backgroundColor: [
+                    '#FFC107',
+                    '#17A2B8',
+                    '#28A745',
+                    '#DC3545'
+                ]
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

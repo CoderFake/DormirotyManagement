@@ -45,9 +45,9 @@
                                                         {{ invoice.invoice_number }}
                                                     </a>
                                                 </td>
-                                                <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                                                <td>{{ invoice.issue_date|date:"Y-m-d" }}</td>
                                                 <td>
-                                                    {{ invoice.due_date|date:"d/m/Y" }}
+                                                    {{ invoice.due_date|date:"Y-m-d" }}
                                                     {% if invoice.status == 'overdue' %}
                                                         <span class="badge bg-danger">Quá hạn</span>
                                                     {% endif %}

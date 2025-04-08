@@ -11,7 +11,7 @@
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -123,7 +123,7 @@
                                                 <div>{{ application.room.building.name }}</div>
                                                 <small class="text-muted">Phòng {{ application.room.number }} - Giường {{ application.bed_number }}</small>
                                             </td>
-                                            <td>{{ application.created_at|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ application.created_at|date:"Y-m-d H:i" }}</td>
                                             <td>
                                                 {% if application.status == 'pending' %}
                                                     <span class="badge bg-warning">Chờ duyệt</span>

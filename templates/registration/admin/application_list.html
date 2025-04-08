@@ -1,4 +1,4 @@
-{% extends 'admin/base.html' %}
+{% extends "base.html" %}
 {% load static %}
 {% load humanize %}
 
@@ -6,247 +6,119 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    
-
-    <!-- Thông báo -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Danh sách đơn đăng ký</h5>
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
         </div>
-        <div class="card-body">
-            <!-- Bộ lọc -->
-            <form method="get" class="row g-3 mb-4">
-                <div class="col-md-2">
-                    <label for="period" class="form-label">Kỳ đăng ký</label>
-                    <select name="period" id="period" class="form-select">
-                        <option value="">Tất cả</option>
-                        {% for p in periods %}
-                            <option value="{{ p.id }}" {% if request.GET.period == p.id|stringformat:"s" %}selected{% endif %}>
-                                {{ p.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="building" class="form-label">Tòa nhà</label>
-                    <select name="building" id="building" class="form-select">
-                        <option value="">Tất cả</option>
-                        {% for b in buildings %}
-                            <option value="{{ b.id }}" {% if request.GET.building == b.id|stringformat:"s" %}selected{% endif %}>
-                                {{ b.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="status" class="form-label">Trạng thái</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">Tất cả</option>
-                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Chờ duyệt</option>
-                        <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Đã duyệt</option>
-                        <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Từ chối</option>
-                        <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Đã hủy</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label for="search" class="form-label">Tìm kiếm</label>
-                    <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search }}" placeholder="Tìm theo mã đơn, MSSV, tên sinh viên...">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Tìm kiếm
-                    </button>
-                </div>
-            </form>
+    </div>
 
-            <!-- Danh sách đơn -->
-            {% if applications %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Mã đơn</th>
-                                <th>Sinh viên</th>
-                                <th>Kỳ đăng ký</th>
-                                <th>Phòng</th>
-                                <th>Giường</th>
-                                <th>Ngày đăng ký</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for application in applications %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Danh sách đơn đăng ký</h5>
+                    <p class="card-text text-muted small">Quản lý các đơn đăng ký ký túc xá</p>
+                </div>
+
+                <div class="card-body">
+                    <!-- Bộ lọc -->
+                    <form method="get" class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label for="period" class="form-label">Kỳ đăng ký</label>
+                            <select name="period" id="period" class="form-select">
+                                <option value="">Tất cả</option>
+                                {% for p in periods %}
+                                    <option value="{{ p.id }}" {% if request.GET.period == p.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ p.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Chờ duyệt</option>
+                                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Đã duyệt</option>
+                                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Từ chối</option>
+                                <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Đã hủy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Tìm kiếm</label>
+                            <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search }}" placeholder="Tìm theo mã SV, họ tên...">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Bảng danh sách -->
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle datatable">
+                            <thead>
                                 <tr>
-                                    <td>{{ application.code }}</td>
+                                    <th>Mã sinh viên</th>
+                                    <th>Họ và tên</th>
+                                    <th>Kỳ đăng ký</th>
+                                    <th>Phòng đăng ký</th>
+                                    <th>Ngày nộp</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in applications %}
+                                <tr>
+                                    <td>{{ application.user.student_id }}</td>
+                                    <td>{{ application.user.full_name }}</td>
+                                    <td>{{ application.registration_period.name }}</td>
                                     <td>
-                                        {{ application.student.full_name }}<br>
-                                        <small class="text-muted">{{ application.student.student_id }}</small>
-                                    </td>
-                                    <td>{{ application.period.name }}</td>
-                                    <td>
-                                        {{ application.room.building.name }} - 
-                                        Phòng {{ application.room.room_number }}
-                                    </td>
-                                    <td>Giường {{ application.bed.bed_number }}</td>
-                                    <td>{{ application.created_at|date:"d/m/Y H:i" }}</td>
-                                    <td>
-                                        {% if application.status == 'pending' %}
-                                            <span class="badge bg-warning">Chờ duyệt</span>
-                                        {% elif application.status == 'approved' %}
-                                            <span class="badge bg-success">Đã duyệt</span>
-                                        {% elif application.status == 'rejected' %}
-                                            <span class="badge bg-danger">Từ chối</span>
+                                        {% if application.assigned_room %}
+                                            {{ application.assigned_room.building.name }} - {{ application.assigned_room.room_number }}
                                         {% else %}
-                                            <span class="badge bg-secondary">Đã hủy</span>
+                                            Chưa phân
                                         {% endif %}
                                     </td>
+                                    <td>{{ application.registration_date|date:"d/m/Y H:i" }}</td>
                                     <td>
+                                        <span class="badge bg-{{ application.status_color }}">
+                                            {{ application.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
                                         <div class="btn-group">
-                                            <a href="{% url 'registration:admin_application_detail' application.id %}" class="btn btn-sm btn-info">
+                                            <a href="{% url 'registration:application_detail' application.id %}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             {% if application.status == 'pending' %}
-                                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ application.id }}">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ application.id }}">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
+                                            <a href="{% url 'registration:application_approve' application.id %}" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            <a href="{% url 'registration:application_reject' application.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-times"></i>
+                                            </a>
                                             {% endif %}
                                         </div>
-
-                                        <!-- Modal duyệt đơn -->
-                                        {% if application.status == 'pending' %}
-                                            <div class="modal fade" id="approveModal{{ application.id }}" tabindex="-1" aria-labelledby="approveModalLabel{{ application.id }}" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="approveModalLabel{{ application.id }}">Duyệt đơn đăng ký</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <form action="{% url 'registration:admin_approve_application' application.id %}" method="post">
-                                                            {% csrf_token %}
-                                                            <div class="modal-body">
-                                                                <p class="mb-3">Bạn có chắc chắn muốn duyệt đơn đăng ký này?</p>
-                                                                <p class="mb-0"><strong>Mã đơn:</strong> {{ application.code }}</p>
-                                                                <p class="mb-0"><strong>Sinh viên:</strong> {{ application.student.full_name }} ({{ application.student.student_id }})</p>
-                                                                <p class="mb-0"><strong>Phòng:</strong> {{ application.room.building.name }} - Phòng {{ application.room.room_number }}</p>
-                                                                <p class="mb-3"><strong>Giường:</strong> Giường {{ application.bed.bed_number }}</p>
-                                                                <div class="form-group">
-                                                                    <label for="note{{ application.id }}" class="form-label">Ghi chú</label>
-                                                                    <textarea name="note" id="note{{ application.id }}" class="form-control" rows="3" placeholder="Nhập ghi chú nếu có..."></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                                                                <button type="submit" class="btn btn-success">
-                                                                    <i class="fas fa-check"></i> Duyệt đơn
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Modal từ chối đơn -->
-                                            <div class="modal fade" id="rejectModal{{ application.id }}" tabindex="-1" aria-labelledby="rejectModalLabel{{ application.id }}" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="rejectModalLabel{{ application.id }}">Từ chối đơn đăng ký</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <form action="{% url 'registration:admin_reject_application' application.id %}" method="post">
-                                                            {% csrf_token %}
-                                                            <div class="modal-body">
-                                                                <p class="mb-3">Bạn có chắc chắn muốn từ chối đơn đăng ký này?</p>
-                                                                <p class="mb-0"><strong>Mã đơn:</strong> {{ application.code }}</p>
-                                                                <p class="mb-0"><strong>Sinh viên:</strong> {{ application.student.full_name }} ({{ application.student.student_id }})</p>
-                                                                <p class="mb-0"><strong>Phòng:</strong> {{ application.room.building.name }} - Phòng {{ application.room.room_number }}</p>
-                                                                <p class="mb-3"><strong>Giường:</strong> Giường {{ application.bed.bed_number }}</p>
-                                                                <div class="form-group">
-                                                                    <label for="reason{{ application.id }}" class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
-                                                                    <textarea name="reason" id="reason{{ application.id }}" class="form-control" rows="3" placeholder="Nhập lý do từ chối..." required></textarea>
-                                                                    <div class="invalid-feedback">Vui lòng nhập lý do từ chối.</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                                                                <button type="submit" class="btn btn-danger">
-                                                                    <i class="fas fa-times"></i> Từ chối đơn
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        {% endif %}
                                     </td>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Không tìm thấy đơn đăng ký nào
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
-                <!-- Phân trang -->
-                {% if applications.has_other_pages %}
-                    <nav aria-label="Page navigation" class="mt-4">
-                        <ul class="pagination justify-content-center">
-                            {% if applications.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page=1{% if request.GET.period %}&period={{ request.GET.period }}{% endif %}{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="First">
-                                        <span aria-hidden="true">&laquo;&laquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ applications.previous_page_number }}{% if request.GET.period %}&period={{ request.GET.period }}{% endif %}{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Previous">
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </a>
-                                </li>
-                            {% endif %}
-
-                            {% for num in applications.paginator.page_range %}
-                                {% if applications.number == num %}
-                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                {% elif num > applications.number|add:'-3' and num < applications.number|add:'3' %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ num }}{% if request.GET.period %}&period={{ request.GET.period }}{% endif %}{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-
-                            {% if applications.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ applications.next_page_number }}{% if request.GET.period %}&period={{ request.GET.period }}{% endif %}{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Next">
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ applications.paginator.num_pages }}{% if request.GET.period %}&period={{ request.GET.period }}{% endif %}{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Last">
-                                        <span aria-hidden="true">&raquo;&raquo;</span>
-                                    </a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                {% endif %}
-            {% else %}
-                <div class="text-center py-4">
-                    <img src="{% static 'images/empty.svg' %}" alt="No data" class="img-fluid mb-3" style="max-width: 200px;">
-                    <h5>Không có đơn đăng ký nào</h5>
-                    <p class="text-muted">Chưa có đơn đăng ký nào trong hệ thống.</p>
-                </div>
-            {% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -254,17 +126,31 @@
 
 {% block extra_js %}
 <script>
-// Auto submit form when select changes
-document.getElementById('period').addEventListener('change', function() {
-    this.form.submit();
-});
+$(document).ready(function() {
 
-document.getElementById('building').addEventListener('change', function() {
-    this.form.submit();
-});
+    $('#status').on('change', function() {
+        var status = $(this).val();
+        if (status) {
+            window.location.href = '?status=' + status;
+        } else {
+            window.location.href = window.location.pathname;
+        }
+    });
 
-document.getElementById('status').addEventListener('change', function() {
-    this.form.submit();
+    $('#period').on('change', function() {
+        var period = $(this).val();
+        if (period) {
+            window.location.href = '?period=' + period;
+        } else {
+            window.location.href = window.location.pathname;
+        }
+    });
+
+    $('#search').on('keypress', function(e) {
+        if (e.which == 13) {
+            $(this).closest('form').submit();
+        }
+    });
 });
 </script>
-{% endblock %} 
+{% endblock %}

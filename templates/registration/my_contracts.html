@@ -19,7 +19,7 @@
                 </div>
                 <div class="flex-grow-1">
                     <h5 class="alert-heading">Hợp đồng đang hoạt động</h5>
-                    <p>Bạn đang có hợp đồng thuê phòng tại ký túc xá. Hợp đồng có hiệu lực từ <strong>{{ active_contract.start_date|date:"d/m/Y" }}</strong> đến <strong>{{ active_contract.end_date|date:"d/m/Y" }}</strong>.</p>
+                    <p>Bạn đang có hợp đồng thuê phòng tại ký túc xá. Hợp đồng có hiệu lực từ <strong>{{ active_contract.start_date|date:"Y-m-d" }}</strong> đến <strong>{{ active_contract.end_date|date:"Y-m-d" }}</strong>.</p>
                     <hr>
                     <p class="mb-0">
                         <a href="{% url 'registration:contract_detail' active_contract.id %}" class="alert-link">
@@ -53,7 +53,7 @@
                             {% for contract in contracts %}
                                 <tr>
                                     <td>{{ contract.contract_number }}</td>
-                                    <td>{{ contract.start_date|date:"d/m/Y" }} - {{ contract.end_date|date:"d/m/Y" }}</td>
+                                    <td>{{ contract.start_date|date:"Y-m-d" }} - {{ contract.end_date|date:"Y-m-d" }}</td>
                                     <td>{{ contract.room.building.name }} - {{ contract.room.room_number }}</td>
                                     <td>{{ contract.monthly_fee|floatformat:0 }} VNĐ</td>
                                     <td>
