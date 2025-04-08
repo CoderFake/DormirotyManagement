@@ -172,7 +172,7 @@ function initializeComponents() {
 
         flatpickr(".datetimepicker", {
             locale: "vn",
-            dateFormat: "d/m/Y H:i",
+            dateFormat: "Y-m-d H:i",
             enableTime: true,
             time_24hr: true,
             allowInput: true
