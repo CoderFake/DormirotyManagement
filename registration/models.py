@@ -135,7 +135,8 @@ class Contract(models.Model):
 
     STATUS_CHOICES = (
         ('draft', 'Dự thảo'),
-        ('pending', 'Chờ ký'),
+        ('pending_signature', 'Chờ sinh viên ký'),
+        ('pending_payment', 'Chờ thanh toán cọc'),
         ('active', 'Đang hiệu lực'),
         ('terminated', 'Đã chấm dứt'),
         ('expired', 'Hết hạn'),
@@ -155,8 +156,9 @@ class Contract(models.Model):
     end_date = models.DateField(_('ngày kết thúc'))
     monthly_fee = models.DecimalField(_('phí hàng tháng'), max_digits=10, decimal_places=2)
     deposit_amount = models.DecimalField(_('tiền đặt cọc'), max_digits=10, decimal_places=2)
-    status = models.CharField(_('trạng thái'), max_length=20, choices=STATUS_CHOICES, default='draft')
+    status = models.CharField(_('trạng thái'), max_length=20, choices=STATUS_CHOICES)
     signed_by_student = models.BooleanField(_('sinh viên đã ký'), default=False)
+    student_signature = models.TextField(_('chữ ký sinh viên'), blank=True, null=True)
     signed_by_admin = models.BooleanField(_('quản trị viên đã ký'), default=False)
     student_signed_date = models.DateTimeField(_('ngày sinh viên ký'), null=True, blank=True)
     admin_signed_date = models.DateTimeField(_('ngày quản trị viên ký'), null=True, blank=True)
@@ -175,55 +177,78 @@ class Contract(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.contract_number:
-
             year = timezone.now().strftime("%Y")
             month = timezone.now().strftime("%m")
-            count = Contract.objects.filter(created_at__year=timezone.now().year).count() + 1
-            self.contract_number = f"HD-{year}{month}-{count:04d}"
-
-        if self.signed_by_student and self.signed_by_admin:
-        
-            if self.status not in ['terminated', 'canceled']:
-                today = timezone.now().date()
-                if today < self.start_date:
-                    self.status = 'pending'
-                elif self.start_date <= today <= self.end_date:
-                    self.status = 'active'
-                else:
-                    self.status = 'expired'
-        else:
-            if self.status not in ['terminated', 'canceled']:
-                self.status = 'draft'
+            count = Contract.objects.filter(created_at__year=timezone.now().year).count()
+            self.contract_number = f"HD-{year}{month}-{count + 1:04d}"
 
         super().save(*args, **kwargs)
 
-    def sign_by_student(self):
+    def sign_by_student(self, signature_data):
         self.signed_by_student = True
+        self.student_signature = signature_data
         self.student_signed_date = timezone.now()
-        self.save()
+        if self.status == 'pending_signature':
+            self.status = 'pending_payment'
+        self.save(update_fields=['signed_by_student', 'student_signature', 'student_signed_date', 'status'])
 
-    def sign_by_admin(self):
-        self.signed_by_admin = True
-        self.admin_signed_date = timezone.now()
-        self.save()
+    def activate_contract(self):
+        if self.signed_by_student and self.status == 'pending_payment':
+            today = timezone.now().date()
+            if self.start_date <= today <= self.end_date:
+                self.status = 'active'
+            elif today < self.start_date:
+                pass
+            else:
+                self.status = 'expired'
+            self.save(update_fields=['status'])
 
     def terminate(self):
-        self.status = 'terminated'
-        self.save()
+        if self.status != 'terminated':
+            self.status = 'terminated'
+            self.save(update_fields=['status'])
 
     def cancel(self):
-        self.status = 'canceled'
-        self.save()
+        if self.status not in ['canceled', 'terminated', 'expired']:
+            self.status = 'canceled'
+            self.save(update_fields=['status'])
 
     def is_active(self):
-        return self.status == 'active'
+        return self.status == 'active' and self.start_date <= timezone.now().date() <= self.end_date
 
     def get_duration_months(self):
         months = (self.end_date.year - self.start_date.year) * 12 + (self.end_date.month - self.start_date.month)
-        return max(1, months)  # Tối thiểu 1 tháng
+        if self.end_date.day >= self.start_date.day:
+            months += 1
+        return max(1, months)
 
     def get_total_amount(self):
         return self.monthly_fee * self.get_duration_months()
+
+    def get_status_color(self):
+        """Trả về màu sắc bootstrap tương ứng với trạng thái"""
+        color_map = {
+            'draft': 'secondary',
+            'pending_signature': 'warning',
+            'pending_payment': 'info',
+            'active': 'success',
+            'terminated': 'danger',
+            'expired': 'dark',
+            'canceled': 'secondary',
+        }
+        return color_map.get(self.status, 'secondary')
+        
+    def get_deposit_invoice(self):
+        """Lấy hóa đơn đặt cọc liên quan đến hợp đồng này"""
+        from payment.models import Invoice 
+        try:
+            deposit_invoice = Invoice.objects.filter(
+                contract=self,
+                invoice_items__fee_type__code='DEPOSIT'
+            ).first()
+            return deposit_invoice
+        except Invoice.DoesNotExist:
+            return None
 
 
 class CheckIn(models.Model):

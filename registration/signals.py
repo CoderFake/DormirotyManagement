@@ -106,10 +106,38 @@ def create_deposit_invoice(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Invoice)
 def handle_deposit_payment(sender, instance, **kwargs):
     """Handle deposit payment completion"""
-    if instance.contract and instance.contract.status == 'draft' and instance.status == 'paid':
-        # If this is a deposit invoice and it's fully paid, activate the contract
-        instance.contract.status = 'active'
-        instance.contract.save()
+    if instance.contract:
+        is_deposit_invoice = instance.invoice_items.filter(fee_type__code='DEPOSIT').exists()
+        
+        if is_deposit_invoice and instance.status == 'paid' and instance.contract.status == 'pending_payment' and instance.contract.signed_by_student:
+            instance.contract.activate_contract()
+            
+            category, _ = NotificationCategory.objects.get_or_create(
+                name="Hợp đồng",
+                defaults={
+                    'icon': 'fa-file-contract',
+                    'color': 'success',
+                    'description': 'Thông báo về hợp đồng thuê phòng'
+                }
+            )
+            notification = Notification.objects.create(
+                title="Xác nhận hoàn tất thủ tục đăng ký",
+                content=f"Bạn đã ký hợp đồng và thanh toán tiền cọc thành công. Hợp đồng #{instance.contract.contract_number} sẽ có hiệu lực từ ngày {instance.contract.start_date.strftime('%d/%m/%Y')}. Bạn có thể chuẩn bị thủ tục nhận phòng.",
+                category=category,
+                sender_id=None, 
+                priority="high",
+                is_global=False,
+            )
+            UserNotification.objects.create(
+                notification=notification,
+                user=instance.contract.user
+            )
+            
+            if hasattr(instance.contract, 'registration'):
+                registration = instance.contract.registration
+                if registration.status == 'approved':
+                    registration.status = 'confirmed'
+                    registration.save(update_fields=['status'])
 
 
 @receiver(post_save, sender=RoomRegistration)
@@ -167,13 +195,12 @@ def create_registration_notification(sender, instance, created, **kwargs):
                     user=admin
                 )
 
-    # Chỉ xử lý thông báo khi đơn bị từ chối, trạng thái 'approved' đã được xử lý trong view
     elif not created and 'status' in kwargs.get('update_fields', []) and instance.status == 'rejected':
         notification = Notification.objects.create(
             title="Đơn đăng ký phòng bị từ chối",
             content=f"Đơn đăng ký phòng của bạn đã bị từ chối. Lý do: {instance.admin_notes or 'Không có lý do cụ thể.'}",
             category=category,
-            sender_id=None, # Cần xem xét lại nếu muốn hiển thị người từ chối
+            sender_id=None,
             priority="high",
             is_global=False,
         )

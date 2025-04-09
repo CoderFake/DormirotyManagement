@@ -13,7 +13,7 @@ urlpatterns = [
     path('my-contracts/', views.my_contracts_view, name='my_contracts'),
 
     path('contract/<uuid:contract_id>/', views.contract_detail_view, name='contract_detail'),
-    path('contract/<uuid:contract_id>/sign/', views.sign_contract_view, name='sign_contract'),
+    path('contract/<uuid:contract_id>/sign/', views.contract_sign_view, name='contract_sign'),
     path('application/<uuid:application_id>/cancel/', views.application_cancel_view, name='application_cancel'),
 
     # Views cho Admin

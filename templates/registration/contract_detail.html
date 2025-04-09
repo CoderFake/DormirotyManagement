@@ -5,312 +5,158 @@
 {% block title %}Chi tiết hợp đồng #{{ contract.contract_number }} - Quản lý Ký túc xá{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="card shadow-sm mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Chi tiết hợp đồng #{{ contract.contract_number }}</h6>
-            <div>
-                {% if is_admin %}
-                    <a href="{% url 'registration:contract_list' %}" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-arrow-left me-1"></i> Danh sách hợp đồng
-                    </a>
-                {% else %}
-                    <a href="{% url 'registration:my_contracts' %}" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-arrow-left me-1"></i> Hợp đồng của tôi
-                    </a>
-                {% endif %}
+<div class="container-fluid py-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Chi tiết hợp đồng #{{ contract.contract_number }}</h1>
+        <div>
+            {% if not is_admin %}
+                <a href="{% url 'registration:my_contracts' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left fa-sm text-gray-600 me-1"></i> Hợp đồng của tôi
+                </a>
+            {% else %}
+                 <a href="{% url 'registration:contract_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left fa-sm text-gray-600 me-1"></i> Danh sách hợp đồng
+                </a>
+            {% endif %}
 
-                <div class="btn-group ms-2">
-                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-cog me-1"></i> Thao tác
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                        {% if is_admin %}
-                            {% if not contract.signed_by_admin %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'registration:contract_approve' contract.id %}">
-                                        <i class="fas fa-signature me-1 text-success"></i> Ký duyệt hợp đồng
-                                    </a>
-                                </li>
-                            {% endif %}
+            {% if not is_admin and contract.status == 'pending_signature' and not contract.signed_by_student %}
+                <a href="{% url 'registration:contract_sign' contract.id %}" class="btn btn-success btn-sm ms-2">
+                    <i class="fas fa-signature fa-sm me-1"></i> Ký hợp đồng
+                </a>
+            {% endif %}
 
-                            {% if not check_in %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'registration:check_in_create' contract.id %}">
-                                        <i class="fas fa-clipboard-check me-1 text-primary"></i> Tạo biên bản nhận phòng
-                                    </a>
-                                </li>
-                            {% endif %}
+            {% if not is_admin and contract.status == 'pending_payment' %}
+                {% with deposit_invoice=contract.get_deposit_invoice %}
+                    {% if deposit_invoice and deposit_invoice.status == 'pending' %}
+                        <a href="{% url 'payment:invoice_detail' deposit_invoice.id %}" class="btn btn-warning btn-sm ms-2">
+                            <i class="fas fa-file-invoice-dollar fa-sm me-1"></i> Thanh toán tiền cọc
+                        </a>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
 
-                            {% if not check_out and contract.status == 'active' %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'registration:check_out_create' contract.id %}">
-                                        <i class="fas fa-door-open me-1 text-warning"></i> Tạo biên bản trả phòng
-                                    </a>
-                                </li>
-                            {% endif %}
-
-                            <li><hr class="dropdown-divider"></li>
-
-                            <li>
-                                <a class="dropdown-item" href="#" onclick="printContract()">
-                                    <i class="fas fa-print me-1 text-info"></i> In hợp đồng
-                                </a>
-                            </li>
-                        {% else %}
-                            {% if not contract.signed_by_student %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'registration:sign_contract' contract.id %}">
-                                        <i class="fas fa-signature me-1 text-success"></i> Ký hợp đồng
-                                    </a>
-                                </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item" href="#" onclick="printContract()">
-                                    <i class="fas fa-print me-1 text-info"></i> In hợp đồng
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
+            <button class="btn btn-info btn-sm ms-2" onclick="printContract()">
+                <i class="fas fa-print fa-sm me-1"></i> In hợp đồng
+            </button>
+            
+            {% if is_admin %}
+            <div class="btn-group ms-2">
+                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButtonAdmin" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-cog fa-sm me-1"></i> Thao tác Admin
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButtonAdmin">
+                    {% if contract.status != 'terminated' and contract.status != 'canceled' and contract.status != 'expired' %}
+                        <li>
+                            <a class="dropdown-item text-danger" href="{% url 'registration:contract_cancel' contract.id %}" onclick="return confirm('Bạn có chắc chắn muốn hủy hợp đồng này không? Hành động này không thể hoàn tác.');">
+                                <i class="fas fa-times-circle me-1"></i> Hủy hợp đồng
+                            </a>
+                        </li>
+                         <li>
+                            <form action="#" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn chấm dứt hợp đồng này không?');">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-ban me-1"></i> Chấm dứt hợp đồng
+                                </button>
+                            </form>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
+            {% endif %}
         </div>
+    </div>
 
+    <div class="card shadow mb-4" id="contract-content-to-print">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Thông tin chi tiết</h6>
+        </div>
         <div class="card-body">
             <div class="row mb-4">
                 <!-- Thông tin hợp đồng -->
-                <div class="col-md-6">
-                    <h5 class="text-primary">Thông tin hợp đồng</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <th style="width: 40%;">Số hợp đồng:</th>
-                            <td>{{ contract.contract_number }}</td>
-                        </tr>
-                        <tr>
-                            <th>Ngày bắt đầu:</th>
-                            <td>{{ contract.start_date|date:"d/m/Y" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Ngày kết thúc:</th>
-                            <td>{{ contract.end_date|date:"d/m/Y" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Phí hàng tháng:</th>
-                            <td>{{ contract.monthly_fee|intcomma }} VNĐ</td>
-                        </tr>
-                        <tr>
-                            <th>Tiền đặt cọc:</th>
-                            <td>{{ contract.deposit_amount|intcomma }} VNĐ</td>
-                        </tr>
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <h5 class="text-primary mb-3">Thông tin hợp đồng</h5>
+                    <table class="table table-sm table-borderless">
+                        <tr><th>Số hợp đồng:</th> <td>{{ contract.contract_number }}</td> </tr>
+                        <tr><th>Thời hạn:</th> <td>{{ contract.start_date|date:"d/m/Y" }} - {{ contract.end_date|date:"d/m/Y" }} ({{ contract.get_duration_months }} tháng)</td> </tr>
+                        <tr><th>Phí hàng tháng:</th> <td>{{ contract.monthly_fee|intcomma }} VNĐ</td> </tr>
+                        <tr><th>Tiền đặt cọc:</th> <td class="fw-bold text-danger">{{ contract.deposit_amount|intcomma }} VNĐ</td> </tr>
                         <tr>
                             <th>Trạng thái:</th>
                             <td>
-                                {% if contract.status == 'draft' %}
-                                    <span class="badge bg-secondary">Dự thảo</span>
-                                {% elif contract.status == 'pending' %}
-                                    <span class="badge bg-warning">Chờ ký</span>
-                                {% elif contract.status == 'active' %}
-                                    <span class="badge bg-success">Đang hiệu lực</span>
-                                {% elif contract.status == 'terminated' %}
-                                    <span class="badge bg-danger">Đã chấm dứt</span>
-                                {% elif contract.status == 'expired' %}
-                                    <span class="badge bg-dark">Hết hạn</span>
-                                {% elif contract.status == 'canceled' %}
-                                    <span class="badge bg-secondary">Đã hủy</span>
-                                {% endif %}
+                                <span class="badge bg-{{ contract.get_status_color|default:'secondary' }}">
+                                    {{ contract.get_status_display }}
+                                </span>
                             </td>
                         </tr>
                     </table>
                 </div>
 
                 <!-- Thông tin sinh viên -->
-                <div class="col-md-6">
-                    <h5 class="text-primary">Thông tin sinh viên</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <th style="width: 40%;">Mã sinh viên:</th>
-                            <td>{{ contract.user.student_id }}</td>
-                        </tr>
-                        <tr>
-                            <th>Họ và tên:</th>
-                            <td>{{ contract.user.full_name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Email:</th>
-                            <td>{{ contract.user.email }}</td>
-                        </tr>
-                        <tr>
-                            <th>Số điện thoại:</th>
-                            <td>{{ contract.user.phone_number|default:"-" }}</td>
-                        </tr>
-                        <tr>
-                            <th>CMND/CCCD:</th>
-                            <td>{{ contract.user.id_card_number|default:"-" }}</td>
-                        </tr>
+                <div class="col-lg-6">
+                    <h5 class="text-primary mb-3">Thông tin sinh viên</h5>
+                     <table class="table table-sm table-borderless">
+                        <tr><th>Mã sinh viên:</th> <td>{{ contract.user.student_id }}</td> </tr>
+                        <tr><th>Họ và tên:</th> <td>{{ contract.user.full_name }}</td> </tr>
+                        <tr><th>Email:</th> <td>{{ contract.user.email }}</td> </tr>
+                        <tr><th>Số điện thoại:</th> <td>{{ contract.user.phone|default:"-" }}</td> </tr>
+                        <tr><th>CMND/CCCD:</th> <td>{{ contract.user.id_card_number|default:"-" }}</td> </tr>
                     </table>
                 </div>
             </div>
+
+            <hr class="my-4">
 
             <div class="row mb-4">
                 <!-- Thông tin phòng ở -->
-                <div class="col-md-6">
-                    <h5 class="text-primary">Thông tin phòng ở</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <th style="width: 40%;">Tòa nhà:</th>
-                            <td>{{ contract.room.building.name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Phòng:</th>
-                            <td>{{ contract.room.room_number }}</td>
-                        </tr>
-                        <tr>
-                            <th>Giường:</th>
-                            <td>Giường {{ contract.bed.bed_number }}</td>
-                        </tr>
-                        <tr>
-                            <th>Loại phòng:</th>
-                            <td>{{ contract.room.room_type.name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Sức chứa:</th>
-                            <td>{{ contract.room.room_type.capacity }} người</td>
-                        </tr>
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <h5 class="text-primary mb-3">Thông tin phòng ở</h5>
+                    <table class="table table-sm table-borderless">
+                        <tr><th>Tòa nhà:</th> <td>{{ contract.room.building.name }}</td> </tr>
+                        <tr><th>Phòng:</th> <td>{{ contract.room.room_number }}</td> </tr>
+                        <tr><th>Giường:</th> <td>Giường {{ contract.bed.bed_number }}</td> </tr>
+                        <tr><th>Loại phòng:</th> <td>{{ contract.room.room_type.name }}</td> </tr>
+                        <tr><th>Sức chứa:</th> <td>{{ contract.room.room_type.capacity }} người</td> </tr>
                     </table>
                 </div>
 
-                <!-- Thông tin xác nhận -->
-                <div class="col-md-6">
-                    <h5 class="text-primary">Thông tin xác nhận</h5>
-                    <table class="table table-bordered">
+                <!-- Thông tin xác nhận ký -->
+                <div class="col-lg-6">
+                    <h5 class="text-primary mb-3">Thông tin xác nhận ký</h5>
+                     <table class="table table-sm table-borderless">
                         <tr>
-                            <th style="width: 40%;">Trạng thái sinh viên:</th>
+                            <th>Sinh viên ký:</th>
                             <td>
                                 {% if contract.signed_by_student %}
-                                    <span class="text-success">
-                                        <i class="fas fa-check-circle me-1"></i> Đã ký
-                                        {% if contract.student_signed_date %}
-                                            ({{ contract.student_signed_date|date:"d/m/Y H:i" }})
+                                    <div class="signature-display">
+                                        <p>Đã ký ngày: {{ contract.student_signed_date|date:"d/m/Y H:i" }}</p>
+                                        {% if contract.student_signature %}
+                                            <img src="{{ contract.student_signature }}" alt="Chữ ký sinh viên">
+                                        {% else %}
+                                            <span class="text-success fst-italic">(Đã ký - không có ảnh)</span>
                                         {% endif %}
-                                    </span>
+                                    </div>
+                                {% elif contract.status == 'pending_signature' and not is_admin %}
+                                    <a href="{% url 'registration:contract_sign' contract.id %}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-signature me-1"></i> Đi đến trang ký
+                                    </a>
                                 {% else %}
-                                    <span class="text-warning">
-                                        <i class="fas fa-clock me-1"></i> Chưa ký
-                                    </span>
+                                    <span class="text-warning"><i class="fas fa-clock me-1"></i> Chưa ký</span>
                                 {% endif %}
                             </td>
-                        </tr>
-                        <tr>
-                            <th>Trạng thái quản trị:</th>
-                            <td>
-                                {% if contract.signed_by_admin %}
-                                    <span class="text-success">
-                                        <i class="fas fa-check-circle me-1"></i> Đã ký
-                                        {% if contract.admin_signed_date %}
-                                            ({{ contract.admin_signed_date|date:"d/m/Y H:i" }})
-                                        {% endif %}
-                                    </span>
-                                {% else %}
-                                    <span class="text-warning">
-                                        <i class="fas fa-clock me-1"></i> Chưa ký
-                                    </span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Ngày tạo:</th>
-                            <td>{{ contract.created_at|date:"d/m/Y H:i" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Cập nhật cuối:</th>
-                            <td>{{ contract.updated_at|date:"d/m/Y H:i" }}</td>
                         </tr>
                     </table>
                 </div>
             </div>
 
+            <hr class="my-4">
+
             <!-- Điều khoản và điều kiện -->
-            <div class="card mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Điều khoản và điều kiện</h6>
-                </div>
-                <div class="card-body contract-terms">
-                    {% if contract.terms_and_conditions %}
-                        {{ contract.terms_and_conditions|linebreaks }}
-                    {% else %}
-                        <h5>HỢP ĐỒNG NỘI TRÚ KÝ TÚC XÁ</h5>
-
-                        <p>Hôm nay, ngày {{ contract.created_at|date:"d" }} tháng {{ contract.created_at|date:"m" }} năm {{ contract.created_at|date:"Y" }}, tại Ký túc xá trường Đại học Bưu chính Viễn thông, chúng tôi gồm:</p>
-
-                        <p><strong>BÊN A: BAN QUẢN LÝ KÝ TÚC XÁ</strong></p>
-                        <p>Đại diện: Ông/Bà ...........................................</p>
-                        <p>Chức vụ: ...................................................</p>
-                        <p>Địa chỉ: ..................................................</p>
-                        <p>Điện thoại: ...............................................</p>
-
-                        <p><strong>BÊN B: NGƯỜI THUÊ CHỖ Ở (SINH VIÊN)</strong></p>
-                        <p>Họ và tên: {{ contract.user.full_name }}</p>
-                        <p>Mã số sinh viên: {{ contract.user.student_id }}</p>
-                        <p>Ngày sinh: {{ contract.user.date_of_birth|date:"d/m/Y" }}</p>
-                        <p>Số CMND/CCCD: {{ contract.user.id_card_number }}</p>
-                        <p>Điện thoại: {{ contract.user.phone_number }}</p>
-                        <p>Email: {{ contract.user.email }}</p>
-
-                        <p>Hai bên thống nhất ký hợp đồng thuê chỗ ở nội trú với các điều khoản sau:</p>
-
-                        <p><strong>Điều 1: Bên A cung cấp cho Bên B chỗ ở tại:</strong></p>
-                        <p>- Phòng số: {{ contract.room.room_number }}</p>
-                        <p>- Tòa nhà: {{ contract.room.building.name }}</p>
-                        <p>- Giường số: {{ contract.bed.bed_number }}</p>
-                        <p>- Thời hạn từ {{ contract.start_date|date:"d/m/Y" }} đến {{ contract.end_date|date:"d/m/Y" }}</p>
-
-                        <p><strong>Điều 2: Bên B phải thực hiện đầy đủ các khoản thanh toán sau:</strong></p>
-                        <p>- Tiền phòng: {{ contract.monthly_fee|intcomma }} VNĐ/tháng</p>
-                        <p>- Tiền đặt cọc: {{ contract.deposit_amount|intcomma }} VNĐ</p>
-                        <p>- Thanh toán theo định kỳ: hàng tháng, trước ngày 10 của tháng</p>
-
-                        <p><strong>Điều 3: Bên B có trách nhiệm:</strong></p>
-                        <ul>
-                            <li>Chấp hành nội quy KTX, giữ gìn an ninh, trật tự trong KTX</li>
-                            <li>Giữ gìn vệ sinh, bảo quản tài sản trong phòng ở</li>
-                            <li>Thanh toán đầy đủ, đúng hạn các khoản phí</li>
-                            <li>Không được tự ý sửa chữa, cải tạo phòng ở</li>
-                            <li>Bồi thường thiệt hại nếu làm hư hỏng tài sản</li>
-                        </ul>
-
-                        <p><strong>Điều 4: Bên A có trách nhiệm:</strong></p>
-                        <ul>
-                            <li>Đảm bảo cơ sở vật chất, an ninh cho sinh viên</li>
-                            <li>Cung cấp đầy đủ điện, nước, dịch vụ theo quy định</li>
-                            <li>Sửa chữa kịp thời các hư hỏng thuộc trách nhiệm của BQL</li>
-                            <li>Tạo môi trường sống lành mạnh, thân thiện</li>
-                        </ul>
-
-                        <p><strong>Điều 5: Chấm dứt hợp đồng</strong></p>
-                        <p>Hợp đồng chấm dứt trong các trường hợp sau:</p>
-                        <ul>
-                            <li>Hết thời hạn ghi trong hợp đồng</li>
-                            <li>Sinh viên vi phạm nghiêm trọng nội quy KTX</li>
-                            <li>Theo thỏa thuận của hai bên</li>
-                        </ul>
-
-                        <p>Hợp đồng được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p>
-
-                        <div class="row mt-5">
-                            <div class="col-6 text-center">
-                                <p><strong>ĐẠI DIỆN BÊN A</strong></p>
-                                {% if contract.signed_by_admin %}
-                                    <p class="signature"><i class="fas fa-signature text-primary"></i></p>
-                                {% endif %}
-                            </div>
-                            <div class="col-6 text-center">
-                                <p><strong>BÊN B (SINH VIÊN)</strong></p>
-                                {% if contract.signed_by_student %}
-                                    <p class="signature"><i class="fas fa-signature text-success"></i></p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endif %}
+            <div class="mb-4">
+                <h5 class="text-primary mb-3">Điều khoản và điều kiện</h5>
+                <div class="contract-terms">
+                    {% autoescape off %}
+                        {{ contract.terms_and_conditions|default:"<p class='text-muted'>Nội dung điều khoản hợp đồng chưa được cập nhật.</p>"|linebreaksbr }}
+                    {% endautoescape %}
                 </div>
             </div>
 
@@ -470,45 +316,85 @@
 
 {% block extra_css %}
 <style>
-    .contract-terms {
-        font-size: 0.9rem;
+.contract-terms {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e3e6f0;
+    padding: 15px;
+    background-color: #f8f9fc;
+    border-radius: .35rem;
+    font-size: 0.9rem;
+}
+.signature-display img {
+    max-width: 200px;
+    max-height: 60px;
+    border: 1px dashed #ccc;
+    background-color: #fff;
+    margin-top: 5px;
+}
+.signature-display p {
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    color: #858796;
+}
+.table-sm th, .table-sm td {
+    padding: 0.4rem;
+    font-size: 0.9rem;
+}
+.table-borderless th {
+     width: 30%;
+     font-weight: 600;
+     color: #5a5c69;
+}
+.text-primary {
+    color: #4e73df !important;
+}
+h5.text-primary {
+    font-weight: bold;
+}
+
+@media print {
+    .no-print, .no-print * {
+        display: none !important;
     }
 
-    .signature {
-        margin-top: 60px;
-        font-size: 2rem;
+    .card {
+        border: none !important;
+        box-shadow: none !important;
     }
 
-    @media print {
-        .no-print, .no-print * {
-            display: none !important;
-        }
-
-        .card {
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        .card-header {
-            background-color: white !important;
-            border-bottom: 1px solid #000 !important;
-        }
-
-        .container-fluid {
-            padding: 0 !important;
-        }
-
-        body {
-            font-size: 12pt;
-        }
+    .card-header {
+        background-color: white !important;
+        border-bottom: 1px solid #000 !important;
     }
+
+    .container-fluid {
+        padding: 0 !important;
+    }
+
+    body {
+        font-size: 12pt;
+    }
+}
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    function printContract() {
-        window.print();
-    }
+function printContract() {
+    const printContent = document.getElementById('contract-content-to-print').cloneNode(true);
+    const printWindow = window.open('', '_blank', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>In Hợp Đồng</title>');
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+        printWindow.document.write(link.outerHTML);
+    });
+    printWindow.document.write('<style> body { margin: 20px; font-family: sans-serif; } .btn, .dropdown { display: none !important; } </style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContent.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 500);
+}
 </script>
 {% endblock %}
