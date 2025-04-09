@@ -9,19 +9,21 @@ from django.utils import timezone
 
 from .models import Contract
 from payment.models import Invoice, InvoiceItem, FeeType
+from .models import RoomRegistration, NotificationCategory, Notification, UserNotification
 
 
 @receiver(pre_save, sender=Contract)
 def handle_contract_status_change(sender, instance, **kwargs):
     """Handle contract status changes"""
-    if not instance.pk:  # New contract
+    if instance._state.adding:
+        return 
+    
+    try:
+        old_instance = Contract.objects.get(pk=instance.pk)
+    except Contract.DoesNotExist:
         return
-    
-    old_instance = Contract.objects.get(pk=instance.pk)
-    
-    # If status changed from draft to active
+
     if old_instance.status == 'draft' and instance.status == 'active':
-        # Send approval email
         context = {
             'contract': instance,
             'site_name': settings.SITE_NAME,
@@ -43,9 +45,7 @@ def handle_contract_status_change(sender, instance, **kwargs):
             fail_silently=False
         )
     
-    # If status changed from active to cancelled
     elif old_instance.status == 'active' and instance.status == 'cancelled':
-        # Send cancellation email
         context = {
             'contract': instance,
             'site_name': settings.SITE_NAME,
@@ -109,3 +109,75 @@ def handle_deposit_payment(sender, instance, **kwargs):
         # If this is a deposit invoice and it's fully paid, activate the contract
         instance.contract.status = 'active'
         instance.contract.save()
+
+
+@receiver(post_save, sender=RoomRegistration)
+def create_registration_notification(sender, instance, created, **kwargs):
+    """Tạo thông báo khi đăng ký phòng được tạo hoặc cập nhật trạng thái"""
+    category, _ = NotificationCategory.objects.get_or_create(
+        name="Đăng ký phòng",
+        defaults={
+            'icon': 'fa-home',
+            'color': 'primary',
+            'description': 'Thông báo về đăng ký phòng ở ký túc xá'
+        }
+    )
+
+    if created:
+        notification = Notification.objects.create(
+            title="Đơn đăng ký phòng đã được tạo",
+            content=f"Đơn đăng ký phòng của bạn đã được tạo thành công và đang chờ xét duyệt. Kỳ đăng ký: {instance.registration_period.name}.",
+            category=category,
+            sender_id=None,
+            priority="normal",
+            is_global=False,
+        )
+
+        UserNotification.objects.create(
+            notification=notification,
+            user=instance.user
+        )
+
+        admin_category, _ = NotificationCategory.objects.get_or_create(
+            name="Quản lý đăng ký",
+            defaults={
+                'icon': 'fa-clipboard-list',
+                'color': 'info',
+                'description': 'Thông báo cho quản trị viên về đăng ký phòng'
+            }
+        )
+
+        from accounts.models import User
+        admins = User.objects.filter(user_type__in=['admin', 'staff'], is_active=True)
+
+        if admins.exists():
+            admin_notification = Notification.objects.create(
+                title="Có đơn đăng ký phòng mới",
+                content=f"Sinh viên {instance.user.full_name} đã đăng ký phòng ở ký túc xá. Kỳ đăng ký: {instance.registration_period.name}.",
+                category=admin_category,
+                sender_id=None,
+                priority="normal",
+                is_global=False,
+            )
+
+            for admin in admins:
+                UserNotification.objects.create(
+                    notification=admin_notification,
+                    user=admin
+                )
+
+    # Chỉ xử lý thông báo khi đơn bị từ chối, trạng thái 'approved' đã được xử lý trong view
+    elif not created and 'status' in kwargs.get('update_fields', []) and instance.status == 'rejected':
+        notification = Notification.objects.create(
+            title="Đơn đăng ký phòng bị từ chối",
+            content=f"Đơn đăng ký phòng của bạn đã bị từ chối. Lý do: {instance.admin_notes or 'Không có lý do cụ thể.'}",
+            category=category,
+            sender_id=None, # Cần xem xét lại nếu muốn hiển thị người từ chối
+            priority="high",
+            is_global=False,
+        )
+
+        UserNotification.objects.create(
+            notification=notification,
+            user=instance.user
+        )
