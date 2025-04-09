@@ -535,7 +535,8 @@ def application_detail_view(request, application_id):
     registration = get_object_or_404(RoomRegistration, pk=application_id)
 
     context = {
-        'registration': registration,
+        'registration': registration,  
+        'application': registration,  
         'page_title': f'Chi tiết đơn đăng ký',
         'breadcrumbs': [
             {'title': 'Đăng ký phòng', 'url': '#'},
@@ -569,7 +570,7 @@ def application_approve_view(request, application_id):
                 available_rooms = Room.objects.filter(
                     status__in=['available', 'partially_occupied'],
                     is_active=True
-                ).select_related('building', 'room_type') # Tối ưu query
+                ).select_related('building', 'room_type')
 
                 if preferred_building:
                     available_rooms = available_rooms.filter(building=preferred_building)
@@ -577,12 +578,20 @@ def application_approve_view(request, application_id):
                 if preferred_room_type:
                     available_rooms = available_rooms.filter(room_type=preferred_room_type)
 
+                if not available_rooms.exists():
+                    available_rooms = Room.objects.filter(
+                        status__in=['available', 'partially_occupied'],
+                        is_active=True
+                    ).select_related('building', 'room_type')
+                    
+                    if not available_rooms.exists():
+                        messages.error(request, 'Không có phòng nào có sẵn trong hệ thống.')
+                        return redirect('registration:application_detail', application_id=application_id)
+
                 room = None
                 bed = None
 
-                # Tìm phòng có giường trống
                 for r in available_rooms:
-                    # Lấy giường trống đầu tiên trong phòng
                     available_bed = Bed.objects.filter(room=r, status='available').first()
                     if available_bed:
                         room = r
@@ -591,22 +600,17 @@ def application_approve_view(request, application_id):
 
                 if not room or not bed:
                     messages.error(request, 'Không tìm thấy phòng và giường phù hợp có sẵn.')
-                    # Trả về trang chi tiết để admin có thể xem lại hoặc xử lý thủ công
                     return redirect('registration:application_detail', application_id=application_id)
 
-                # 2. Cập nhật đơn đăng ký
                 registration.assigned_room = room
                 registration.assigned_bed = bed
                 registration.status = 'approved'
                 registration.approval_date = timezone.now()
                 registration.save(update_fields=['assigned_room', 'assigned_bed', 'status', 'approval_date'])
 
-                # 3. Cập nhật trạng thái giường
-                bed.status = 'reserved' # Giường được giữ cho đến khi hợp đồng hoàn tất
+                bed.status = 'reserved'
                 bed.save(update_fields=['status'])
 
-                # 4. Tạo hợp đồng
-                # Tính toán giá và cọc dựa trên RoomType
                 monthly_fee = room.room_type.price_per_month
                 deposit_amount = room.room_type.deposit
 
@@ -619,11 +623,9 @@ def application_approve_view(request, application_id):
                     end_date=registration.registration_period.contract_end,
                     monthly_fee=monthly_fee,
                     deposit_amount=deposit_amount,
-                    # Đặt trạng thái chờ sinh viên ký
-                    status='pending_signature' 
+                    status='pending_signature'
                 )
 
-                # 5. Gửi thông báo cho sinh viên yêu cầu ký hợp đồng và thanh toán
                 category, _ = NotificationCategory.objects.get_or_create(
                     name="Hợp đồng",
                     defaults={
@@ -633,17 +635,16 @@ def application_approve_view(request, application_id):
                     }
                 )
                 
-                # Tạo URL để sinh viên ký hợp đồng
                 sign_contract_url = request.build_absolute_uri(
-                    reverse('registration:contract_sign', args=[contract.id]) # Giả sử URL name là contract_sign
+                    reverse('registration:contract_sign', args=[contract.id])
                 )
-                # Tạo URL xem hóa đơn cọc
-                deposit_invoice = Invoice.objects.filter(contract=contract, invoice_items__fee_type__code='DEPOSIT').first()
-                invoice_url = "#" # Mặc định nếu không tìm thấy hóa đơn cọc
+                
+                deposit_invoice = Invoice.objects.filter(contract=contract, items__fee_type__code='DEPOSIT').first()
+                invoice_url = "#"
                 if deposit_invoice:
-                     invoice_url = request.build_absolute_uri(
-                         reverse('payment:invoice_detail', args=[deposit_invoice.id]) # Giả sử URL name là invoice_detail
-                     )
+                    invoice_url = request.build_absolute_uri(
+                        reverse('payment:invoice_detail', args=[deposit_invoice.id])
+                    )
 
                 notification_content = (
                     f"Đơn đăng ký của bạn đã được duyệt! Phòng: {room.building.name} - {room.room_number}, Giường: {bed.bed_number}.<br>"
@@ -655,7 +656,7 @@ def application_approve_view(request, application_id):
                     title="Yêu cầu ký hợp đồng và thanh toán cọc",
                     content=notification_content,
                     category=category,
-                    sender=request.user, # Người duyệt đơn
+                    sender=request.user,
                     priority="high",
                     is_global=False,
                 )
@@ -666,11 +667,10 @@ def application_approve_view(request, application_id):
                 )
 
                 messages.success(request,
-                                 f'Đã phê duyệt đơn đăng ký. Hợp đồng #{contract.contract_number} và hóa đơn cọc đã được tạo. Sinh viên cần ký hợp đồng và thanh toán.')
+                                f'Đã phê duyệt đơn đăng ký. Hợp đồng #{contract.contract_number} và hóa đơn cọc đã được tạo. Sinh viên cần ký hợp đồng và thanh toán.')
                 return redirect('registration:contract_list')
 
         except Exception as e:
-
             messages.error(request, f'Đã xảy ra lỗi trong quá trình phê duyệt: {str(e)}')
             return redirect('registration:application_detail', application_id=application_id)
     

@@ -6,12 +6,10 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    
-
     <!-- Thông báo -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none d-none" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-none" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -26,11 +24,11 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Chi tiết đơn đăng ký</h5>
                         <div>
-                            {% if application.status == 'pending' %}
+                            {% if registration.status == 'pending' %}
                                 <span class="badge bg-warning">Chờ duyệt</span>
-                            {% elif application.status == 'approved' %}
+                            {% elif registration.status == 'approved' %}
                                 <span class="badge bg-success">Đã duyệt</span>
-                            {% elif application.status == 'rejected' %}
+                            {% elif registration.status == 'rejected' %}
                                 <span class="badge bg-danger">Từ chối</span>
                             {% else %}
                                 <span class="badge bg-secondary">Đã hủy</span>
@@ -43,94 +41,74 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h6 class="card-subtitle mb-3">Thông tin đơn</h6>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">
-                                    <i class="fas fa-hashtag text-primary"></i> <strong>Mã đơn:</strong><br>
-                                    <span class="ps-4">{{ application.code }}</span>
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-calendar text-primary"></i> <strong>Kỳ đăng ký:</strong><br>
-                                    <span class="ps-4">{{ application.period.name }}</span>
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-clock text-primary"></i> <strong>Ngày đăng ký:</strong><br>
-                                    <span class="ps-4">{{ application.created_at|date:"Y-m-d H:i" }}</span>
-                                </li>
-                                {% if application.updated_at %}
-                                    <li class="mb-2">
-                                        <i class="fas fa-history text-primary"></i> <strong>Cập nhật lần cuối:</strong><br>
-                                        <span class="ps-4">{{ application.updated_at|date:"Y-m-d H:i" }}</span>
-                                    </li>
-                                {% endif %}
-                            </ul>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th style="width: 40%">Mã đơn:</th>
+                                    <td>{{ registration.id|truncatechars:8 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Kỳ đăng ký:</th>
+                                    <td>{{ registration.registration_period.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Ngày đăng ký:</th>
+                                    <td>{{ registration.registration_date|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Trạng thái:</th>
+                                    <td>
+                                        {% if registration.status == 'pending' %}
+                                            <span class="badge bg-warning">Chờ duyệt</span>
+                                        {% elif registration.status == 'approved' %}
+                                            <span class="badge bg-success">Đã duyệt</span>
+                                        {% elif registration.status == 'rejected' %}
+                                            <span class="badge bg-danger">Từ chối</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Đã hủy</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                         <div class="col-md-6">
                             <h6 class="card-subtitle mb-3">Thông tin phòng</h6>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">
-                                    <i class="fas fa-building text-primary"></i> <strong>Tòa nhà:</strong><br>
-                                    <span class="ps-4">{{ application.room.building.name }}</span>
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-door-open text-primary"></i> <strong>Phòng:</strong><br>
-                                    <span class="ps-4">{{ application.room.room_number }}</span>
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-bed text-primary"></i> <strong>Giường:</strong><br>
-                                    <span class="ps-4">Giường {{ application.bed.bed_number }}</span>
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-money-bill-wave text-primary"></i> <strong>Giá/tháng:</strong><br>
-                                    <span class="ps-4">{{ application.room.room_type.price_per_month|intcomma }} VNĐ</span>
-                                </li>
-                            </ul>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th style="width: 40%">Tòa nhà:</th>
+                                    <td>{{ registration.assigned_room.building.name|default:"Chưa phân phòng" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Phòng:</th>
+                                    <td>{{ registration.assigned_room.room_number|default:"Chưa phân phòng" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Giường:</th>
+                                    <td>{{ registration.assigned_bed.bed_number|default:"Chưa phân phòng" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Loại phòng:</th>
+                                    <td>{{ registration.assigned_room.room_type.name|default:"Chưa phân phòng" }}</td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
 
                     <!-- Yêu cầu đặc biệt -->
-                    {% if application.special_requirements %}
+                    {% if registration.special_requirements %}
                         <div class="mb-4">
                             <h6 class="card-subtitle mb-3">Yêu cầu đặc biệt</h6>
                             <div class="alert alert-light">
-                                {{ application.special_requirements|linebreaks }}
+                                {{ registration.special_requirements|linebreaks }}
                             </div>
                         </div>
                     {% endif %}
 
                     <!-- Ghi chú từ admin -->
-                    {% if application.admin_note %}
+                    {% if registration.admin_notes %}
                         <div class="mb-4">
                             <h6 class="card-subtitle mb-3">Ghi chú từ admin</h6>
-                            <div class="alert {% if application.status == 'rejected' %}alert-danger{% else %}alert-info{% endif %}">
-                                {{ application.admin_note|linebreaks }}
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    <!-- Thông tin hợp đồng -->
-                    {% if application.contract %}
-                        <div class="mb-4">
-                            <h6 class="card-subtitle mb-3">Thông tin hợp đồng</h6>
-                            <div class="alert alert-success">
-                                <p class="mb-1"><strong>Mã hợp đồng:</strong> {{ application.contract.code }}</p>
-                                <p class="mb-1"><strong>Ngày bắt đầu:</strong> {{ application.contract.start_date|date:"Y-m-d" }}</p>
-                                <p class="mb-1"><strong>Ngày kết thúc:</strong> {{ application.contract.end_date|date:"Y-m-d" }}</p>
-                                <p class="mb-0"><strong>Trạng thái:</strong> 
-                                    {% if application.contract.status == 'pending' %}
-                                        <span class="badge bg-warning">Chờ ký</span>
-                                    {% elif application.contract.status == 'active' %}
-                                        <span class="badge bg-success">Đang hiệu lực</span>
-                                    {% elif application.contract.status == 'expired' %}
-                                        <span class="badge bg-secondary">Hết hạn</span>
-                                    {% elif application.contract.status == 'terminated' %}
-                                        <span class="badge bg-danger">Đã chấm dứt</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                            <div class="d-grid gap-2">
-                                <a href="{% url 'registration:contract_detail' application.contract.id %}" class="btn btn-outline-primary">
-                                    <i class="fas fa-file-contract"></i> Xem chi tiết hợp đồng
-                                </a>
+                            <div class="alert {% if registration.status == 'rejected' %}alert-danger{% else %}alert-info{% endif %}">
+                                {{ registration.admin_notes|linebreaks }}
                             </div>
                         </div>
                     {% endif %}
@@ -140,15 +118,15 @@
                         <a href="{% url 'registration:application_list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Quay lại
                         </a>
-                        {% if application.status == 'pending' %}
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                                <i class="fas fa-times"></i> Hủy đơn
-                            </button>
-                        {% endif %}
-                        {% if application.status == 'approved' and application.contract and application.contract.status == 'pending' %}
-                            <a href="{% url 'registration:sign_contract' application.contract.id %}" class="btn btn-success">
-                                <i class="fas fa-signature"></i> Ký hợp đồng
-                            </a>
+                        {% if registration.status == 'pending' %}
+                            {% if request.user.user_type == 'admin' or request.user.user_type == 'staff' %}
+                                <a href="{% url 'registration:application_approve' registration.id %}" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Duyệt
+                                </a>
+                                <a href="{% url 'registration:application_reject' registration.id %}" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Từ chối
+                                </a>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -162,163 +140,46 @@
                     <h5 class="mb-0">Thông tin sinh viên</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2">
-                            <i class="fas fa-user text-primary"></i> <strong>Họ tên:</strong><br>
-                            <span class="ps-4">{{ application.student.full_name }}</span>
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-id-card text-primary"></i> <strong>MSSV:</strong><br>
-                            <span class="ps-4">{{ application.student.student_id }}</span>
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-envelope text-primary"></i> <strong>Email:</strong><br>
-                            <span class="ps-4">{{ application.student.email }}</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-phone text-primary"></i> <strong>Số điện thoại:</strong><br>
-                            <span class="ps-4">{{ application.student.phone_number }}</span>
-                        </li>
-                    </ul>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 40%">MSSV:</th>
+                            <td>{{ registration.user.student_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Họ tên:</th>
+                            <td>{{ registration.user.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ registration.user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Số điện thoại:</th>
+                            <td>{{ registration.user.phone_number }}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
-            <!-- Timeline -->
-            <div class="card">
+            <!-- Thông tin ưu tiên -->
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Lịch sử đơn</h5>
+                    <h5 class="mb-0">Thông tin đăng ký</h5>
                 </div>
                 <div class="card-body">
-                    <div class="timeline">
-                        <!-- Tạo đơn -->
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-primary"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Tạo đơn đăng ký</h6>
-                                <small class="text-muted">{{ application.created_at|date:"Y-m-d H:i" }}</small>
-                            </div>
-                        </div>
-
-                        <!-- Cập nhật trạng thái -->
-                        {% if application.status_updates.all %}
-                            {% for update in application.status_updates.all %}
-                                <div class="timeline-item">
-                                    <div class="timeline-marker {% if update.status == 'approved' %}bg-success{% elif update.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}"></div>
-                                    <div class="timeline-content">
-                                        <h6 class="mb-1">
-                                            {% if update.status == 'approved' %}
-                                                Đơn được duyệt
-                                            {% elif update.status == 'rejected' %}
-                                                Đơn bị từ chối
-                                            {% else %}
-                                                Đơn bị hủy
-                                            {% endif %}
-                                        </h6>
-                                        <small class="text-muted">{{ update.created_at|date:"Y-m-d H:i" }}</small>
-                                        {% if update.note %}
-                                            <p class="mb-0 mt-2">{{ update.note }}</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-
-                        <!-- Tạo hợp đồng -->
-                        {% if application.contract %}
-                            <div class="timeline-item">
-                                <div class="timeline-marker bg-info"></div>
-                                <div class="timeline-content">
-                                    <h6 class="mb-1">Tạo hợp đồng</h6>
-                                    <small class="text-muted">{{ application.contract.created_at|date:"Y-m-d H:i" }}</small>
-                                </div>
-                            </div>
-
-                            {% if application.contract.status == 'active' %}
-                                <div class="timeline-item">
-                                    <div class="timeline-marker bg-success"></div>
-                                    <div class="timeline-content">
-                                        <h6 class="mb-1">Ký hợp đồng thành công</h6>
-                                        <small class="text-muted">{{ application.contract.signed_at|date:"Y-m-d H:i" }}</small>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                    </div>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 40%">Tòa nhà mong muốn:</th>
+                            <td>{{ registration.preferred_building.name|default:"Không chọn" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Loại phòng mong muốn:</th>
+                            <td>{{ registration.preferred_room_type.name|default:"Không chọn" }}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Modal hủy đơn -->
-{% if application.status == 'pending' %}
-    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cancelModalLabel">Xác nhận hủy đơn</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Bạn có chắc chắn muốn hủy đơn đăng ký này?</p>
-                    <p class="mb-0"><strong>Mã đơn:</strong> {{ application.code }}</p>
-                    <p class="mb-0"><strong>Phòng:</strong> {{ application.room.building.name }} - Phòng {{ application.room.room_number }}</p>
-                    <p class="mb-0"><strong>Giường:</strong> Giường {{ application.bed.bed_number }}</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <form action="{% url 'registration:cancel_application' application.id %}" method="post" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Hủy đơn
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endif %}
-
 {% endblock %}
-
-{% block extra_css %}
-<style>
-/* Timeline styles */
-.timeline {
-    position: relative;
-    padding-left: 3rem;
-    margin-bottom: 0;
-}
-
-.timeline:before {
-    content: '';
-    position: absolute;
-    left: 1rem;
-    top: 0;
-    height: 100%;
-    width: 2px;
-    background-color: #e9ecef;
-}
-
-.timeline-item {
-    position: relative;
-    padding-bottom: 1.5rem;
-}
-
-.timeline-item:last-child {
-    padding-bottom: 0;
-}
-
-.timeline-marker {
-    position: absolute;
-    left: -2.45rem;
-    width: 1rem;
-    height: 1rem;
-    border-radius: 50%;
-}
-
-.timeline-content {
-    padding-left: 0.5rem;
-}
-</style>
-{% endblock %} 

@@ -21,17 +21,17 @@ def generate_room_fee_invoices(request):
         month = int(request.POST.get('month', timezone.now().month))
         year = int(request.POST.get('year', timezone.now().year))
         
-        # Lấy danh sách hợp đồng đang hoạt động
+
         active_contracts = Contract.objects.filter(
             status='active',
             start_date__lte=datetime.date(year, month, 1),
             end_date__gte=datetime.date(year, month, 1)
         )
         
-        # Tạo hóa đơn cho từng hợp đồng
+
         created_count = 0
         for contract in active_contracts:
-            # Kiểm tra xem đã có hóa đơn cho tháng này chưa
+
             existing_invoice = Invoice.objects.filter(
                 contract=contract,
                 month=month,
@@ -40,7 +40,7 @@ def generate_room_fee_invoices(request):
             ).exists()
             
             if not existing_invoice:
-                # Tìm hoặc tạo hóa đơn cho tháng này
+
                 invoice = Invoice.objects.filter(
                     contract=contract,
                     month=month,
@@ -63,7 +63,7 @@ def generate_room_fee_invoices(request):
                         status='pending'
                     )
                 
-                # Thêm mục tiền phòng
+
                 room_fee_type, _ = FeeType.objects.get_or_create(
                     code='ROOM_FEE',
                     defaults={
@@ -114,17 +114,17 @@ def generate_utility_invoices(request):
             messages.error(request, 'Loại tiện ích không hợp lệ.')
             return redirect('payment:generate_utility_invoices')
         
-        # Lấy danh sách phòng có người ở
+
         from dormitory.models import Room
         occupied_rooms = Room.objects.filter(
             status__in=['partially_occupied', 'fully_occupied']
         )
         
-        # Tạo hóa đơn cho từng phòng
+
         created_count = 0
         
         for room in occupied_rooms:
-            # Lấy danh sách hợp đồng đang hoạt động trong phòng
+
             active_contracts = Contract.objects.filter(
                 room=room,
                 status='active',
@@ -135,14 +135,14 @@ def generate_utility_invoices(request):
             if not active_contracts.exists():
                 continue
             
-            # Tính số người trong phòng
+
             occupants_count = active_contracts.count()
             
-            # Xử lý hóa đơn điện
+
             if utility_type in ['electricity', 'both']:
                 from payment.payment_models import ElectricityReading
                 
-                # Lấy chỉ số điện của tháng này
+
                 current_reading = ElectricityReading.objects.filter(
                     room=room,
                     month=month,
@@ -150,9 +150,9 @@ def generate_utility_invoices(request):
                 ).first()
                 
                 if current_reading and not current_reading.is_billed:
-                    # Tạo hóa đơn điện
+
                     for contract in active_contracts:
-                        # Kiểm tra xem đã có hóa đơn điện cho tháng này chưa
+
                         existing_invoice = Invoice.objects.filter(
                             contract=contract,
                             month=month,
@@ -161,7 +161,7 @@ def generate_utility_invoices(request):
                         ).exists()
                         
                         if not existing_invoice:
-                            # Tìm hoặc tạo hóa đơn cho tháng này
+
                             invoice = Invoice.objects.filter(
                                 contract=contract,
                                 month=month,
@@ -184,7 +184,7 @@ def generate_utility_invoices(request):
                                     status='pending'
                                 )
                             
-                            # Thêm mục tiền điện
+
                             electricity_fee_type, _ = FeeType.objects.get_or_create(
                                 code='ELECTRICITY',
                                 defaults={
@@ -194,7 +194,7 @@ def generate_utility_invoices(request):
                                 }
                             )
                             
-                            # Tính tiền điện cho mỗi người
+
                             per_person_amount = current_reading.amount / occupants_count
                             
                             InvoiceItem.objects.create(
@@ -208,16 +208,16 @@ def generate_utility_invoices(request):
                             
                             created_count += 1
                     
-                    # Đánh dấu đã lập hóa đơn
+
                     current_reading.is_billed = True
                     current_reading.invoice = invoice
                     current_reading.save()
             
-            # Xử lý hóa đơn nước
+
             if utility_type in ['water', 'both']:
                 from payment.payment_models import WaterReading
                 
-                # Lấy chỉ số nước của tháng này
+
                 current_reading = WaterReading.objects.filter(
                     room=room,
                     month=month,
@@ -225,9 +225,9 @@ def generate_utility_invoices(request):
                 ).first()
                 
                 if current_reading and not current_reading.is_billed:
-                    # Tạo hóa đơn nước
+
                     for contract in active_contracts:
-                        # Kiểm tra xem đã có hóa đơn nước cho tháng này chưa
+
                         existing_invoice = Invoice.objects.filter(
                             contract=contract,
                             month=month,
@@ -236,7 +236,7 @@ def generate_utility_invoices(request):
                         ).exists()
                         
                         if not existing_invoice:
-                            # Tìm hoặc tạo hóa đơn cho tháng này
+
                             invoice = Invoice.objects.filter(
                                 contract=contract,
                                 month=month,
@@ -259,7 +259,7 @@ def generate_utility_invoices(request):
                                     status='pending'
                                 )
                             
-                            # Thêm mục tiền nước
+
                             water_fee_type, _ = FeeType.objects.get_or_create(
                                 code='WATER',
                                 defaults={
@@ -269,7 +269,7 @@ def generate_utility_invoices(request):
                                 }
                             )
                             
-                            # Tính tiền nước cho mỗi người
+
                             per_person_amount = current_reading.amount / occupants_count
                             
                             InvoiceItem.objects.create(
@@ -283,7 +283,7 @@ def generate_utility_invoices(request):
                             
                             created_count += 1
                     
-                    # Đánh dấu đã lập hóa đơn
+
                     current_reading.is_billed = True
                     current_reading.invoice = invoice
                     current_reading.save()
