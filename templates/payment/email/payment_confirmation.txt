@@ -1,0 +1,29 @@
+Xác nhận thanh toán thành công
+
+Kính gửi {{ payment.invoice.user.full_name }},
+
+Chúng tôi xin thông báo rằng khoản thanh toán của bạn đã được xác nhận thành công. Chi tiết thanh toán như sau:
+
+Số hóa đơn: {{ payment.invoice.invoice_number }}
+Ngày thanh toán: {{ payment.payment_date|date:"d/m/Y H:i" }}
+Phương thức thanh toán: {{ payment.get_payment_method_display }}
+Mã giao dịch: {{ payment.transaction_id }}
+Số tiền thanh toán: {{ payment.amount|floatformat:0 }} VNĐ
+
+{% if payment.invoice.contract %}
+Thông tin hợp đồng:
+- Số hợp đồng: {{ payment.invoice.contract.contract_number }}
+- Phòng: {{ payment.invoice.contract.room.building.name }} - {{ payment.invoice.contract.room.room_number }}
+- Thời hạn: {{ payment.invoice.contract.start_date|date:"d/m/Y" }} - {{ payment.invoice.contract.end_date|date:"d/m/Y" }}
+{% endif %}
+
+Bạn có thể xem chi tiết hóa đơn và lịch sử thanh toán tại: {{ invoice_url }}
+
+Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua:
+- Email: {{ support_email }}
+- Điện thoại: {{ support_phone }}
+- Địa chỉ: {{ support_address }}
+
+Email này được gửi tự động, vui lòng không trả lời.
+
+© {{ current_year }} {{ site_name }}. All rights reserved.

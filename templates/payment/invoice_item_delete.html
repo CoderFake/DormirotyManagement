@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h5 class="card-title mb-0">{{ page_title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Bạn có chắc chắn muốn xóa mục hóa đơn này? Hành động này không thể hoàn tác.
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>Thông tin mục hóa đơn</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Loại phí</th>
+                            <td>{{ item.fee_type.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Mô tả</th>
+                            <td>{{ item.description }}</td>
+                        </tr>
+                        <tr>
+                            <th>Số lượng</th>
+                            <td>{{ item.quantity }}</td>
+                        </tr>
+                        <tr>
+                            <th>Đơn giá</th>
+                            <td>{{ item.unit_price|floatformat:0 }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <th>Thành tiền</th>
+                            <td class="fw-bold text-primary">{{ item.amount|floatformat:0 }} VNĐ</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6>Thông tin hóa đơn</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Số hóa đơn</th>
+                            <td>{{ invoice.invoice_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Sinh viên</th>
+                            <td>
+                                {{ invoice.user.full_name }}
+                                {% if invoice.user.student_id %}
+                                <br>
+                                <small class="text-muted">{{ invoice.user.student_id }}</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Phòng</th>
+                            <td>
+                                {% if invoice.room %}
+                                {{ invoice.room.building.name }} - {{ invoice.room.room_number }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Tổng tiền</th>
+                            <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Xác nhận xóa
+                    </button>
+                    <a href="{% url 'payment:invoice_detail' invoice.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

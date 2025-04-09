@@ -1,276 +1,111 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
-from .models import RoomRegistration, Contract, CheckIn, CheckOut
-from notification.models import Notification, NotificationCategory, UserNotification
+
+from .models import Contract
+from payment.models import Invoice, InvoiceItem, FeeType
 
 
-@receiver(post_save, sender=RoomRegistration)
-def create_registration_notification(sender, instance, created, **kwargs):
-    """Tạo thông báo khi đăng ký phòng được tạo hoặc cập nhật trạng thái"""
-    category, _ = NotificationCategory.objects.get_or_create(
-        name="Đăng ký phòng",
-        defaults={
-            'icon': 'fa-home',
-            'color': 'primary',
-            'description': 'Thông báo về đăng ký phòng ở ký túc xá'
+@receiver(pre_save, sender=Contract)
+def handle_contract_status_change(sender, instance, **kwargs):
+    """Handle contract status changes"""
+    if not instance.pk:  # New contract
+        return
+    
+    old_instance = Contract.objects.get(pk=instance.pk)
+    
+    # If status changed from draft to active
+    if old_instance.status == 'draft' and instance.status == 'active':
+        # Send approval email
+        context = {
+            'contract': instance,
+            'site_name': settings.SITE_NAME,
+            'support_email': settings.SUPPORT_EMAIL,
+            'support_phone': settings.SUPPORT_PHONE,
+            'support_address': settings.SUPPORT_ADDRESS,
+            'deposit_url': settings.BASE_URL + reverse('payment:deposit_payment', args=[instance.id])
         }
-    )
-
-    if created:
-        notification = Notification.objects.create(
-            title="Đơn đăng ký phòng đã được tạo",
-            content=f"Đơn đăng ký phòng của bạn đã được tạo thành công và đang chờ xét duyệt. Kỳ đăng ký: {instance.registration_period.name}.",
-            category=category,
-            sender=None,
-            priority="normal",
-            is_global=False,
+        
+        html_message = render_to_string('registration/email/contract_approved.html', context)
+        plain_message = strip_tags(html_message)
+        
+        send_mail(
+            subject=f'[{settings.SITE_NAME}] Hợp đồng của bạn đã được phê duyệt',
+            message=plain_message,
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[instance.user.email],
+            fail_silently=False
         )
-
-        UserNotification.objects.create(
-            notification=notification,
-            user=instance.user
-        )
-
-        admin_category, _ = NotificationCategory.objects.get_or_create(
-            name="Quản lý đăng ký",
-            defaults={
-                'icon': 'fa-clipboard-list',
-                'color': 'info',
-                'description': 'Thông báo cho quản trị viên về đăng ký phòng'
-            }
-        )
-
-        from accounts.models import User
-        admins = User.objects.filter(user_type__in=['admin', 'staff'], is_active=True)
-
-        if admins.exists():
-            admin_notification = Notification.objects.create(
-                title="Có đơn đăng ký phòng mới",
-                content=f"Sinh viên {instance.user.full_name} đã đăng ký phòng ở ký túc xá. Kỳ đăng ký: {instance.registration_period.name}.",
-                category=admin_category,
-                sender=None,
-                priority="normal",
-                is_global=False,
-            )
-
-            for admin in admins:
-                UserNotification.objects.create(
-                    notification=admin_notification,
-                    user=admin
-                )
-
-    elif not created and instance.status == 'approved' and 'status' in kwargs.get('update_fields', []):
-        notification = Notification.objects.create(
-            title="Đơn đăng ký phòng đã được duyệt",
-            content=f"Đơn đăng ký phòng của bạn đã được duyệt. Phòng được phân: {instance.assigned_room.building.name} - {instance.assigned_room.room_number}, Giường: {instance.assigned_bed.bed_number}.",
-            category=category,
-            sender=None,
-            priority="high",
-            is_global=False,
-        )
-
-        UserNotification.objects.create(
-            notification=notification,
-            user=instance.user
-        )
-
-    elif not created and instance.status == 'rejected' and 'status' in kwargs.get('update_fields', []):
-        notification = Notification.objects.create(
-            title="Đơn đăng ký phòng bị từ chối",
-            content=f"Đơn đăng ký phòng của bạn đã bị từ chối. Lý do: {instance.admin_notes or 'Không có lý do cụ thể.'}",
-            category=category,
-            sender=None,
-            priority="high",
-            is_global=False,
-        )
-
-        UserNotification.objects.create(
-            notification=notification,
-            user=instance.user
+    
+    # If status changed from active to cancelled
+    elif old_instance.status == 'active' and instance.status == 'cancelled':
+        # Send cancellation email
+        context = {
+            'contract': instance,
+            'site_name': settings.SITE_NAME,
+            'support_email': settings.SUPPORT_EMAIL,
+            'support_phone': settings.SUPPORT_PHONE,
+            'support_address': settings.SUPPORT_ADDRESS
+        }
+        
+        html_message = render_to_string('registration/email/contract_cancelled.html', context)
+        plain_message = strip_tags(html_message)
+        
+        send_mail(
+            subject=f'[{settings.SITE_NAME}] Hợp đồng của bạn đã bị hủy',
+            message=plain_message,
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[instance.user.email],
+            fail_silently=False
         )
 
 
 @receiver(post_save, sender=Contract)
-def create_contract_notification(sender, instance, created, **kwargs):
-    """Tạo thông báo khi hợp đồng được tạo hoặc cập nhật trạng thái"""
-
-    category, _ = NotificationCategory.objects.get_or_create(
-        name="Hợp đồng",
-        defaults={
-            'icon': 'fa-file-contract',
-            'color': 'success',
-            'description': 'Thông báo về hợp đồng thuê phòng'
-        }
-    )
-
-    if created:
-        notification = Notification.objects.create(
-            title="Hợp đồng mới đã được tạo",
-            content=f"Hợp đồng thuê phòng của bạn đã được tạo. Số hợp đồng: {instance.contract_number}. Vui lòng kiểm tra và xác nhận hợp đồng.",
-            category=category,
-            sender=None,
-            priority="normal",
-            is_global=False,
+def create_deposit_invoice(sender, instance, created, **kwargs):
+    """Create deposit invoice when contract is created"""
+    if created and instance.deposit_amount > 0:
+        # Create deposit invoice
+        invoice = Invoice.objects.create(
+            user=instance.user,
+            contract=instance,
+            room=instance.room,
+            due_date=timezone.now().date() + timezone.timedelta(days=7),
+            total_amount=instance.deposit_amount,
+            status='pending'
         )
-
-        UserNotification.objects.create(
-            notification=notification,
-            user=instance.user
-        )
-
-    elif not created:
-        if instance.signed_by_student and not instance.signed_by_admin:
-            admin_category, _ = NotificationCategory.objects.get_or_create(
-                name="Quản lý hợp đồng",
-                defaults={
-                    'icon': 'fa-file-signature',
-                    'color': 'info',
-                    'description': 'Thông báo cho quản trị viên về hợp đồng'
-                }
-            )
-
-            from accounts.models import User
-            admins = User.objects.filter(user_type__in=['admin', 'staff'], is_active=True)
-
-            if admins.exists():
-                admin_notification = Notification.objects.create(
-                    title="Sinh viên đã ký hợp đồng",
-                    content=f"Sinh viên {instance.user.full_name} đã ký hợp đồng #{instance.contract_number}. Vui lòng xem xét và ký duyệt hợp đồng.",
-                    category=admin_category,
-                    sender=None,
-                    priority="normal",
-                    is_global=False,
-                )
-
-                for admin in admins:
-                    UserNotification.objects.create(
-                        notification=admin_notification,
-                        user=admin
-                    )
-
-        elif instance.signed_by_student and instance.signed_by_admin:
-            notification = Notification.objects.create(
-                title="Hợp đồng đã được ký đầy đủ",
-                content=f"Hợp đồng #{instance.contract_number} đã được ký duyệt đầy đủ và có hiệu lực từ ngày {instance.start_date.strftime('%d/%m/%Y')} đến ngày {instance.end_date.strftime('%d/%m/%Y')}.",
-                category=category,
-                sender=None,
-                priority="high",
-                is_global=False,
-            )
-
-            UserNotification.objects.create(
-                notification=notification,
-                user=instance.user
-            )
-
-
-@receiver(post_save, sender=CheckIn)
-def create_checkin_notification(sender, instance, created, **kwargs):
-    """Tạo thông báo khi sinh viên nhận phòng"""
-
-    if created or (not created and instance.is_completed):
-        category, _ = NotificationCategory.objects.get_or_create(
-            name="Nhận phòng",
+        
+        # Create deposit fee type if not exists
+        fee_type, _ = FeeType.objects.get_or_create(
+            code='DEPOSIT',
             defaults={
-                'icon': 'fa-key',
-                'color': 'info',
-                'description': 'Thông báo về nhận phòng ký túc xá'
+                'name': 'Tiền đặt cọc',
+                'description': 'Tiền đặt cọc ký túc xá',
+                'is_recurring': False
             }
         )
-
-        if instance.is_completed:
-            notification = Notification.objects.create(
-                title="Hoàn thành nhận phòng",
-                content=f"Bạn đã hoàn thành thủ tục nhận phòng. Phòng: {instance.contract.room.building.name} - {instance.contract.room.room_number}, Giường: {instance.contract.bed.bed_number}.",
-                category=category,
-                sender=instance.checked_by,
-                priority="normal",
-                is_global=False,
-            )
-        else:
-            notification = Notification.objects.create(
-                title="Đã tạo biên bản nhận phòng",
-                content=f"Biên bản nhận phòng của bạn đã được tạo. Vui lòng kiểm tra thông tin và hoàn thành các thủ tục cần thiết.",
-                category=category,
-                sender=instance.checked_by,
-                priority="normal",
-                is_global=False,
-            )
-
-        UserNotification.objects.create(
-            notification=notification,
-            user=instance.contract.user
+        
+        # Create invoice item
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            fee_type=fee_type,
+            description='Tiền đặt cọc ký túc xá',
+            quantity=1,
+            unit_price=instance.deposit_amount,
+            amount=instance.deposit_amount
         )
 
 
-@receiver(post_save, sender=CheckOut)
-def create_checkout_notification(sender, instance, created, **kwargs):
-    """Tạo thông báo khi sinh viên trả phòng"""
-
-    category, _ = NotificationCategory.objects.get_or_create(
-        name="Trả phòng",
-        defaults={
-            'icon': 'fa-door-open',
-            'color': 'warning',
-            'description': 'Thông báo về việc trả phòng ký túc xá'
-        }
-    )
-
-    if created:
-        notification = Notification.objects.create(
-            title="Biên bản trả phòng đã được tạo",
-            content=f"Biên bản trả phòng của bạn đã được tạo. Vui lòng kiểm tra thông tin và hoàn thành các thủ tục cần thiết.",
-            category=category,
-            sender=instance.checked_by,
-            priority="normal",
-            is_global=False,
-        )
-
-        UserNotification.objects.create(
-            notification=notification,
-            user=instance.contract.user
-        )
-
-        admin_category, _ = NotificationCategory.objects.get_or_create(
-            name="Quản lý trả phòng",
-            defaults={
-                'icon': 'fa-clipboard-check',
-                'color': 'warning',
-                'description': 'Thông báo cho quản trị viên về trả phòng'
-            }
-        )
-
-        from accounts.models import User
-        admins = User.objects.filter(user_type__in=['admin', 'staff'], is_active=True)
-
-        if admins.exists():
-            admin_notification = Notification.objects.create(
-                title="Có biên bản trả phòng mới",
-                content=f"Sinh viên {instance.contract.user.full_name} đã tạo biên bản trả phòng {instance.contract.room.building.name} - {instance.contract.room.room_number}.",
-                category=admin_category,
-                sender=None,
-                priority="normal",
-                is_global=False,
-            )
-
-            for admin in admins:
-                UserNotification.objects.create(
-                    notification=admin_notification,
-                    user=admin
-                )
-
-    elif not created and instance.is_completed:
-        notification = Notification.objects.create(
-            title="Đã hoàn thành trả phòng",
-            content=f"Bạn đã hoàn thành thủ tục trả phòng {instance.contract.room.building.name} - {instance.contract.room.room_number}. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!",
-            category=category,
-            sender=instance.checked_by,
-            priority="high",
-            is_global=False,
-        )
-
-        UserNotification.objects.create(
-            notification=notification,
-            user=instance.contract.user
-        )
+@receiver(post_save, sender=Invoice)
+def handle_deposit_payment(sender, instance, **kwargs):
+    """Handle deposit payment completion"""
+    if instance.contract and instance.contract.status == 'draft' and instance.status == 'paid':
+        # If this is a deposit invoice and it's fully paid, activate the contract
+        instance.contract.status = 'active'
+        instance.contract.save()

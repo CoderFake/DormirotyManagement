@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h5 class="card-title mb-0">{{ page_title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Tạo hóa đơn tiền phòng cho tất cả các hợp đồng đang hoạt động trong tháng được chọn.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Tháng</label>
+                            <select name="month" class="form-select">
+                                {% for i in "123456789"|make_list %}
+                                <option value="{{ i }}" {% if i|add:"0" == current_month %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                                {% for i in "101112"|slice:"2:2" %}
+                                <option value="{{ i }}" {% if i|add:"0" == current_month %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Năm</label>
+                            <select name="year" class="form-select">
+                                {% with current_year|add:"-1" as prev_year %}
+                                <option value="{{ prev_year }}">{{ prev_year }}</option>
+                                {% endwith %}
+                                <option value="{{ current_year }}" selected>{{ current_year }}</option>
+                                {% with current_year|add:"1" as next_year %}
+                                <option value="{{ next_year }}">{{ next_year }}</option>
+                                {% endwith %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-file-invoice-dollar me-1"></i> Tạo hóa đơn
+                    </button>
+                    <a href="{% url 'payment:invoice_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

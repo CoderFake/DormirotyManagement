@@ -170,7 +170,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.payment_models.BigAutoField"
 
 # Cấu hình Auth tùy chỉnh
 AUTH_USER_MODEL = "accounts.User"

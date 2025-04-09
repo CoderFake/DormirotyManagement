@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Hủy hợp đồng #{{ contract.contract_number }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h6>Bạn có chắc chắn muốn hủy hợp đồng này?</h6>
+                <p>Thông tin hợp đồng:</p>
+                <ul>
+                    <li>Sinh viên: {{ contract.user.full_name }}</li>
+                    <li>Phòng: {{ contract.room.building.name }} - {{ contract.room.room_number }}</li>
+                    <li>Giường: {{ contract.bed.bed_number }}</li>
+                    <li>Thời hạn: {{ contract.start_date|date:"d/m/Y" }} - {{ contract.end_date|date:"d/m/Y" }}</li>
+                    <li>Trạng thái: {{ contract.get_status_display }}</li>
+                </ul>
+                <p class="mb-0">Hành động này không thể hoàn tác. Hợp đồng sẽ bị hủy và phòng/giường sẽ được giải phóng.</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="notes">Lý do hủy</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" required></textarea>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                    <a href="{% url 'registration:contract_admin_detail' contract.id %}" class="btn btn-secondary">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

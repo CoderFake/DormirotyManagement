@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Danh sách nhận phòng</h5>
+                    <p class="card-text text-muted small">Quản lý danh sách sinh viên nhận phòng</p>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle datatable">
+                            <thead>
+                                <tr>
+                                    <th>Mã sinh viên</th>
+                                    <th>Họ và tên</th>
+                                    <th>Phòng</th>
+                                    <th>Ngày nhận phòng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ghi chú</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for check_in in check_ins %}
+                                <tr>
+                                    <td>{{ check_in.student.student_id }}</td>
+                                    <td>{{ check_in.student.full_name }}</td>
+                                    <td>{{ check_in.room.name }}</td>
+                                    <td>{{ check_in.check_in_date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ check_in.status|yesno:'success,warning' }}">
+                                            {{ check_in.status|yesno:'Đã nhận phòng,Chờ nhận phòng' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ check_in.notes|default:"-" }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{% url 'registration:check_in_detail' check_in.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'registration:check_in_edit' check_in.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'registration:check_in_delete' check_in.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Chưa có sinh viên nào nhận phòng
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

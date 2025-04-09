@@ -92,11 +92,9 @@ class RoomRegistration(models.Model):
         return f"{self.user.get_full_name()} - {self.registration_period} - {self.get_status_display()}"
 
     def clean(self):
-        # Kiểm tra kỳ đăng ký có đang mở không
+
         if self.registration_period and self.registration_period.status != 'active':
             raise ValidationError(_('Kỳ đăng ký này hiện không mở cho đăng ký.'))
-
-        # Kiểm tra người dùng đã đăng ký trong kỳ này chưa
         if self.user and self.registration_period:
             existing_reg = RoomRegistration.objects.filter(
                 user=self.user,
@@ -177,21 +175,25 @@ class Contract(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.contract_number:
-            # Tạo số hợp đồng tự động
+
             year = timezone.now().strftime("%Y")
             month = timezone.now().strftime("%m")
             count = Contract.objects.filter(created_at__year=timezone.now().year).count() + 1
             self.contract_number = f"HD-{year}{month}-{count:04d}"
 
-        # Cập nhật trạng thái dựa trên chữ ký
         if self.signed_by_student and self.signed_by_admin:
-            today = timezone.now().date()
-            if today < self.start_date:
-                self.status = 'pending'
-            elif self.start_date <= today <= self.end_date:
-                self.status = 'active'
-            else:
-                self.status = 'expired'
+        
+            if self.status not in ['terminated', 'canceled']:
+                today = timezone.now().date()
+                if today < self.start_date:
+                    self.status = 'pending'
+                elif self.start_date <= today <= self.end_date:
+                    self.status = 'active'
+                else:
+                    self.status = 'expired'
+        else:
+            if self.status not in ['terminated', 'canceled']:
+                self.status = 'draft'
 
         super().save(*args, **kwargs)
 
@@ -276,7 +278,6 @@ class CheckOut(models.Model):
         return f"{self.contract.user.get_full_name()} - {self.check_out_date.strftime('%d/%m/%Y')}"
 
     def save(self, *args, **kwargs):
-        # Tính toán tiền đặt cọc hoàn trả
         deposit = self.contract.deposit_amount
         self.deposit_refunded = max(0, deposit - self.damage_charges)
         super().save(*args, **kwargs)

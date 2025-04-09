@@ -1,87 +1,160 @@
 {% extends 'base.html' %}
-
-{% block title %}Ghi nhận thanh toán - Quản lý Ký túc xá{% endblock %}
+{% load static %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="card shadow-sm mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Ghi nhận thanh toán cho hóa đơn #{{ invoice.invoice_number }}</h6>
+            <h5 class="card-title mb-0">{{ page_title }}</h5>
         </div>
         <div class="card-body">
-            <div class="mb-4">
-                <h5>Thông tin hóa đơn</h5>
-                <div class="table-responsive">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>Thông tin hóa đơn</h6>
                     <table class="table table-bordered">
                         <tr>
-                            <th style="width: 200px">Số hóa đơn:</th>
+                            <th width="30%">Số hóa đơn</th>
                             <td>{{ invoice.invoice_number }}</td>
                         </tr>
                         <tr>
-                            <th>Người dùng:</th>
-                            <td>{{ invoice.user.full_name }}</td>
+                            <th>Sinh viên</th>
+                            <td>
+                                {{ invoice.user.full_name }}
+                                {% if invoice.user.student_id %}
+                                <br>
+                                <small class="text-muted">{{ invoice.user.student_id }}</small>
+                                {% endif %}
+                            </td>
                         </tr>
                         <tr>
-                            <th>Ngày lập:</th>
-                            <td>{{ invoice.issue_date|date:"Y-m-d" }}</td>
+                            <th>Tổng tiền</th>
+                            <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
                         </tr>
                         <tr>
-                            <th>Ngày đến hạn:</th>
-                            <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Tổng tiền:</th>
-                            <td class="fw-bold">{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
-                        </tr>
-                        <tr>
-                            <th>Đã thanh toán:</th>
+                            <th>Đã thanh toán</th>
                             <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
                         </tr>
                         <tr>
-                            <th>Còn lại:</th>
-                            <td class="fw-bold {% if invoice.get_remaining_amount > 0 %}text-danger{% else %}text-success{% endif %}">
-                                {{ invoice.get_remaining_amount|floatformat:0 }} VNĐ
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Trạng thái:</th>
-                            <td>
-                                {% if invoice.status == 'paid' %}
-                                    <span class="badge bg-success">Đã thanh toán</span>
-                                {% elif invoice.status == 'partially_paid' %}
-                                    <span class="badge bg-info">Thanh toán một phần</span>
-                                {% elif invoice.status == 'overdue' %}
-                                    <span class="badge bg-danger">Quá hạn</span>
-                                {% elif invoice.status == 'pending' %}
-                                    <span class="badge bg-warning">Chờ thanh toán</span>
-                                {% elif invoice.status == 'canceled' %}
-                                    <span class="badge bg-secondary">Đã hủy</span>
-                                {% else %}
-                                    <span class="badge bg-light">{{ invoice.get_status_display }}</span>
-                                {% endif %}
-                            </td>
+                            <th>Còn lại</th>
+                            <td class="fw-bold text-primary">{{ invoice.get_remaining_amount|floatformat:0 }} VNĐ</td>
                         </tr>
                     </table>
                 </div>
             </div>
 
-            <form method="post" class="needs-validation" novalidate>
+            <form method="post">
                 {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
 
-                <h5>Thông tin thanh toán</h5>
-
-                <div class="mb-3">
-                    <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
-                    {{ form.amount }}
-                    {% if form.amount.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.amount.errors %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.payment_date.id_for_label }}" class="form-label">Ngày thanh toán</label>
+                            {{ form.payment_date }}
+                            {% if form.payment_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.payment_date.errors %}
                                 {{ error }}
-                            {% endfor %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                    <div class="form-text">Số tiền thanh toán không vượt quá số tiền còn lại của hóa đơn.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.amount.id_for_label }}" class="form-label">Số tiền thanh toán (VNĐ)</label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.amount.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.payment_method.id_for_label }}" class="form-label">Phương thức thanh toán</label>
+                            {{ form.payment_method }}
+                            {% if form.payment_method.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.payment_method.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.transaction_id.id_for_label }}" class="form-label">Mã giao dịch</label>
+                            {{ form.transaction_id }}
+                            {% if form.transaction_id.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.transaction_id.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Ghi chú</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.payment_method.id_for_label }}" class="form-label">{{ form.payment_method.label }}</label>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Ghi nhận thanh toán
+                    </button>
+                    <a href="{% url 'payment:invoice_detail' invoice.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize datepicker for payment date
+    $('#{{ form.payment_date.id_for_label }}').datepicker({
+        format: 'dd/mm/yyyy',
+        autoclose: true,
+        todayHighlight: true,
+        language: 'vi'
+    });
+
+    // Initialize select2 for payment method
+    $('#{{ form.payment_method.id_for_label }}').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Chọn phương thức thanh toán'
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

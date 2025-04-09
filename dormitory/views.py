@@ -649,24 +649,30 @@ def amenity_delete_view(request, amenity_id):
 
 
 # ===== API =====
-
 @login_required
 @user_passes_test(is_admin_or_staff)
 def api_get_beds(request):
-    """API lấy danh sách giường theo phòng"""
+    """API để lấy danh sách giường theo phòng và trạng thái"""
     room_id = request.GET.get('room_id')
-    if not room_id:
-        return JsonResponse({'error': 'Thiếu room_id'}, status=400)
+    status = request.GET.get('status')
 
-    try:
-        beds = Bed.objects.filter(
-            room_id=room_id,
-            status='available',
-            is_active=True
-        ).values('id', 'bed_number')
-        return JsonResponse({'beds': list(beds)})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    if not room_id:
+        return JsonResponse({'error': 'Room ID is required'}, status=400)
+
+    beds = Bed.objects.filter(room_id=room_id)
+
+    if status:
+        beds = beds.filter(status=status)
+
+    beds_data = []
+    for bed in beds:
+        beds_data.append({
+            'id': str(bed.id),
+            'bed_number': bed.bed_number,
+            'status': bed.status
+        })
+
+    return JsonResponse(beds_data, safe=False)
 
 
 @login_required

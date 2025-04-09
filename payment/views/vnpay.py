@@ -14,7 +14,79 @@ import datetime
 import uuid
 
 from registration.models import Contract
-from .payment_models import Payment, VNPayTransaction, Invoice, InvoiceItem, FeeType
+from payment.models import Payment, Invoice, InvoiceItem, FeeType
+from payment.payment_models.vnpay import VNPayTransaction
+
+
+@login_required
+def vnpay_payment_view(request, invoice_id):
+    """Thanh toán hóa đơn qua VNPay"""
+    invoice = get_object_or_404(Invoice, pk=invoice_id, user=request.user)
+    
+    if invoice.status not in ['pending', 'partially_paid', 'overdue']:
+        messages.error(request, 'Hóa đơn này không trong trạng thái có thể thanh toán.')
+        return redirect('payment:invoice_detail', invoice_id=invoice.id)
+
+    # Tính số tiền cần thanh toán
+    amount_to_pay = invoice.get_remaining_amount()
+    if amount_to_pay <= 0:
+        messages.error(request, 'Hóa đơn này đã được thanh toán đầy đủ.')
+        return redirect('payment:invoice_detail', invoice_id=invoice.id)
+
+    # Tạo giao dịch VNPay
+    txn_ref = f"KTX{timezone.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:8].upper()}"
+    
+    vnpay_transaction = VNPayTransaction.objects.create(
+        user=request.user,
+        amount=amount_to_pay,
+        order_info=f'Thanh toán hóa đơn {invoice.invoice_number}',
+        txn_ref=txn_ref
+    )
+    
+    # Tạo payment record
+    payment = Payment.objects.create(
+        invoice=invoice,
+        user=request.user,
+        amount=amount_to_pay,
+        payment_method='vnpay',
+        status='pending'
+    )
+    
+    vnpay_transaction.payment = payment
+    vnpay_transaction.save()
+    
+    # Tạo URL thanh toán VNPay
+    vnp_params = {
+        'vnp_Version': '2.1.0',
+        'vnp_Command': 'pay',
+        'vnp_TmnCode': settings.VNPAY_TMN_CODE,
+        'vnp_Amount': str(int(amount_to_pay * 100)),  # Số tiền * 100 (VNĐ)
+        'vnp_CurrCode': 'VND',
+        'vnp_TxnRef': txn_ref,
+        'vnp_OrderInfo': f'Thanh toan hoa don {invoice.invoice_number}',
+        'vnp_OrderType': 'billpayment',
+        'vnp_Locale': 'vn',
+        'vnp_ReturnUrl': request.build_absolute_uri(reverse('payment:vnpay_return')),
+        'vnp_IpAddr': request.META.get('REMOTE_ADDR', '127.0.0.1'),
+        'vnp_CreateDate': timezone.now().strftime('%Y%m%d%H%M%S')
+    }
+    
+    # Sắp xếp params theo key
+    sorted_params = sorted(vnp_params.items(), key=lambda x: x[0])
+    hash_data = '&'.join([f'{k}={v}' for k, v in sorted_params])
+    
+    # Tạo chữ ký
+    secret_key = settings.VNPAY_HASH_SECRET_KEY
+    secure_hash = hmac.new(
+        secret_key.encode('utf-8'),
+        hash_data.encode('utf-8'),
+        hashlib.sha512
+    ).hexdigest()
+    
+    vnp_params['vnp_SecureHash'] = secure_hash
+    vnpay_url = settings.VNPAY_PAYMENT_URL + '?' + urllib.parse.urlencode(vnp_params)
+    
+    return redirect(vnpay_url)
 
 
 @login_required
@@ -65,6 +137,18 @@ def deposit_payment_view(request, contract_id):
         order_info=f'Thanh toán tiền đặt cọc hợp đồng {contract.contract_number}',
         txn_ref=txn_ref
     )
+    
+    # Tạo payment record
+    payment = Payment.objects.create(
+        invoice=invoice,
+        user=request.user,
+        amount=invoice.total_amount,
+        payment_method='vnpay',
+        status='pending'
+    )
+    
+    vnpay_transaction.payment = payment
+    vnpay_transaction.save()
     
     # Tạo URL thanh toán VNPay
     vnp_params = {
@@ -140,35 +224,38 @@ def vnpay_return_view(request):
                     vnpay_transaction.response_code = response_code
                     vnpay_transaction.save()
                     
-                    # Tạo payment record
-                    payment = Payment.objects.create(
-                        invoice=vnpay_transaction.payment.invoice if vnpay_transaction.payment else None,
-                        user=vnpay_transaction.user,
-                        amount=vnpay_transaction.amount,
-                        payment_method='vnpay',
-                        transaction_id=transaction_no,
-                        status='completed'
-                    )
-                    
-                    vnpay_transaction.payment = payment
-                    vnpay_transaction.save()
-                    
-                    # Cập nhật hóa đơn
-                    if payment.invoice:
-                        payment.invoice.record_payment(payment.amount, 'vnpay', transaction_no)
-                    
-                    # Cập nhật trạng thái hợp đồng
-                    contract = payment.invoice.contract
-                    if contract and contract.status == 'draft':
-                        contract.status = 'pending'
-                        contract.save()
-                    
-                    messages.success(request, 'Thanh toán thành công.')
-                    return redirect('registration:contract_detail', contract_id=contract.id)
+                    # Cập nhật payment
+                    if vnpay_transaction.payment:
+                        payment = vnpay_transaction.payment
+                        payment.status = 'completed'
+                        payment.transaction_id = transaction_no
+                        payment.save()
+                        
+                        # Cập nhật hóa đơn
+                        if payment.invoice:
+                            invoice = payment.invoice
+                            invoice.record_payment(payment.amount, 'vnpay', transaction_no)
+                            
+                            # Cập nhật trạng thái hợp đồng nếu là tiền đặt cọc
+                            if invoice.contract and invoice.contract.status == 'draft':
+                                contract = invoice.contract
+                                contract.status = 'pending'
+                                contract.save()
+                            
+                            messages.success(request, 'Thanh toán thành công.')
+                            
+                            if invoice.contract:
+                                return redirect('registration:contract_detail', contract_id=invoice.contract.id)
+                            else:
+                                return redirect('payment:invoice_detail', invoice_id=invoice.id)
                 else:
                     vnpay_transaction.transaction_status = 'failed'
                     vnpay_transaction.response_code = response_code
                     vnpay_transaction.save()
+                    
+                    if vnpay_transaction.payment:
+                        vnpay_transaction.payment.status = 'failed'
+                        vnpay_transaction.payment.save()
                     
                     messages.error(request, 'Thanh toán thất bại.')
                     return redirect('dashboard:index')
@@ -221,12 +308,20 @@ def vnpay_ipn_view(request):
                         
                         # Cập nhật payment và invoice nếu cần
                         if vnpay_transaction.payment:
-                            vnpay_transaction.payment.status = 'completed'
-                            vnpay_transaction.payment.save()
+                            payment = vnpay_transaction.payment
+                            payment.status = 'completed'
+                            payment.transaction_id = transaction_no
+                            payment.save()
                             
-                            if vnpay_transaction.payment.invoice:
-                                invoice = vnpay_transaction.payment.invoice
-                                invoice.record_payment(vnpay_transaction.amount, 'vnpay', transaction_no)
+                            if payment.invoice:
+                                invoice = payment.invoice
+                                invoice.record_payment(payment.amount, 'vnpay', transaction_no)
+                                
+                                # Cập nhật trạng thái hợp đồng nếu là tiền đặt cọc
+                                if invoice.contract and invoice.contract.status == 'draft':
+                                    contract = invoice.contract
+                                    contract.status = 'pending'
+                                    contract.save()
             
             return HttpResponse('OK')
             

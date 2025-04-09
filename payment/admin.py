@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import (
-    FeeType, Invoice, InvoiceItem, Payment,
-    ElectricityReading, WaterReading, VNPayTransaction
+from .models import (FeeType, Invoice, InvoiceItem, Payment,
+    ElectricityReading, WaterReading
 )
+
+from payment.payment_models.vnpay import VNPayTransaction
 
 
 class InvoiceItemInline(admin.TabularInline):

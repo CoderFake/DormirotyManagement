@@ -11,6 +11,7 @@ urlpatterns = [
     path('apply/<uuid:room_id>/', views.apply_view, name='apply_with_room'),
     path('my-applications/', views.my_applications_view, name='my_applications'),
     path('my-contracts/', views.my_contracts_view, name='my_contracts'),
+
     path('contract/<uuid:contract_id>/', views.contract_detail_view, name='contract_detail'),
     path('contract/<uuid:contract_id>/sign/', views.sign_contract_view, name='sign_contract'),
     path('application/<uuid:application_id>/cancel/', views.application_cancel_view, name='application_cancel'),
@@ -27,8 +28,8 @@ urlpatterns = [
     path('application/<uuid:application_id>/reject/', views.application_reject_view, name='application_reject'),
 
     path('contract/list/', views.contract_list_view, name='contract_list'),
-    path('contract/admin/<uuid:contract_id>/', views.contract_admin_detail_view, name='contract_admin_detail'),
     path('contract/<uuid:contract_id>/approve/', views.contract_approve_view, name='contract_approve'),
+    path('contract/<uuid:contract_id>/cancel/', views.contract_cancel_view, name='contract_cancel'),
 
     path('check-in/list/', views.check_in_list_view, name='check_in_list'),
     path('check-in/create/<uuid:contract_id>/', views.check_in_create_view, name='check_in_create'),

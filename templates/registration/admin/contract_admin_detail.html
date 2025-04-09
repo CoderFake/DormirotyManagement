@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Chi tiết hợp đồng #{{ contract.contract_number }}</h5>
+            <div>
+                {% if contract.status == 'draft' and not contract.signed_by_student %}
+                    <span class="badge bg-warning">Chờ sinh viên ký</span>
+                {% elif contract.status == 'draft' and contract.signed_by_student and not contract.signed_by_admin %}
+                    <a href="{% url 'registration:contract_approve' contract.id %}" class="btn btn-success">
+                        <i class="fas fa-check"></i> Duyệt hợp đồng
+                    </a>
+                {% endif %}
+                {% if contract.status not in 'terminated,canceled,expired' %}
+                    <a href="{% url 'registration:contract_cancel' contract.id %}" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Hủy hợp đồng
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">Thông tin sinh viên</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Họ và tên</th>
+                            <td>{{ contract.user.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>MSSV</th>
+                            <td>{{ contract.user.student_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td>{{ contract.user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Số điện thoại</th>
+                            <td>{{ contract.user.phone_number }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3">Thông tin phòng</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Tòa nhà</th>
+                            <td>{{ contract.room.building.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phòng</th>
+                            <td>{{ contract.room.room_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Giường</th>
+                            <td>{{ contract.bed.bed_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Loại phòng</th>
+                            <td>{{ contract.room.room_type.name }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h6 class="mb-3">Thông tin hợp đồng</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Số hợp đồng</th>
+                            <td>{{ contract.contract_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Thời hạn</th>
+                            <td>{{ contract.start_date|date:"d/m/Y" }} - {{ contract.end_date|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phí hàng tháng</th>
+                            <td>{{ contract.monthly_fee|floatformat:0 }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <th>Tiền đặt cọc</th>
+                            <td>{{ contract.deposit_amount|floatformat:0 }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái</th>
+                            <td>
+                                {% if contract.status == 'draft' %}
+                                    <span class="badge bg-secondary">{{ contract.get_status_display }}</span>
+                                {% elif contract.status == 'pending' %}
+                                    <span class="badge bg-warning">{{ contract.get_status_display }}</span>
+                                {% elif contract.status == 'active' %}
+                                    <span class="badge bg-success">{{ contract.get_status_display }}</span>
+                                {% elif contract.status == 'terminated' %}
+                                    <span class="badge bg-danger">{{ contract.get_status_display }}</span>
+                                {% elif contract.status == 'expired' %}
+                                    <span class="badge bg-dark">{{ contract.get_status_display }}</span>
+                                {% elif contract.status == 'canceled' %}
+                                    <span class="badge bg-danger">{{ contract.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3">Trạng thái ký hợp đồng</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Sinh viên</th>
+                            <td>
+                                {% if contract.signed_by_student %}
+                                    <span class="text-success">
+                                        <i class="fas fa-check"></i> Đã ký
+                                        {% if contract.student_signed_at %}
+                                            ({{ contract.student_signed_at|date:"d/m/Y H:i" }})
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="text-warning">
+                                        <i class="fas fa-clock"></i> Chưa ký
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Quản trị viên</th>
+                            <td>
+                                {% if contract.signed_by_admin %}
+                                    <span class="text-success">
+                                        <i class="fas fa-check"></i> Đã ký
+                                        {% if contract.admin_signed_at %}
+                                            ({{ contract.admin_signed_at|date:"d/m/Y H:i" }})
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="text-warning">
+                                        <i class="fas fa-clock"></i> Chưa ký
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% if contract.notes %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6 class="mb-3">Ghi chú</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ contract.notes|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if contract.invoices.exists %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6 class="mb-3">Hóa đơn</h6>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Số hóa đơn</th>
+                                <th>Ngày phát hành</th>
+                                <th>Hạn thanh toán</th>
+                                <th>Tổng tiền</th>
+                                <th>Đã thanh toán</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in contract.invoices.all %}
+                            <tr>
+                                <td>{{ invoice.invoice_number }}</td>
+                                <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                                <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                                <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
+                                <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
+                                <td>
+                                    {% if invoice.status == 'draft' %}
+                                        <span class="badge bg-secondary">{{ invoice.get_status_display }}</span>
+                                    {% elif invoice.status == 'pending' %}
+                                        <span class="badge bg-warning">{{ invoice.get_status_display }}</span>
+                                    {% elif invoice.status == 'partially_paid' %}
+                                        <span class="badge bg-info">{{ invoice.get_status_display }}</span>
+                                    {% elif invoice.status == 'paid' %}
+                                        <span class="badge bg-success">{{ invoice.get_status_display }}</span>
+                                    {% elif invoice.status == 'overdue' %}
+                                        <span class="badge bg-danger">{{ invoice.get_status_display }}</span>
+                                    {% elif invoice.status == 'canceled' %}
+                                        <span class="badge bg-danger">{{ invoice.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

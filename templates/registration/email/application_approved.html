@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Đơn đăng ký phòng đã được duyệt</title>
+</head>
+<body>
+    <h2>Xin chào {{ registration.user.full_name }},</h2>
+    
+    <p>Đơn đăng ký phòng ký túc xá của bạn đã được phê duyệt.</p>
+    
+    <p><strong>Thông tin phòng được phân:</strong></p>
+    <ul>
+        <li>Tòa nhà: {{ registration.assigned_room.building.name }}</li>
+        <li>Phòng: {{ registration.assigned_room.room_number }}</li>
+        <li>Giường: {{ registration.assigned_bed.bed_number }}</li>
+    </ul>
+
+    <p><strong>Thông tin hợp đồng:</strong></p>
+    <ul>
+        <li>Số hợp đồng: {{ contract.contract_number }}</li>
+        <li>Thời hạn: {{ contract.start_date|date:"d/m/Y" }} - {{ contract.end_date|date:"d/m/Y" }}</li>
+        <li>Phí hàng tháng: {{ contract.monthly_fee|floatformat:0 }} VNĐ</li>
+        <li>Tiền đặt cọc: {{ contract.deposit_amount|floatformat:0 }} VNĐ</li>
+    </ul>
+
+    {% if contract.deposit_amount > 0 %}
+    <p>Vui lòng thanh toán tiền đặt cọc để xác nhận đăng ký phòng của bạn.</p>
+    <p>
+        <a href="{{ payment_url }}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            Thanh toán tiền đặt cọc
+        </a>
+    </p>
+    {% endif %}
+
+    <p>Sau khi hoàn tất các thủ tục, bạn có thể xem chi tiết hợp đồng tại:</p>
+    <p><a href="{{ contract_url }}">Xem hợp đồng</a></p>
+
+    <p>Trân trọng,<br>Ban Quản lý Ký túc xá</p>
+</body>
+</html>

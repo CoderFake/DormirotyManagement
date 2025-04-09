@@ -1,327 +1,202 @@
 {% extends 'base.html' %}
-
-{% block title %}Chi tiết hóa đơn - Quản lý Ký túc xá{% endblock %}
+{% load static %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="card shadow-sm mb-4">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between mb-4">
-                <h4 class="card-title text-primary">
-                    <i class="fas fa-file-invoice me-2"></i>Hóa đơn #{{ invoice.invoice_number }}
-                </h4>
-
-                <div class="d-flex">
-                    <!-- Các nút thao tác -->
-                    {% if user.user_type == 'admin' or user.user_type == 'staff' %}
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="invoiceActions" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-cog me-1"></i> Thao tác
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="invoiceActions">
-                                <li><a class="dropdown-item" href="{% url 'payment:invoice_edit' invoice.id %}">
-                                    <i class="fas fa-edit me-1"></i> Chỉnh sửa hóa đơn
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'payment:invoice_add_item' invoice.id %}">
-                                    <i class="fas fa-plus-circle me-1"></i> Thêm mục
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'payment:record_payment' invoice.id %}">
-                                    <i class="fas fa-money-bill-wave me-1"></i> Ghi nhận thanh toán
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="{% url 'payment:invoice_delete' invoice.id %}">
-                                    <i class="fas fa-trash me-1"></i> Xóa hóa đơn
-                                </a></li>
-                            </ul>
-                        </div>
-                    {% endif %}
-
-                    {% if invoice.status != 'paid' and invoice.status != 'canceled' and invoice.user == user %}
-                        <a href="{% url 'payment:pay_invoice' invoice.id %}" class="btn btn-success ms-2">
-                            <i class="fas fa-credit-card me-1"></i> Thanh toán
-                        </a>
-                    {% endif %}
-
-                    <button class="btn btn-outline-secondary ms-2 btn-print-invoice">
-                        <i class="fas fa-print me-1"></i> In hóa đơn
-                    </button>
-                </div>
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Chi tiết hóa đơn #{{ invoice.invoice_number }}</h5>
+            <div>
+                {% if is_admin %}
+                <a href="{% url 'payment:invoice_edit' invoice.id %}" class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-edit me-1"></i> Chỉnh sửa
+                </a>
+                {% if invoice.status != 'paid' %}
+                <a href="{% url 'payment:record_payment' invoice.id %}" class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-money-bill me-1"></i> Ghi nhận thanh toán
+                </a>
+                {% endif %}
+                {% if invoice.status == 'pending' %}
+                <a href="{% url 'payment:invoice_delete' invoice.id %}" class="btn btn-danger btn-sm me-2">
+                    <i class="fas fa-trash me-1"></i> Xóa
+                </a>
+                {% endif %}
+                {% else %}
+                {% if invoice.status in 'pending,partially_paid,overdue' %}
+                <a href="{% url 'payment:payment_methods' invoice.id %}" class="btn btn-success btn-sm">
+                    <i class="fas fa-credit-card me-1"></i> Thanh toán
+                </a>
+                {% endif %}
+                {% endif %}
             </div>
-
-            <!-- Thông tin hóa đơn -->
+        </div>
+        <div class="card-body">
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <h5>Thông tin hóa đơn</h5>
-                    <table class="table table-sm table-borderless">
+                    <h6>Thông tin hóa đơn</h6>
+                    <table class="table table-bordered">
                         <tr>
-                            <th width="30%">Số hóa đơn:</th>
+                            <th width="30%">Số hóa đơn</th>
                             <td>{{ invoice.invoice_number }}</td>
                         </tr>
                         <tr>
-                            <th>Ngày lập:</th>
-                            <td>{{ invoice.issue_date|date:"Y-m-d" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Ngày đến hạn:</th>
-                            <td>{{ invoice.due_date|date:"Y-m-d" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Thời gian:</th>
+                            <th>Sinh viên</th>
                             <td>
-                                {% if invoice.month and invoice.year %}
-                                    Tháng {{ invoice.month }}/{{ invoice.year }}
-                                {% else %}
-                                    -
+                                {{ invoice.user.full_name }}
+                                {% if invoice.user.student_id %}
+                                <br>
+                                <small class="text-muted">{{ invoice.user.student_id }}</small>
                                 {% endif %}
                             </td>
                         </tr>
                         <tr>
-                            <th>Trạng thái:</th>
+                            <th>Phòng</th>
                             <td>
-                                {% if invoice.status == 'paid' %}
-                                    <span class="badge bg-success">Đã thanh toán</span>
-                                {% elif invoice.status == 'partially_paid' %}
-                                    <span class="badge bg-info">Thanh toán một phần</span>
-                                {% elif invoice.status == 'overdue' %}
-                                    <span class="badge bg-danger">Quá hạn</span>
-                                {% elif invoice.status == 'pending' %}
-                                    <span class="badge bg-warning">Chờ thanh toán</span>
-                                {% elif invoice.status == 'canceled' %}
-                                    <span class="badge bg-secondary">Đã hủy</span>
+                                {% if invoice.room %}
+                                {{ invoice.room.building.name }} - {{ invoice.room.room_number }}
                                 {% else %}
-                                    <span class="badge bg-light">{{ invoice.get_status_display }}</span>
+                                N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Ngày phát hành</th>
+                            <td>{{ invoice.issue_date|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày đến hạn</th>
+                            <td>{{ invoice.due_date|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái</th>
+                            <td>
+                                {% if invoice.status == 'pending' %}
+                                <span class="badge bg-warning">Chờ thanh toán</span>
+                                {% elif invoice.status == 'partially_paid' %}
+                                <span class="badge bg-info">Đã thanh toán một phần</span>
+                                {% elif invoice.status == 'paid' %}
+                                <span class="badge bg-success">Đã thanh toán</span>
+                                {% elif invoice.status == 'overdue' %}
+                                <span class="badge bg-danger">Quá hạn</span>
+                                {% elif invoice.status == 'cancelled' %}
+                                <span class="badge bg-secondary">Đã hủy</span>
                                 {% endif %}
                             </td>
                         </tr>
                     </table>
                 </div>
                 <div class="col-md-6">
-                    <h5>Thông tin người dùng</h5>
-                    <table class="table table-sm table-borderless">
+                    <h6>Tổng quan thanh toán</h6>
+                    <table class="table table-bordered">
                         <tr>
-                            <th width="30%">Họ và tên:</th>
-                            <td>{{ invoice.user.full_name }}</td>
+                            <th width="30%">Tổng tiền</th>
+                            <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
                         </tr>
                         <tr>
-                            <th>Email:</th>
-                            <td>{{ invoice.user.email }}</td>
+                            <th>Đã thanh toán</th>
+                            <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
                         </tr>
                         <tr>
-                            <th>Số điện thoại:</th>
-                            <td>{{ invoice.user.phone_number|default:"-" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Phòng:</th>
-                            <td>
-                                {% if invoice.room %}
-                                    {{ invoice.room.building.name }} - {{ invoice.room.room_number }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Mã sinh viên:</th>
-                            <td>{{ invoice.user.student_id|default:"-" }}</td>
+                            <th>Còn lại</th>
+                            <td class="fw-bold text-primary">{{ invoice.get_remaining_amount|floatformat:0 }} VNĐ</td>
                         </tr>
                     </table>
                 </div>
             </div>
 
-            <!-- Các mục trong hóa đơn -->
-            <h5>Chi tiết hóa đơn</h5>
-            <div class="table-responsive mb-4">
-                <table class="table table-bordered table-striped">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Mục</th>
-                            <th>Loại phí</th>
-                            <th>Số lượng</th>
-                            <th>Đơn giá</th>
-                            <th>Thành tiền</th>
-                            {% if user.user_type == 'admin' or user.user_type == 'staff' %}
-                                <th>Thao tác</th>
-                            {% endif %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in items %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ item.description }}</td>
-                                <td>{{ item.fee_type.name }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>{{ item.unit_price|floatformat:0 }} VNĐ</td>
-                                <td>{{ item.amount|floatformat:0 }} VNĐ</td>
-                                {% if user.user_type == 'admin' or user.user_type == 'staff' %}
-                                    <td>
-                                        <a href="{% url 'payment:invoice_item_edit' item.id %}" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Chỉnh sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{% url 'payment:invoice_item_delete' item.id %}" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Xóa">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </td>
-                                {% endif %}
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="{% if user.user_type == 'admin' or user.user_type == 'staff' %}7{% else %}6{% endif %}" class="text-center">Không có mục nào trong hóa đơn</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr class="fw-bold">
-                            <td colspan="5" class="text-end">Tổng tiền:</td>
-                            <td>{{ invoice.total_amount|floatformat:0 }} VNĐ</td>
-                            {% if user.user_type == 'admin' or user.user_type == 'staff' %}
-                                <td></td>
-                            {% endif %}
-                        </tr>
-                        <tr>
-                            <td colspan="5" class="text-end">Đã thanh toán:</td>
-                            <td>{{ invoice.paid_amount|floatformat:0 }} VNĐ</td>
-                            {% if user.user_type == 'admin' or user.user_type == 'staff' %}
-                                <td></td>
-                            {% endif %}
-                        </tr>
-                        <tr class="fw-bold {% if invoice.get_remaining_amount > 0 %}text-danger{% else %}text-success{% endif %}">
-                            <td colspan="5" class="text-end">Còn lại:</td>
-                            <td>{{ invoice.get_remaining_amount|floatformat:0 }} VNĐ</td>
-                            {% if user.user_type == 'admin' or user.user_type == 'staff' %}
-                                <td></td>
-                            {% endif %}
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <!-- Lịch sử thanh toán -->
-            <h5>Lịch sử thanh toán</h5>
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Ngày thanh toán</th>
-                            <th>Phương thức</th>
-                            <th>Mã giao dịch</th>
-                            <th>Số tiền</th>
-                            <th>Trạng thái</th>
-                            <th>Ghi chú</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for payment in payments %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ payment.payment_date|date:"Y-m-d H:i" }}</td>
-                                <td>{{ payment.get_payment_method_display }}</td>
-                                <td>{{ payment.transaction_id|default:"-" }}</td>
-                                <td>{{ payment.amount|floatformat:0 }} VNĐ</td>
-                                <td>
-                                    {% if payment.status == 'completed' %}
-                                        <span class="badge bg-success">Hoàn thành</span>
-                                    {% elif payment.status == 'pending' %}
-                                        <span class="badge bg-warning">Đang xử lý</span>
-                                    {% elif payment.status == 'failed' %}
-                                        <span class="badge bg-danger">Thất bại</span>
-                                    {% elif payment.status == 'refunded' %}
-                                        <span class="badge bg-info">Đã hoàn tiền</span>
-                                    {% elif payment.status == 'canceled' %}
-                                        <span class="badge bg-secondary">Đã hủy</span>
+            <div class="row">
+                <div class="col-md-12">
+                    <h6>Chi tiết các mục</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Mô tả</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Thành tiền</th>
+                                    {% if is_admin %}
+                                    <th>Thao tác</th>
                                     {% endif %}
-                                </td>
-                                <td>{{ payment.notes|default:"-" }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center">Chưa có giao dịch thanh toán nào</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.unit_price|floatformat:0 }} VNĐ</td>
+                                    <td>{{ item.amount|floatformat:0 }} VNĐ</td>
+                                    {% if is_admin %}
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'payment:invoice_item_edit' item.id %}" class="btn btn-sm btn-primary" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'payment:invoice_item_delete' item.id %}" class="btn btn-sm btn-danger" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">Tổng cộng:</th>
+                                    <th>{{ invoice.total_amount|floatformat:0 }} VNĐ</th>
+                                    {% if is_admin %}
+                                    <th></th>
+                                    {% endif %}
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% if is_admin %}
+                    <div class="text-end mt-3">
+                        <a href="{% url 'payment:invoice_item_create' invoice.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Thêm mục
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- Ghi chú -->
-            {% if invoice.notes %}
-                <h5 class="mt-4">Ghi chú</h5>
-                <div class="alert alert-info">
-                    {{ invoice.notes|linebreaks }}
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h6>Lịch sử thanh toán</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Ngày thanh toán</th>
+                                    <th>Số tiền</th>
+                                    <th>Phương thức</th>
+                                    <th>Mã giao dịch</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ payment.amount|floatformat:0 }} VNĐ</td>
+                                    <td>{{ payment.get_payment_method_display }}</td>
+                                    <td>{{ payment.transaction_id }}</td>
+                                    <td>{{ payment.notes|default:'' }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Chưa có thanh toán nào.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            {% endif %}
+            </div>
         </div>
     </div>
-
-    <div class="d-flex justify-content-between">
-        <a href="{% url 'payment:my_invoices' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách hóa đơn
-        </a>
-
-        {% if invoice.status != 'paid' and invoice.status != 'canceled' and invoice.user == user %}
-            <a href="{% url 'payment:pay_invoice' invoice.id %}" class="btn btn-primary">
-                <i class="fas fa-credit-card me-1"></i> Thanh toán ngay
-            </a>
-        {% endif %}
-    </div>
 </div>
-
-<style type="text/css" media="print">
-    @page {
-        size: A4;
-        margin: 1cm;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-        font-size: 12pt;
-    }
-
-    .no-print {
-        display: none !important;
-    }
-
-    .container-fluid {
-        width: 100%;
-        padding: 0;
-    }
-
-    .btn, .navbar, .sidebar, footer, .breadcrumb, .dropdown-toggle::after {
-        display: none !important;
-    }
-
-    .card {
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    .card-body {
-        padding: 0 !important;
-    }
-
-    table {
-        width: 100% !important;
-    }
-
-    .table th, .table td {
-        padding: 0.5rem !important;
-    }
-
-    main {
-        margin-left: 0 !important;
-        padding: 0 !important;
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        $('.btn-print-invoice').on('click', function() {
-            window.print();
-        });
-    });
-</script>
 {% endblock %}
