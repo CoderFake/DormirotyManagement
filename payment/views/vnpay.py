@@ -71,7 +71,6 @@ def vnpay_payment_view(request, invoice_id):
         'vnp_ReturnUrl': request.build_absolute_uri(reverse('payment:vnpay_return')),
         'vnp_IpAddr': request.META.get('REMOTE_ADDR', '127.0.0.1'),
         'vnp_CreateDate': timezone.now().strftime('%Y%m%d%H%M%S'),
-        'vnp_BankCode': 'VNPAYQR',
     }
 
     payment_url = vn_pay.get_payment_url(settings.VNPAY_PAYMENT_URL, settings.VNPAY_HASH_SECRET_KEY)

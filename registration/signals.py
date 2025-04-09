@@ -107,7 +107,7 @@ def create_deposit_invoice(sender, instance, created, **kwargs):
 def handle_deposit_payment(sender, instance, **kwargs):
     """Handle deposit payment completion"""
     if instance.contract:
-        is_deposit_invoice = instance.invoice_items.filter(fee_type__code='DEPOSIT').exists()
+        is_deposit_invoice = instance.items.filter(fee_type__code='DEPOSIT').exists()
         
         if is_deposit_invoice and instance.status == 'paid' and instance.contract.status == 'pending_payment' and instance.contract.signed_by_student:
             instance.contract.activate_contract()
@@ -124,7 +124,7 @@ def handle_deposit_payment(sender, instance, **kwargs):
                 title="Xác nhận hoàn tất thủ tục đăng ký",
                 content=f"Bạn đã ký hợp đồng và thanh toán tiền cọc thành công. Hợp đồng #{instance.contract.contract_number} sẽ có hiệu lực từ ngày {instance.contract.start_date.strftime('%d/%m/%Y')}. Bạn có thể chuẩn bị thủ tục nhận phòng.",
                 category=category,
-                sender_id=None, 
+                sender_id=None,
                 priority="high",
                 is_global=False,
             )

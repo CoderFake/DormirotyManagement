@@ -299,15 +299,39 @@ def my_contracts_view(request):
 
 @login_required
 def contract_detail_view(request, contract_id):
-    """Xem chi tiết hợp đồng"""
-    contract = get_object_or_404(Contract, pk=contract_id, user=request.user)
+    is_admin = request.user.user_type in ['admin', 'staff']
+
+    if is_admin:
+        contract = get_object_or_404(Contract, pk=contract_id)
+    else:
+        contract = get_object_or_404(Contract, pk=contract_id, user=request.user)
+
+    registration = contract.registration if hasattr(contract, 'registration') else None
+
+    try:
+        check_in = contract.check_in
+    except:
+        check_in = None
+
+    try:
+        check_out = contract.check_out
+    except:
+        check_out = None
+
+    invoices = contract.invoices.all() if hasattr(contract, 'invoices') else []
 
     context = {
         'contract': contract,
+        'registration': registration,
+        'check_in': check_in,
+        'check_out': check_out,
+        'invoices': invoices,
+        'is_admin': is_admin,
         'page_title': f'Chi tiết hợp đồng #{contract.contract_number}',
         'breadcrumbs': [
             {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Hợp đồng của tôi', 'url': reverse('registration:my_contracts')},
+            {'title': 'Hợp đồng',
+             'url': reverse('registration:my_contracts') if not is_admin else reverse('registration:contract_list')},
             {'title': f'Hợp đồng #{contract.contract_number}', 'url': None}
         ]
     }
@@ -973,7 +997,7 @@ def contract_cancel_view(request, contract_id):
     
     if contract.status in ['terminated', 'canceled', 'expired']:
         messages.error(request, 'Không thể hủy hợp đồng đã kết thúc.')
-        return redirect('registration:contract_admin_detail', contract_id=contract.id)
+        return redirect('registration:contract_list')
     
     if request.method == 'POST':
         notes = request.POST.get('notes')
@@ -1013,16 +1037,14 @@ def contract_cancel_view(request, contract_id):
             )
             
             messages.success(request, 'Đã hủy hợp đồng thành công.')
-            return redirect('registration:contract_admin_detail', contract_id=contract.id)
+            return redirect('registration:contract_list')
     
     context = {
         'contract': contract,
-        'page_title': f'Hủy hợp đồng #{contract.contract_number}',
+        'page_title': f'Xác nhận Hủy hợp đồng #{contract.contract_number}',
         'breadcrumbs': [
             {'title': 'Quản lý đăng ký', 'url': '#'},
             {'title': 'Hợp đồng', 'url': reverse('registration:contract_list')},
-            {'title': f'Hợp đồng #{contract.contract_number}', 
-             'url': reverse('registration:contract_admin_detail', args=[contract_id])},
             {'title': 'Hủy hợp đồng', 'url': None}
         ]
     }
@@ -1116,44 +1138,3 @@ def application_cancel_view(request, application_id):
         ]
     }
     return render(request, 'registration/admin/application_cancel.html', context)
-
-
-@login_required
-def contract_detail_view(request, contract_id):
-    is_admin = request.user.user_type in ['admin', 'staff']
-
-    if is_admin:
-        contract = get_object_or_404(Contract, pk=contract_id)
-    else:
-        contract = get_object_or_404(Contract, pk=contract_id, user=request.user)
-
-    registration = contract.registration if hasattr(contract, 'registration') else None
-
-    try:
-        check_in = contract.check_in
-    except:
-        check_in = None
-
-    try:
-        check_out = contract.check_out
-    except:
-        check_out = None
-
-    invoices = contract.invoices.all() if hasattr(contract, 'invoices') else []
-
-    context = {
-        'contract': contract,
-        'registration': registration,
-        'check_in': check_in,
-        'check_out': check_out,
-        'invoices': invoices,
-        'is_admin': is_admin,
-        'page_title': f'Chi tiết hợp đồng #{contract.contract_number}',
-        'breadcrumbs': [
-            {'title': 'Đăng ký phòng', 'url': '#'},
-            {'title': 'Hợp đồng',
-             'url': reverse('registration:my_contracts') if not is_admin else reverse('registration:contract_list')},
-            {'title': f'Hợp đồng #{contract.contract_number}', 'url': None}
-        ]
-    }
-    return render(request, 'registration/contract_detail.html', context)
