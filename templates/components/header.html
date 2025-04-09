@@ -65,7 +65,7 @@
                                             </div>
                                             <div>
                                                 <div class="small text-gray-500">{{ notification.created_at|date:"Y-m-d H:i" }}</div>
-                                                <span class="{% if not notification.is_read %}fw-bold{% endif %}">{{ notification.notification.title }}</span>
+                                                <span class="{% if not notification.is_read %}fw-bold{% endif %}">{{ notification.notification.title|safe }}</span>
                                             </div>
                                         </a>
                                     {% endfor %}

@@ -198,10 +198,14 @@ class Contract(models.Model):
             if self.start_date <= today <= self.end_date:
                 self.status = 'active'
             elif today < self.start_date:
+                # Nếu ngày hiện tại trước ngày bắt đầu hợp đồng, giữ nguyên trạng thái pending_payment
+                # nhưng vẫn đánh dấu là đã thanh toán cọc
                 pass
             else:
                 self.status = 'expired'
             self.save(update_fields=['status'])
+            return True
+        return False
 
     def terminate(self):
         if self.status != 'terminated':

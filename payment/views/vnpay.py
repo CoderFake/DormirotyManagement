@@ -219,6 +219,13 @@ def vnpay_return_view(request):
                             
                             messages.success(request, f'Thanh toán hóa đơn #{invoice.invoice_number} thành công.')
                             
+                            # Đảm bảo hợp đồng không bị chuyển sang trạng thái terminated
+                            if invoice.contract and invoice.contract.status == 'pending_payment':
+                                # Kiểm tra nếu là hóa đơn đặt cọc
+                                is_deposit_invoice = invoice.items.filter(fee_type__code='DEPOSIT').exists()
+                                if is_deposit_invoice and invoice.status == 'paid' and invoice.contract.signed_by_student:
+                                    invoice.contract.activate_contract()
+                            
                             if invoice.contract:
                                 return redirect('registration:contract_detail', contract_id=invoice.contract.id)
                             else:
@@ -276,7 +283,7 @@ def vnpay_ipn_view(request):
         pay_date_str = vn_pay.responseData.get('vnp_PayDate')
 
         try:
-            vnpay_transaction = VNPayTransaction.objects.select_related('payment', 'payment__invoice').get(txn_ref=txn_ref)
+            vnpay_transaction = VNPayTransaction.objects.select_related('payment', 'payment__invoice', 'payment__invoice__contract').get(txn_ref=txn_ref)
         except VNPayTransaction.DoesNotExist:
             return HttpResponse(VNPayIPNResponse.ORDER_NOT_FOUND, content_type='application/json')
 
@@ -291,7 +298,6 @@ def vnpay_ipn_view(request):
                 vnpay_transaction.response_code = response_code
                 vnpay_transaction.transaction_no = transaction_no
             
-                
                 if response_code == '00':
                     vnpay_transaction.transaction_status = 'success'
                     vnpay_transaction.save()
@@ -303,7 +309,14 @@ def vnpay_ipn_view(request):
                         
                         if payment.invoice:
                             invoice = payment.invoice
-                            invoice.record_payment(payment.amount, 'vnpay_ipn', transaction_no) 
+                            invoice.record_payment(payment.amount, 'vnpay_ipn', transaction_no)
+                            
+                            # Đảm bảo hợp đồng không bị chuyển sang trạng thái terminated
+                            if invoice.contract and invoice.contract.status == 'pending_payment':
+                                # Kiểm tra nếu là hóa đơn đặt cọc
+                                is_deposit_invoice = invoice.items.filter(fee_type__code='DEPOSIT').exists()
+                                if is_deposit_invoice and invoice.status == 'paid' and invoice.contract.signed_by_student:
+                                    invoice.contract.activate_contract()
 
                         return HttpResponse(VNPayIPNResponse.CONFIRM_SUCCESS, content_type='application/json')
                     else:

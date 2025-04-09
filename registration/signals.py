@@ -110,6 +110,7 @@ def handle_deposit_payment(sender, instance, **kwargs):
         is_deposit_invoice = instance.items.filter(fee_type__code='DEPOSIT').exists()
         
         if is_deposit_invoice and instance.status == 'paid' and instance.contract.status == 'pending_payment' and instance.contract.signed_by_student:
+            # Đảm bảo hợp đồng được kích hoạt đúng cách
             instance.contract.activate_contract()
             
             category, _ = NotificationCategory.objects.get_or_create(
