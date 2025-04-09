@@ -17,7 +17,7 @@ import requests
 
 from registration.models import Contract
 from payment.models import Payment, Invoice, InvoiceItem, FeeType
-from payment.payment_models.momo import MomoTransaction
+from payment.models.momo import MomoTransaction
 
 
 @login_required

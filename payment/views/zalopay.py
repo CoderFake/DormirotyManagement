@@ -17,7 +17,7 @@ import base64
 
 from registration.models import Contract
 from payment.models import Payment, Invoice, InvoiceItem, FeeType
-from payment.payment_models.zalopay import ZaloPayTransaction
+from payment.models.zalopay import ZaloPayTransaction
 
 
 @login_required

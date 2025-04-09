@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import transaction
 from decimal import Decimal
 
-from .payment_models import Invoice, Payment, ElectricityReading, WaterReading, VNPayTransaction
+from .models import Invoice, Payment, ElectricityReading, WaterReading, VNPayTransaction
 from notification.models import Notification, NotificationCategory, UserNotification
 
 
@@ -189,7 +189,7 @@ def create_electric_invoice_item(sender, instance, created, **kwargs):
     """Tạo mục hóa đơn từ chỉ số điện"""
     if instance.is_billed is False and instance.amount > 0:
         with transaction.atomic():
-            from .payment_models import FeeType, Invoice, InvoiceItem
+            from .models import FeeType, Invoice, InvoiceItem
             fee_type, _ = FeeType.objects.get_or_create(
                 code='ELECTRIC',
                 defaults={
@@ -238,7 +238,7 @@ def create_water_invoice_item(sender, instance, created, **kwargs):
     """Tạo mục hóa đơn từ chỉ số nước"""
     if instance.is_billed is False and instance.amount > 0:
         with transaction.atomic():
-            from .payment_models import FeeType, Invoice, InvoiceItem
+            from .models import FeeType, Invoice, InvoiceItem
             fee_type, _ = FeeType.objects.get_or_create(
                 code='WATER',
                 defaults={

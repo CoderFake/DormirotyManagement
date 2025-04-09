@@ -15,7 +15,7 @@ import uuid
 
 from registration.models import Contract
 from payment.models import Payment, Invoice, InvoiceItem, FeeType
-from payment.payment_models.vnpay import VNPayTransaction
+from payment.models.vnpay import VNPayTransaction
 
 
 @login_required

@@ -1,11 +1,10 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import (FeeType, Invoice, InvoiceItem, Payment,
-    ElectricityReading, WaterReading
+from payment.models import (
+    FeeType, Invoice, InvoiceItem, Payment,
+    ElectricityReading, WaterReading,
+    VNPayTransaction, ZaloPayTransaction, MomoTransaction
 )
-
-from payment.payment_models.vnpay import VNPayTransaction
-
 
 class InvoiceItemInline(admin.TabularInline):
     model = InvoiceItem
@@ -82,4 +81,28 @@ class VNPayTransactionAdmin(admin.ModelAdmin):
         'user', 'payment', 'txn_ref', 'amount', 'order_info',
         'transaction_no', 'bank_code', 'card_type', 'transaction_date',
         'response_code', 'response_message', 'secure_hash'
+    )
+
+
+@admin.register(ZaloPayTransaction)
+class ZaloPayTransactionAdmin(admin.ModelAdmin):
+    list_display = ('app_trans_id', 'user', 'amount', 'transaction_status', 'created_at', 'transaction_date')
+    list_filter = ('transaction_status', 'created_at')
+    search_fields = ('app_trans_id', 'user__full_name', 'user__email', 'order_info', 'zp_trans_id')
+    date_hierarchy = 'created_at'
+    readonly_fields = (
+        'user', 'payment', 'app_trans_id', 'amount', 'order_info',
+        'zp_trans_id', 'transaction_date', 'response_code', 'response_message'
+    )
+
+
+@admin.register(MomoTransaction)
+class MomoTransactionAdmin(admin.ModelAdmin):
+    list_display = ('order_id', 'user', 'amount', 'transaction_status', 'created_at', 'transaction_date')
+    list_filter = ('transaction_status', 'created_at')
+    search_fields = ('order_id', 'user__full_name', 'user__email', 'order_info', 'transaction_id')
+    date_hierarchy = 'created_at'
+    readonly_fields = (
+        'user', 'payment', 'order_id', 'request_id', 'amount', 'order_info',
+        'transaction_id', 'transaction_date', 'response_code', 'response_message'
     )
