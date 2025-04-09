@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import vnpay, zalopay, momo, invoice, utility, room_fee, deposit
+from .views import vnpay, zalopay, momo, invoice, utility, room_fee, deposit, fee_type
 
 app_name = 'payment'
 
@@ -12,9 +12,13 @@ urlpatterns = [
     path('invoices/<uuid:invoice_id>/delete/', invoice.invoice_delete_view, name='invoice_delete'),
     
     # Invoice items
+    path('payment-history/', invoice.payment_history_view, name='payment_history'),
+    path('invoices/<uuid:invoice_id>/pay/', invoice.pay_invoice_view, name='pay_invoice'),
+    path('my-invoices/', invoice.my_invoices_view, name='my_invoices'),
     path('invoices/<uuid:invoice_id>/items/add/', invoice.invoice_item_create_view, name='invoice_item_create'),
     path('invoice-items/<uuid:item_id>/edit/', invoice.invoice_item_edit_view, name='invoice_item_edit'),
     path('invoice-items/<uuid:item_id>/delete/', invoice.invoice_item_delete_view, name='invoice_item_delete'),
+    path('invoices/<uuid:invoice_id>/items/add-ajax/', invoice.invoice_item_create_ajax, name='invoice_item_create_ajax'),
     
     # Payment recording
     path('invoices/<uuid:invoice_id>/record-payment/', invoice.record_payment_view, name='record_payment'),
@@ -22,6 +26,10 @@ urlpatterns = [
     
     # Deposit payment
     path('deposit/<uuid:contract_id>/', deposit.deposit_payment_view, name='deposit_payment'),
+
+    # Payment methods
+    path('payment-methods/', deposit.payment_methods_view, name='payment_methods'),
+    path('invoices/<uuid:invoice_id>/payment-methods/', deposit.payment_methods_view, name='payment_methods'),
     
     # VNPAY integration
     path('vnpay/pay/<uuid:invoice_id>/', vnpay.vnpay_payment_view, name='vnpay_payment'),
@@ -55,4 +63,10 @@ urlpatterns = [
     
     # Export
     path('invoices/export/csv/', invoice.export_invoices_csv, name='export_invoices_csv'),
+
+    #fee
+    path('fee-types/', fee_type.fee_type_list_view, name='fee_type_list'),
+    path('fee-types/create/', fee_type.fee_type_create_view, name='fee_type_create'),
+    path('fee-types/<uuid:fee_type_id>/edit/', fee_type.fee_type_edit_view, name='fee_type_edit'),
+    path('fee-types/<uuid:fee_type_id>/delete/', fee_type.fee_type_delete_view, name='fee_type_delete'),
 ]

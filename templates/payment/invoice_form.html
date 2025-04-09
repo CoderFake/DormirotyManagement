@@ -1,193 +1,509 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}{{ page_title }}{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="card shadow-sm mb-4">
-        <div class="card-header py-3">
-            <h5 class="card-title mb-0">{{ page_title }}</h5>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
         </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                
-                {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {% for error in form.non_field_errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
+    </div>
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.user.id_for_label }}" class="form-label">Sinh viên</label>
-                            {{ form.user }}
-                            {% if form.user.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.user.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.contract.id_for_label }}" class="form-label">Hợp đồng</label>
-                            {{ form.contract }}
-                            {% if form.contract.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.contract.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.room.id_for_label }}" class="form-label">Phòng</label>
-                            {{ form.room }}
-                            {% if form.room.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.room.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.issue_date.id_for_label }}" class="form-label">Ngày phát hành</label>
-                            {{ form.issue_date }}
-                            {% if form.issue_date.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.issue_date.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.due_date.id_for_label }}" class="form-label">Ngày đến hạn</label>
-                            {{ form.due_date }}
-                            {% if form.due_date.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.due_date.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.status.id_for_label }}" class="form-label">Trạng thái</label>
-                            {{ form.status }}
-                            {% if form.status.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.status.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="{{ form.notes.id_for_label }}" class="form-label">Ghi chú</label>
-                            {{ form.notes }}
-                            {% if form.notes.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.notes.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{% if invoice %}Chỉnh sửa hóa đơn{% else %}Tạo hóa đơn mới{% endif %}</h5>
+                    <p class="card-text text-muted small">Nhập thông tin chi tiết về hóa đơn</p>
                 </div>
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> Lưu
-                    </button>
-                    <a href="{% if invoice %}{% url 'payment:invoice_detail' invoice.id %}{% else %}{% url 'payment:invoice_list' %}{% endif %}" class="btn btn-secondary">
-                        <i class="fas fa-times me-1"></i> Hủy
-                    </a>
+                <div class="card-body">
+                    <form method="post" id="invoiceForm">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="border-bottom pb-2 mb-3">Thông tin chung</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.user.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.user.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.user }}
+                                        {% if form.user.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.user.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.contract.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.contract.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.contract }}
+                                        {% if form.contract.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.contract.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.room.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.room.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.room }}
+                                        {% if form.room.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.room.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="border-bottom pb-2 mb-3">Thông tin thanh toán</h5>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.issue_date.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.issue_date.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.issue_date }}
+                                        {% if form.issue_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.issue_date.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.due_date.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.due_date.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.due_date }}
+                                        {% if form.due_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.due_date.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.status.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.status.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.status }}
+                                        {% if form.status.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.status.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.month.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.month.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.month }}
+                                        {% if form.month.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.month.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.year.id_for_label }}" class="col-sm-3 col-form-label">
+                                        {{ form.year.label }}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        {{ form.year }}
+                                        {% if form.year.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.year.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if invoice %}
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">Các mục trong hóa đơn</h5>
+
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="invoice-items-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Loại phí</th>
+                                                <th>Mô tả</th>
+                                                <th>Số lượng</th>
+                                                <th>Đơn giá (VNĐ)</th>
+                                                <th>Thành tiền (VNĐ)</th>
+                                                <th>Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in invoice.items.all %}
+                                            <tr data-item-id="{{ item.id }}">
+                                                <td>{{ item.fee_type.name }}</td>
+                                                <td>{{ item.description }}</td>
+                                                <td>{{ item.quantity }}</td>
+                                                <td>{{ item.unit_price|floatformat:0 }}</td>
+                                                <td>{{ item.amount|floatformat:0 }}</td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <a href="{% url 'payment:invoice_item_edit' item.id %}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="{% url 'payment:invoice_item_delete' item.id %}" class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr id="no-items-row">
+                                                <td colspan="6" class="text-center py-3">Chưa có mục nào trong hóa đơn</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th colspan="4" class="text-end">Tổng cộng:</th>
+                                                <th colspan="2">{{ invoice.total_amount|floatformat:0 }} VNĐ</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                <div class="text-end mt-3">
+                                    <a href="{% url 'payment:invoice_item_create' invoice.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i> Thêm mục
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">Các mục trong hóa đơn</h5>
+
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Bạn cần lưu hóa đơn trước khi thêm các mục.
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">Ghi chú</h5>
+
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        {{ form.notes }}
+                                        {% if form.notes.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.notes.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'payment:invoice_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if invoice %}
+                                    Cập nhật hóa đơn
+                                {% else %}
+                                    Lưu hóa đơn
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Modal thêm mục hóa đơn -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Thêm mục hóa đơn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm">
+                    <div class="row mb-3">
+                        <label for="fee_type" class="col-sm-3 col-form-label">Loại phí</label>
+                        <div class="col-sm-9">
+                            <select id="fee_type" class="form-select" required>
+                                <option value="">-- Chọn loại phí --</option>
+                                {% for fee_type in fee_types %}
+                                <option value="{{ fee_type.id }}" data-price="{{ fee_type.default_price }}" data-unit="{{ fee_type.unit }}">
+                                    {{ fee_type.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="item_description" class="col-sm-3 col-form-label">Mô tả</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="item_description" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="item_quantity" class="col-sm-3 col-form-label">Số lượng</label>
+                        <div class="col-sm-9">
+                            <input type="number" class="form-control" id="item_quantity" min="1" value="1" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="item_unit_price" class="col-sm-3 col-form-label">Đơn giá (VNĐ)</label>
+                        <div class="col-sm-9">
+                            <input type="number" class="form-control" id="item_unit_price" min="0" step="1000" required>
+                            <div class="form-text" id="price_unit">VNĐ</div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="item_amount" class="col-sm-3 col-form-label">Thành tiền (VNĐ)</label>
+                        <div class="col-sm-9">
+                            <input type="number" class="form-control" id="item_amount" readonly>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveItemBtn">Thêm mục</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Initialize select2 for dropdowns
-    $('#{{ form.user.id_for_label }}').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Chọn sinh viên'
-    });
+    $(document).ready(function() {
+        // Initialize select2 for dropdowns
+        $('#{{ form.user.id_for_label }}').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Chọn sinh viên'
+        });
 
-    $('#{{ form.contract.id_for_label }}').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Chọn hợp đồng'
-    });
+        $('#{{ form.contract.id_for_label }}').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Chọn hợp đồng'
+        });
 
-    $('#{{ form.room.id_for_label }}').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Chọn phòng'
-    });
+        $('#{{ form.room.id_for_label }}').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Chọn phòng'
+        });
 
-    // Initialize datepicker for date fields
-    $('#{{ form.issue_date.id_for_label }}, #{{ form.due_date.id_for_label }}').datepicker({
-        format: 'dd/mm/yyyy',
-        autoclose: true,
-        todayHighlight: true,
-        language: 'vi'
-    });
+        // Initialize datepicker for date fields
+        $('#{{ form.issue_date.id_for_label }}, #{{ form.due_date.id_for_label }}').flatpickr({
+            dateFormat: "Y-m-d",
+            locale: "vn"
+        });
 
-    // Update contract and room when user changes
-    $('#{{ form.user.id_for_label }}').on('change', function() {
-        var userId = $(this).val();
-        if (userId) {
-            // Get active contracts for selected user
-            $.get('/api/contracts/', { user: userId, status: 'active' }, function(data) {
-                var $contract = $('#{{ form.contract.id_for_label }}');
-                $contract.empty();
-                $contract.append('<option value="">Chọn hợp đồng</option>');
-                data.forEach(function(contract) {
-                    $contract.append(`<option value="${contract.id}">${contract.contract_number}</option>`);
+        // Update contract and room when user changes
+        $('#{{ form.user.id_for_label }}').on('change', function() {
+            var userId = $(this).val();
+            if (userId) {
+                // Get active contracts for selected user
+                $.ajax({
+                    url: '/payment/api/get-contracts/',
+                    data: { user_id: userId, status: 'active' },
+                    dataType: 'json',
+                    success: function(data) {
+                        var $contract = $('#{{ form.contract.id_for_label }}');
+                        $contract.empty();
+                        $contract.append('<option value="">Chọn hợp đồng</option>');
+                        data.forEach(function(contract) {
+                            $contract.append(`<option value="${contract.id}">${contract.contract_number}</option>`);
+                        });
+                        $contract.trigger('change');
+                    }
                 });
-            });
-        }
-    });
+            }
+        });
 
-    // Update room when contract changes
-    $('#{{ form.contract.id_for_label }}').on('change', function() {
-        var contractId = $(this).val();
-        if (contractId) {
-            // Get room for selected contract
-            $.get('/api/contracts/' + contractId + '/', function(data) {
-                var $room = $('#{{ form.room.id_for_label }}');
-                $room.val(data.room);
-                $room.trigger('change');
+        // Update room when contract changes
+        $('#{{ form.contract.id_for_label }}').on('change', function() {
+            var contractId = $(this).val();
+            if (contractId) {
+                // Get room for selected contract
+                $.ajax({
+                    url: '/payment/api/get-contract-details/',
+                    data: { contract_id: contractId },
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#{{ form.room.id_for_label }}').val(data.room_id).trigger('change');
+                    }
+                });
+            }
+        });
+
+        // Handle adding invoice items
+        $('#addItemBtn').click(function() {
+            if (validateItemForm()) {
+                addInvoiceItem();
+            }
+        });
+
+        // Auto calculate amount when quantity or unit price changes
+        $('#item_quantity, #item_unit_price').on('input', function() {
+            calculateAmount();
+        });
+
+        // Update unit price and unit when fee type changes
+        $('#fee_type').on('change', function() {
+            var selectedOption = $(this).find('option:selected');
+            var defaultPrice = selectedOption.data('price');
+            var unit = selectedOption.data('unit');
+
+            $('#item_unit_price').val(defaultPrice);
+            $('#price_unit').text(unit || 'VNĐ');
+            calculateAmount();
+        });
+
+        function calculateAmount() {
+            var quantity = parseFloat($('#item_quantity').val()) || 0;
+            var unitPrice = parseFloat($('#item_unit_price').val()) || 0;
+            var amount = quantity * unitPrice;
+            $('#item_amount').val(amount.toFixed(0));
+        }
+
+        function validateItemForm() {
+            return $('#itemForm')[0].checkValidity();
+        }
+
+        function addInvoiceItem() {
+            var feeTypeId = $('#fee_type').val();
+            var feeTypeName = $('#fee_type option:selected').text();
+            var description = $('#item_description').val();
+            var quantity = $('#item_quantity').val();
+            var unitPrice = $('#item_unit_price').val();
+            var amount = $('#item_amount').val();
+
+            $.ajax({
+                url: '{% if invoice %}{% url "payment:invoice_item_create_ajax" invoice.id %}{% else %}#{% endif %}',
+                method: 'POST',
+                data: {
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+                    fee_type: feeTypeId,
+                    description: description,
+                    quantity: quantity,
+                    unit_price: unitPrice
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Add new row to table
+                        $('#no-items-row').remove();
+
+                        var newRow = `
+                            <tr data-item-id="${response.item_id}">
+                                <td>${feeTypeName}</td>
+                                <td>${description}</td>
+                                <td>${quantity}</td>
+                                <td>${parseInt(unitPrice).toLocaleString('vi-VN')}</td>
+                                <td>${parseInt(amount).toLocaleString('vi-VN')}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="/payment/invoice-items/${response.item_id}/edit/" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="/payment/invoice-items/${response.item_id}/delete/" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+
+                        $('#invoice-items-table tbody').append(newRow);
+
+                        // Update total
+                        var currentTotal = parseFloat($('#invoice-items-table tfoot th:last').text().replace('VNĐ', '').replace(/\./g, '').trim());
+                        var newTotal = currentTotal + parseFloat(amount);
+                        $('#invoice-items-table tfoot th:last').text(newTotal.toLocaleString('vi-VN') + ' VNĐ');
+
+                        // Reset form
+                        $('#itemForm')[0].reset();
+                        $('#fee_type').val('').trigger('change');
+                        $('#addItemModal').modal('hide');
+
+                        // Show success message
+                        toastr.success('Đã thêm mục hóa đơn thành công.');
+                    } else {
+                        toastr.error(response.message || 'Có lỗi xảy ra khi thêm mục hóa đơn.');
+                    }
+                },
+                error: function() {
+                    toastr.error('Có lỗi xảy ra khi thêm mục hóa đơn.');
+                }
             });
         }
     });
-});
 </script>
-{% endblock %}
 {% endblock %}

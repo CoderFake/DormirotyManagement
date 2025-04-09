@@ -19,6 +19,59 @@
 
     <div class="row">
         <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Bộ lọc</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="q" class="form-label">Tìm kiếm</label>
+                                <input type="text" name="q" id="q" class="form-control" value="{{ search_query }}" placeholder="Nhập tên hoặc mã loại phí...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="is_active" class="form-label">Trạng thái</label>
+                                <select name="is_active" id="is_active" class="form-select">
+                                    <option value="">Tất cả</option>
+                                    <option value="true" {% if is_active == True %}selected{% endif %}>Đang hoạt động</option>
+                                    <option value="false" {% if is_active == False %}selected{% endif %}>Tạm ngưng</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="is_recurring" class="form-label">Định kỳ</label>
+                                <select name="is_recurring" id="is_recurring" class="form-select">
+                                    <option value="">Tất cả</option>
+                                    <option value="true" {% if is_recurring == True %}selected{% endif %}>Có</option>
+                                    <option value="false" {% if is_recurring == False %}selected{% endif %}>Không</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="sort" class="form-label">Sắp xếp</label>
+                                <select name="sort" id="sort" class="form-select">
+                                    <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Tên A-Z</option>
+                                    <option value="code" {% if sort_by == 'code' %}selected{% endif %}>Mã A-Z</option>
+                                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Mới nhất</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-group w-100">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter me-1"></i> Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Danh sách loại phí</h5>
@@ -28,26 +81,34 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle datatable">
-                            <thead>
+                             <thead>
                                 <tr>
                                     <th>Tên loại phí</th>
                                     <th>Mã loại phí</th>
                                     <th>Mô tả</th>
+                                    <th>Giá mặc định</th>
                                     <th>Đơn vị tính</th>
+                                    <th>Định kỳ</th>
                                     <th>Trạng thái</th>
                                     <th class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for fee_type in fee_types %}
+                                 {% for fee_type in fee_types %}
                                 <tr>
                                     <td>{{ fee_type.name }}</td>
-                                    <td>{{ fee_type.code }}</td>
-                                    <td>{{ fee_type.description|default:"-" }}</td>
-                                    <td>{{ fee_type.unit }}</td>
+                                    <td><code>{{ fee_type.code }}</code></td>
+                                    <td>{{ fee_type.description|default:"-"|truncatechars:50 }}</td>
+                                    <td>{{ fee_type.default_price|floatformat:0 }} VNĐ</td>
+                                    <td>{{ fee_type.unit|default:"VNĐ" }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ fee_type.is_recurring|yesno:'success,secondary' }}">
+                                            {{ fee_type.is_recurring|yesno:'Có,Không' }}
+                                        </span>
+                                    </td>
                                     <td>
                                         <span class="badge bg-{{ fee_type.is_active|yesno:'success,danger' }}">
-                                            {{ fee_type.is_active|yesno:'Đang hoạt động,Đã khóa' }}
+                                            {{ fee_type.is_active|yesno:'Đang hoạt động,Tạm ngưng' }}
                                         </span>
                                     </td>
                                     <td class="text-end">
@@ -63,7 +124,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
+                                    <td colspan="7" class="text-center py-4">
                                         <div class="text-muted">
                                             <i class="fas fa-info-circle me-2"></i>
                                             Chưa có loại phí nào được tạo
@@ -75,6 +136,52 @@
                         </table>
                     </div>
                 </div>
+
+                {% if fee_types.paginator.num_pages > 1 %}
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center m-0">
+                            {% if fee_types.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if is_recurring %}&is_recurring={{ is_recurring }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ fee_types.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if is_recurring %}&is_recurring={{ is_recurring }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for i in fee_types.paginator.page_range %}
+                            {% if fee_types.number == i %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                            {% elif i > fee_types.number|add:'-3' and i < fee_types.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}{% if search_query %}&q={{ search_query }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if is_recurring %}&is_recurring={{ is_recurring }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ i }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if fee_types.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ fee_types.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if is_recurring %}&is_recurring={{ is_recurring }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ fee_types.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if is_recurring %}&is_recurring={{ is_recurring }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

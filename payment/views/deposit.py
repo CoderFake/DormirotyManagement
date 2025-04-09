@@ -66,21 +66,31 @@ def deposit_payment_view(request, contract_id):
 
 
 @login_required
-def payment_methods_view(request, invoice_id):
+def payment_methods_view(request, invoice_id=None):
     """Chọn phương thức thanh toán"""
+    if invoice_id is None:
+        context = {
+            'page_title': 'Phương thức thanh toán',
+            'breadcrumbs': [
+                {'title': 'Thanh toán', 'url': '#'},
+                {'title': 'Phương thức thanh toán', 'url': None}
+            ]
+        }
+        return render(request, 'payment/payment_methods_overview.html', context)
+
+
     invoice = get_object_or_404(Invoice, pk=invoice_id, user=request.user)
-    
-    # Kiểm tra trạng thái hóa đơn
+
+
     if invoice.status not in ['pending', 'partially_paid', 'overdue']:
         messages.error(request, 'Hóa đơn này không trong trạng thái có thể thanh toán.')
         return redirect('payment:invoice_detail', invoice_id=invoice.id)
-    
-    # Tính số tiền cần thanh toán
+
     amount_to_pay = invoice.get_remaining_amount()
     if amount_to_pay <= 0:
         messages.error(request, 'Hóa đơn này đã được thanh toán đầy đủ.')
         return redirect('payment:invoice_detail', invoice_id=invoice.id)
-    
+
     context = {
         'invoice': invoice,
         'amount_to_pay': amount_to_pay,
@@ -88,9 +98,10 @@ def payment_methods_view(request, invoice_id):
         'breadcrumbs': [
             {'title': 'Thanh toán', 'url': '#'},
             {'title': 'Hóa đơn', 'url': reverse('payment:invoice_list')},
-            {'title': f'Hóa đơn #{invoice.invoice_number}', 'url': reverse('payment:invoice_detail', args=[invoice_id])},
+            {'title': f'Hóa đơn #{invoice.invoice_number}',
+             'url': reverse('payment:invoice_detail', args=[invoice_id])},
             {'title': 'Thanh toán', 'url': None}
         ]
     }
-    
+
     return render(request, 'payment/payment_methods.html', context)

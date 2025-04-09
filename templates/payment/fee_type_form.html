@@ -12,7 +12,7 @@
     </div>
 
     <div class="row">
-        <div class="col-12">
+        <div class="col-lg-8 mx-auto">
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="card-title mb-0">{% if fee_type %}Chỉnh sửa{% else %}Thêm mới{% endif %} loại phí</h5>
@@ -34,117 +34,136 @@
                         </div>
                         {% endif %}
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <h5 class="mb-3">Thông tin cơ bản</h5>
-
-                                <div class="row mb-3">
-                                    <label for="{{ form.name.id_for_label }}" class="col-sm-4 col-form-label">
-                                        {{ form.name.label }}
-                                    </label>
-                                    <div class="col-sm-8">
-                                        {{ form.name }}
-                                        {% if form.name.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.name.errors %}
-                                            {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                        {% if form.name.help_text %}
-                                        <div class="form-text">{{ form.name.help_text }}</div>
-                                        {% endif %}
-                                    </div>
+                        <div class="row mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.name.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                    {{ error }}
+                                    {% endfor %}
                                 </div>
-
-                                <div class="row mb-3">
-                                    <label for="{{ form.code.id_for_label }}" class="col-sm-4 col-form-label">
-                                        {{ form.code.label }}
-                                    </label>
-                                    <div class="col-sm-8">
-                                        {{ form.code }}
-                                        {% if form.code.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.code.errors %}
-                                            {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                        {% if form.code.help_text %}
-                                        <div class="form-text">{{ form.code.help_text }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3">
-                                    <label for="{{ form.unit.id_for_label }}" class="col-sm-4 col-form-label">
-                                        {{ form.unit.label }}
-                                    </label>
-                                    <div class="col-sm-8">
-                                        {{ form.unit }}
-                                        {% if form.unit.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.unit.errors %}
-                                            {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                        {% if form.unit.help_text %}
-                                        <div class="form-text">{{ form.unit.help_text }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <h5 class="mb-3">Thông tin bổ sung</h5>
-
-                                <div class="row mb-3">
-                                    <label for="{{ form.description.id_for_label }}" class="col-sm-4 col-form-label">
-                                        {{ form.description.label }}
-                                    </label>
-                                    <div class="col-sm-8">
-                                        {{ form.description }}
-                                        {% if form.description.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.description.errors %}
-                                            {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                        {% if form.description.help_text %}
-                                        <div class="form-text">{{ form.description.help_text }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3">
-                                    <label for="{{ form.is_active.id_for_label }}" class="col-sm-4 col-form-label">
-                                        {{ form.is_active.label }}
-                                    </label>
-                                    <div class="col-sm-8">
-                                        <div class="form-check form-switch">
-                                            {{ form.is_active }}
-                                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                                Kích hoạt
-                                            </label>
-                                        </div>
-                                        {% if form.is_active.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.is_active.errors %}
-                                            {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                        {% if form.is_active.help_text %}
-                                        <div class="form-text">{{ form.is_active.help_text }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                                {% endif %}
+                                <div class="form-text">Nhập tên loại phí (ví dụ: Tiền điện, Tiền nước, Phí dịch vụ...)</div>
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
+                        <div class="row mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.code.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.code.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Nhập mã loại phí (ví dụ: ELECTRIC, WATER, SERVICE). Mã không được trùng lặp.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.unit.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.unit.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.unit }}
+                                {% if form.unit.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.unit.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Nhập đơn vị tính (ví dụ: VNĐ, kWh, m³...)</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.default_price.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.default_price.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.default_price }}
+                                {% if form.default_price.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.default_price.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Nhập giá mặc định (VNĐ) cho loại phí này</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.description.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Mô tả chi tiết về loại phí</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.is_recurring.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.is_recurring.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_recurring }}
+                                    <label class="form-check-label" for="{{ form.is_recurring.id_for_label }}">
+                                        Phí định kỳ
+                                    </label>
+                                </div>
+                                {% if form.is_recurring.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.is_recurring.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Đánh dấu nếu đây là loại phí được tính định kỳ hàng tháng</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="{{ form.is_active.id_for_label }}" class="col-sm-3 col-form-label">
+                                {{ form.is_active.label }}
+                            </label>
+                            <div class="col-sm-9">
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Đang hoạt động
+                                    </label>
+                                </div>
+                                {% if form.is_active.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.is_active.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Đánh dấu nếu loại phí này đang hoạt động</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
                             <a href="{% url 'payment:fee_type_list' %}" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left me-1"></i> Quay lại
                             </a>
@@ -163,4 +182,14 @@
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#{{ form.code.id_for_label }}').on('input', function() {
+            $(this).val($(this).val().toUpperCase());
+        });
+    });
+</script>
+{% endblock %}

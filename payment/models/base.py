@@ -15,6 +15,8 @@ class FeeType(models.Model):
     name = models.CharField(_('tên loại phí'), max_length=100)
     code = models.CharField(_('mã loại phí'), max_length=20, unique=True)
     description = models.TextField(_('mô tả'), blank=True, null=True)
+    unit = models.CharField(_('đơn vị tính'), max_length=50, blank=True, null=True, default='VNĐ')
+    default_price = models.DecimalField(_('giá mặc định'), max_digits=10, decimal_places=2, default=0, null=True, blank=True)
     is_recurring = models.BooleanField(_('tính định kỳ'), default=True)
     is_active = models.BooleanField(_('đang hoạt động'), default=True)
     created_at = models.DateTimeField(_('thời gian tạo'), auto_now_add=True)

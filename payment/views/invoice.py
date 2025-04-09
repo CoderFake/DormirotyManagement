@@ -4,9 +4,9 @@ from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import datetime
 import csv
 import uuid
@@ -18,6 +18,62 @@ from registration.models import Contract
 from payment.models import Invoice, InvoiceItem, Payment, FeeType
 from payment.forms import InvoiceForm, InvoiceItemForm, PaymentForm
 
+
+@login_required
+def payment_history_view(request):
+    payments = Payment.objects.filter(user=request.user).select_related('invoice').order_by('-payment_date')
+
+    context = {
+        'payments': payments,
+        'page_title': 'Lịch sử thanh toán',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Lịch sử thanh toán', 'url': None}
+        ]
+    }
+
+    return render(request, 'payment/payment_history.html', context)
+
+
+@login_required
+def pay_invoice_view(request, invoice_id):
+    invoice = get_object_or_404(Invoice, pk=invoice_id, user=request.user)
+
+    if invoice.status not in ['pending', 'partially_paid', 'overdue']:
+        messages.error(request, 'Hóa đơn này không trong trạng thái có thể thanh toán.')
+        return redirect('payment:invoice_detail', invoice_id=invoice.id)
+
+    amount_to_pay = invoice.get_remaining_amount()
+    if amount_to_pay <= 0:
+        messages.error(request, 'Hóa đơn này đã được thanh toán đầy đủ.')
+        return redirect('payment:invoice_detail', invoice_id=invoice.id)
+
+    return redirect('payment:payment_methods', invoice_id=invoice.id)
+
+
+@login_required
+def my_invoices_view(request):
+
+    invoices = Invoice.objects.filter(user=request.user).select_related('room').order_by('-issue_date')
+
+    total_invoices = invoices.count()
+    pending_invoices = invoices.filter(status__in=['pending', 'partially_paid', 'overdue']).count()
+    total_unpaid = invoices.filter(status__in=['pending', 'partially_paid', 'overdue']).aggregate(
+        total=Sum(F('total_amount') - F('paid_amount')))['total'] or 0
+
+    context = {
+        'invoices': invoices,
+        'total_invoices': total_invoices,
+        'pending_invoices': pending_invoices,
+        'total_unpaid': total_unpaid,
+        'page_title': 'Hóa đơn của tôi',
+        'breadcrumbs': [
+            {'title': 'Thanh toán', 'url': '#'},
+            {'title': 'Hóa đơn của tôi', 'url': None}
+        ]
+    }
+
+    return render(request, 'payment/my_invoices.html', context)
 
 @login_required
 def invoice_list_view(request):
@@ -496,7 +552,7 @@ def generate_utility_invoices(request):
             
             # Xử lý hóa đơn điện
             if utility_type in ['electricity', 'both']:
-                from payment.payment_models import ElectricityReading
+                from payment.models import ElectricityReading
                 
                 # Lấy chỉ số điện của tháng này và tháng trước
                 current_reading = ElectricityReading.objects.filter(
@@ -570,7 +626,7 @@ def generate_utility_invoices(request):
             
             # Xử lý hóa đơn nước
             if utility_type in ['water', 'both']:
-                from payment.payment_models import WaterReading
+                from payment.models import WaterReading
                 
                 # Lấy chỉ số nước của tháng này và tháng trước
                 current_reading = WaterReading.objects.filter(
@@ -727,3 +783,47 @@ def export_invoices_csv(request):
         ])
     
     return response
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def invoice_item_create_ajax(request, invoice_id):
+    """Tạo mục hóa đơn qua AJAX"""
+    invoice = get_object_or_404(Invoice, pk=invoice_id)
+
+    if request.method == 'POST':
+        try:
+            fee_type_id = request.POST.get('fee_type')
+            description = request.POST.get('description')
+            quantity = int(request.POST.get('quantity', 1))
+            unit_price = float(request.POST.get('unit_price', 0))
+
+            fee_type = get_object_or_404(FeeType, pk=fee_type_id)
+
+            # Tạo mục hóa đơn mới
+            item = InvoiceItem.objects.create(
+                invoice=invoice,
+                fee_type=fee_type,
+                description=description,
+                quantity=quantity,
+                unit_price=unit_price,
+                amount=quantity * unit_price
+            )
+            invoice.total_amount = sum(item.amount for item in invoice.items.all())
+            invoice.save()
+
+            return JsonResponse({
+                'success': True,
+                'item_id': str(item.id),
+                'message': 'Đã thêm mục hóa đơn thành công.'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Lỗi: {str(e)}'
+            })
+
+    return JsonResponse({
+        'success': False,
+        'message': 'Phương thức không hợp lệ.'
+    })

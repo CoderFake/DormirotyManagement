@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h5 class="card-title mb-0">Phương thức thanh toán</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Dưới đây là các phương thức thanh toán được hỗ trợ trong hệ thống. Để thanh toán, vui lòng chọn hóa đơn cần thanh toán trong danh sách "Hóa đơn của tôi".
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <img src="{% static 'images/vnpay-logo.png' %}" alt="VNPAY" class="img-fluid mb-3" style="max-height: 60px;">
+                            <h6 class="card-title">VNPAY</h6>
+                            <p class="card-text">Thanh toán qua cổng thanh toán VNPAY</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <img src="{% static 'images/zalopay-logo.png' %}" alt="ZaloPay" class="img-fluid mb-3" style="max-height: 60px;">
+                            <h6 class="card-title">ZaloPay</h6>
+                            <p class="card-text">Thanh toán qua ví điện tử ZaloPay</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <img src="{% static 'images/momo-logo.png' %}" alt="Momo" class="img-fluid mb-3" style="max-height: 60px;">
+                            <h6 class="card-title">Momo</h6>
+                            <p class="card-text">Thanh toán qua ví điện tử Momo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'payment:my_invoices' %}" class="btn btn-primary">
+                    <i class="fas fa-file-invoice me-1"></i> Xem hóa đơn cần thanh toán
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

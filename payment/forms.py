@@ -10,14 +10,27 @@ class FeeTypeForm(forms.ModelForm):
 
     class Meta:
         model = FeeType
-        fields = ['name', 'code', 'description', 'is_recurring', 'is_active']
+        fields = ['name', 'code', 'description', 'unit', 'default_price', 'is_recurring', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'code': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'unit': forms.TextInput(attrs={'class': 'form-control'}),
+            'default_price': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '1000'}),
             'is_recurring': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code')
+        if code:
+            code = code.upper()
+            if self.instance.pk:
+                if FeeType.objects.filter(code=code).exclude(pk=self.instance.pk).exists():
+                    raise forms.ValidationError("Mã loại phí này đã tồn tại. Vui lòng chọn mã khác.")
+            elif FeeType.objects.filter(code=code).exists():
+                raise forms.ValidationError("Mã loại phí này đã tồn tại. Vui lòng chọn mã khác.")
+        return code
 
 
 class InvoiceForm(forms.ModelForm):

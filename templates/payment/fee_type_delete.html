@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{{ page_title }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Xác nhận xóa loại phí</h5>
+                    <p class="card-text text-muted small">Thao tác này không thể hoàn tác.</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <div>
+                            Bạn có chắc chắn muốn xóa loại phí <strong>{{ fee_type.name }}</strong> không?
+                            Thao tác này sẽ xóa vĩnh viễn loại phí và có thể ảnh hưởng đến các hóa đơn liên quan.
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th class="bg-light w-25">Tên loại phí</th>
+                                    <td>{{ fee_type.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Mã loại phí</th>
+                                    <td><code>{{ fee_type.code }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Đơn vị tính</th>
+                                    <td>{{ fee_type.unit|default:"VNĐ" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Mô tả</th>
+                                    <td>{{ fee_type.description|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Định kỳ</th>
+                                    <td>
+                                        <span class="badge bg-{{ fee_type.is_recurring|yesno:'success,secondary' }}">
+                                            {{ fee_type.is_recurring|yesno:'Có,Không' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Trạng thái</th>
+                                    <td>
+                                        <span class="badge bg-{{ fee_type.is_active|yesno:'success,danger' }}">
+                                            {{ fee_type.is_active|yesno:'Đang hoạt động,Tạm ngưng' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Ngày tạo</th>
+                                    <td>{{ fee_type.created_at|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'payment:fee_type_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i> Xác nhận xóa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
