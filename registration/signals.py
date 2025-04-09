@@ -9,7 +9,8 @@ from django.utils import timezone
 
 from .models import Contract
 from payment.models import Invoice, InvoiceItem, FeeType
-from .models import RoomRegistration, NotificationCategory, Notification, UserNotification
+from .models import RoomRegistration
+from notification.models import NotificationCategory, Notification, UserNotification
 
 
 @receiver(pre_save, sender=Contract)
