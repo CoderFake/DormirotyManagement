@@ -572,12 +572,15 @@ def application_approve_view(request, application_id):
                     is_active=True
                 ).select_related('building', 'room_type')
 
+                # Lọc theo tòa nhà nếu có
                 if preferred_building:
                     available_rooms = available_rooms.filter(building=preferred_building)
 
+                # Lọc theo loại phòng nếu có
                 if preferred_room_type:
                     available_rooms = available_rooms.filter(room_type=preferred_room_type)
 
+                # Nếu không tìm thấy phòng phù hợp với lựa chọn ưu tiên, tìm bất kỳ phòng nào có sẵn
                 if not available_rooms.exists():
                     available_rooms = Room.objects.filter(
                         status__in=['available', 'partially_occupied'],
@@ -591,7 +594,9 @@ def application_approve_view(request, application_id):
                 room = None
                 bed = None
 
+                # Tìm phòng có giường trống
                 for r in available_rooms:
+                    # Lấy giường trống đầu tiên trong phòng
                     available_bed = Bed.objects.filter(room=r, status='available').first()
                     if available_bed:
                         room = r
@@ -602,15 +607,18 @@ def application_approve_view(request, application_id):
                     messages.error(request, 'Không tìm thấy phòng và giường phù hợp có sẵn.')
                     return redirect('registration:application_detail', application_id=application_id)
 
+                # 2. Cập nhật đơn đăng ký
                 registration.assigned_room = room
                 registration.assigned_bed = bed
                 registration.status = 'approved'
                 registration.approval_date = timezone.now()
                 registration.save(update_fields=['assigned_room', 'assigned_bed', 'status', 'approval_date'])
 
+                # 3. Cập nhật trạng thái giường
                 bed.status = 'reserved'
                 bed.save(update_fields=['status'])
 
+                # 4. Tạo hợp đồng
                 monthly_fee = room.room_type.price_per_month
                 deposit_amount = room.room_type.deposit
 
@@ -626,6 +634,7 @@ def application_approve_view(request, application_id):
                     status='pending_signature'
                 )
 
+                # 5. Gửi thông báo
                 category, _ = NotificationCategory.objects.get_or_create(
                     name="Hợp đồng",
                     defaults={
@@ -674,9 +683,16 @@ def application_approve_view(request, application_id):
             messages.error(request, f'Đã xảy ra lỗi trong quá trình phê duyệt: {str(e)}')
             return redirect('registration:application_detail', application_id=application_id)
     
-    messages.info(request, 'Vui lòng xác nhận phê duyệt bằng cách nhấn nút trong trang chi tiết.')
-    return redirect('registration:application_detail', application_id=application_id)
-
+    return render(request, 'registration/application_approve.html', {
+        'registration': registration,
+        'page_title': f'Phê duyệt đơn đăng ký',
+        'breadcrumbs': [
+            {'title': 'Đăng ký phòng', 'url': '#'},
+            {'title': 'Đơn đăng ký', 'url': reverse('registration:application_list')},
+            {'title': registration.user.full_name, 'url': reverse('registration:application_detail', args=[application_id])},
+            {'title': 'Phê duyệt', 'url': None}
+        ]
+    })
 
 @login_required
 @user_passes_test(is_admin_or_staff)
